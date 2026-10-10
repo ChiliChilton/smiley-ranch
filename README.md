@@ -137,12 +137,21 @@ Open the local URL on your phone (same Wi-Fi) or in a desktop browser. In a desk
 
 To get a quick check of the layout, use the browser's device toolbar at 375 px and 430 px wide.
 
-### 6. Deploy to Vercel
+### 6. Put it online
 
-1. Push the repo to GitHub and import it at [vercel.com/new](https://vercel.com/new). Framework preset: **Vite**.
-2. Add the two `VITE_*` environment variables to the project.
-3. Deploy. `vercel.json` already rewrites all routes to `index.html` and keeps `sw.js` uncached.
-4. Send the Vercel URL to the family by group text. iPhone users open it in Safari → Share → Add to Home Screen.
+The build is plain static files (`dist/`). It needs any HTTPS static host; the phones talk straight to Supabase.
+
+**Option A: GitHub Pages (recommended, one account for everything)**
+1. Push the repo to GitHub. In the repo: Settings → Pages → Source: **GitHub Actions**.
+2. Settings → Secrets and variables → Actions: add `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+3. Every push to `main` deploys via `.github/workflows/pages.yml`. The app lives at `https://<you>.github.io/<repo>/`.
+4. Send that link to the family by group text. iPhone users open it in Safari → Share → Add to Home Screen.
+
+**Option B: Vercel**
+1. Import the repo at [vercel.com/new](https://vercel.com/new). Framework preset: **Vite**.
+2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables and deploy. `vercel.json` handles routing.
+
+Either way it's free and redeploys itself on push.
 
 ### 7. VAPID keys for push (Phase 5)
 
@@ -162,7 +171,7 @@ Phase 5 adds the Edge Function and the subscription UI.
 | Command | What |
 | --- | --- |
 | `npm run dev` | Dev server |
-| `npm run build` | Typecheck and production build (`dist/`) |
+| `npm run build` | Typecheck and production build (`dist/`). Set `VITE_BASE=/repo/` for GitHub Pages. |
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | oxlint |
 | `npm run typecheck` | `tsc -b` only |

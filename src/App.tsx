@@ -45,7 +45,7 @@ export default function App() {
           <Gate />
         </MemoryRouter>
       ) : (
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Gate />
         </BrowserRouter>
       )}
