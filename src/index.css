@@ -89,3 +89,6 @@ button { user-select: none; -webkit-user-select: none; }
 .marker-icon-middle { opacity: .6; }
 .area-label { background: rgba(58,26,15,.75); color: #f8f2e8; border: none; box-shadow: none; font-weight: 700; font-size: 12px; padding: 2px 6px; border-radius: 6px; }
 .area-label::before { display: none; }
+/* Leaflet zoom buttons: finger-sized, out of the way of the + button */
+.leaflet-bottom.leaflet-left { margin-bottom: 28px; }
+.leaflet-touch .leaflet-control-zoom a { width: 44px; height: 44px; line-height: 44px; font-size: 22px; }

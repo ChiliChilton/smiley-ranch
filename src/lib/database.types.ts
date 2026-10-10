@@ -70,6 +70,68 @@ export type CheckoutRow = {
 
 export type SettingRow = { key: string; value: string; updated_at: string }
 
+export type FeederFillRow = {
+  id: string
+  feeder_id: string
+  filled_at: string
+  amount: string | null
+  feed_type: string | null
+  created_by: string | null
+  created_at: string
+  deleted_at: string | null
+}
+
+export type SightingRow = {
+  id: string
+  species: string
+  description: string | null
+  count: number
+  seen_at: string
+  pin_id: string | null
+  lat: number | null
+  lng: number | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type HarvestRow = {
+  id: string
+  member_id: string
+  harvested_on: string
+  species: string
+  sex: string | null
+  description: string | null
+  pin_id: string | null
+  lat: number | null
+  lng: number | null
+  notes: string | null
+  tag_number: string | null
+  logged_on_license: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type PhotoParent = 'log_entry' | 'sighting' | 'harvest' | 'todo' | 'pin' | 'event'
+
+export type PhotoRow = {
+  id: string
+  parent_type: PhotoParent
+  parent_id: string
+  storage_path: string
+  width: number | null
+  height: number | null
+  pin_id: string | null
+  caption: string | null
+  created_by: string | null
+  created_at: string
+  deleted_at: string | null
+}
+
 export type PinType = 'stand' | 'feeder' | 'camera' | 'water' | 'gate' | 'food_plot' | 'hazard' | 'other'
 export type StandType = 'ladder' | 'box_blind' | 'ground_blind'
 export type Sit = 'am' | 'pm'
@@ -197,6 +259,65 @@ export type Database = {
         Row: StandClaimRow
         Insert: { id?: string; stand_id: string; member_id: string; date: string; sit: Sit; note?: string | null; created_by?: string | null }
         Update: { note?: string | null; released_at?: string | null; released_by?: string | null }
+        Relationships: []
+      }
+      feeder_fills: {
+        Row: FeederFillRow
+        Insert: { id?: string; feeder_id: string; filled_at?: string; amount?: string | null; feed_type?: string | null; created_by?: string | null }
+        Update: { amount?: string | null; feed_type?: string | null; filled_at?: string; deleted_at?: string | null }
+        Relationships: []
+      }
+      sightings: {
+        Row: SightingRow
+        Insert: {
+          id?: string
+          species: string
+          description?: string | null
+          count?: number
+          seen_at?: string
+          pin_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          created_by?: string | null
+        }
+        Update: Partial<Omit<SightingRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      harvests: {
+        Row: HarvestRow
+        Insert: {
+          id?: string
+          member_id: string
+          harvested_on?: string
+          species: string
+          sex?: string | null
+          description?: string | null
+          pin_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          tag_number?: string | null
+          logged_on_license?: boolean
+          created_by?: string | null
+        }
+        Update: Partial<Omit<HarvestRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      photos: {
+        Row: PhotoRow
+        Insert: {
+          id?: string
+          parent_type: PhotoParent
+          parent_id: string
+          storage_path: string
+          width?: number | null
+          height?: number | null
+          pin_id?: string | null
+          caption?: string | null
+          created_by?: string | null
+        }
+        Update: { caption?: string | null; pin_id?: string | null; deleted_at?: string | null }
         Relationships: []
       }
       checkouts: {

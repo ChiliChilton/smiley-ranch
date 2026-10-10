@@ -69,5 +69,20 @@ export function seedDb(): Record<string, Row[]> {
   const checkouts = [
     { id: 'o1', member_id: M(3), event_id: null, left_at: ts(9, 14), items: checklist.map((c, i) => ({ id: c.id, title: c.title, done: i !== 20 })), all_done: false, notes: 'Propane is getting low.', created_by: M(3), created_at: ts(9, 14), deleted_at: null },
   ]
-  return { members, checklist_items: checklist, settings, pins, areas, events, event_attendees, stand_claims, checkouts }
+  const feeder_fills = [
+    { id: 'f1', feeder_id: 'p5', filled_at: ts(3, 11), amount: '200 lb', feed_type: 'corn', created_by: M(4), created_at: ts(3, 11), deleted_at: null },
+    { id: 'f2', feeder_id: 'p6', filled_at: ts(25, 10), amount: '100 lb', feed_type: 'protein', created_by: M(3), created_at: ts(25, 10), deleted_at: null },
+  ]
+  const sightings = [
+    { id: 's1', species: 'Deer', description: 'Big 8, heavy', count: 1, seen_at: ts(2, 7), pin_id: 'p2', lat: null, lng: null, notes: 'Came in from the creek side right at first light.', ...base(2), created_by: M(1) },
+    { id: 's2', species: 'Hog', description: 'Sow with 6 piglets', count: 7, seen_at: ts(5, 18), pin_id: 'p5', lat: null, lng: null, notes: null, ...base(5), created_by: M(4) },
+    { id: 's3', species: 'Turkey', description: 'Flock', count: 12, seen_at: ts(9, 8), pin_id: 'p1', lat: null, lng: null, notes: null, ...base(9), created_by: M(3) },
+  ]
+  const y = Number(today.slice(0, 4)); const seasonYear = Number(today.slice(5, 7)) >= 9 ? y : y - 1
+  const harvests = [
+    { id: 'h1', member_id: M(3), harvested_on: `${seasonYear}-11-08`, species: 'Deer', sex: 'buck', description: '10 point, 138"', pin_id: 'p1', lat: null, lng: null, notes: null, tag_number: 'A-4471', logged_on_license: true, ...base(30) , created_by: M(3) },
+    { id: 'h2', member_id: M(1), harvested_on: `${seasonYear}-11-15`, species: 'Deer', sex: 'doe', description: null, pin_id: 'p2', lat: null, lng: null, notes: 'Management doe', tag_number: null, logged_on_license: false, ...base(20) },
+    { id: 'h3', member_id: M(4), harvested_on: `${seasonYear}-10-02`, species: 'Hog', sex: 'male', description: '180 lb boar', pin_id: 'p5', lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, ...base(40), created_by: M(4) },
+  ]
+  return { members, checklist_items: checklist, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, sightings, harvests, photos: [] }
 }

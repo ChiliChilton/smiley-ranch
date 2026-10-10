@@ -8,7 +8,9 @@ import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
 import { loadClaims, SIT_LABEL, weekendDates } from '../lib/claims'
-import type { CheckoutRow, EventRow, PinRow, StandClaimRow } from '../lib/database.types'
+import type { CheckoutRow, EventRow, FeederFillRow, PinRow, StandClaimRow } from '../lib/database.types'
+import { feederStatus, loadFeeders, recordFill } from '../lib/feeders'
+import { FeederCard, FillDetailsSheet } from './Feeders'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { loadEvents } from '../lib/events'
 import { supabase } from '../lib/supabase'
@@ -28,24 +30,30 @@ export function Home() {
   const [events, setEvents] = useState<EventRow[] | null>(null)
   const [last, setLast] = useState<CheckoutRow | null>(null)
   const [weekend, setWeekend] = useState<{ days: string[]; claims: StandClaimRow[]; stands: PinRow[] } | null>(null)
+  const [feeders, setFeeders] = useState<{ feeders: PinRow[]; lastFill: Map<string, FeederFillRow> } | null>(null)
+  const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
 
   const reload = useCallback(async () => {
     const days = weekendDates()
-    const [ev, co, cl, st] = await Promise.all([
+    const [ev, co, cl, st, fd] = await Promise.all([
       loadEvents(todayISO()).catch(() => null),
       loadLastCheckout(),
       days.length ? loadClaims(days[0], days[days.length - 1]).catch(() => []) : Promise.resolve([]),
       supabase.from('pins').select('*').eq('type', 'stand').is('deleted_at', null).then((r) => r.data ?? []),
+      loadFeeders().catch(() => null),
     ])
     if (ev) setEvents(ev.slice(0, 4))
     setLast(co)
     setWeekend({ days, claims: cl, stands: st })
+    setFeeders(fd)
   }, [])
 
   useEffect(() => {
     void reload()
   }, [reload])
-  useRealtime(['events', 'checkouts', 'stand_claims'], reload)
+  useRealtime(['events', 'checkouts', 'stand_claims', 'feeder_fills'], reload)
+
+  const feedersDue = (feeders?.feeders ?? []).filter((f) => ['due', 'overdue'].includes(feederStatus(f, feeders!.lastFill.get(f.id)).status))
 
   return (
     <Screen title={greeting(me.name)}>
@@ -112,6 +120,27 @@ export function Home() {
           )}
         </section>
 
+        {feedersDue.length > 0 && (
+          <section>
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-clay-800">Feeders due</h2>
+              <button type="button" onClick={() => navigate('/feeders')} className="tap px-2 text-sm font-semibold text-clay-800">All feeders</button>
+            </div>
+            <ul className="space-y-2">
+              {feedersDue.map((f) => (
+                <li key={f.id}>
+                  <FeederCard
+                    feeder={f}
+                    fill={feeders!.lastFill.get(f.id)}
+                    compact
+                    onFilled={async () => { const fill = await recordFill(f.id); setJustFilled({ feeder: f, fill }); await reload() }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         <EmergencyCard />
 
         <Card title="Before you leave">
@@ -130,7 +159,7 @@ export function Home() {
         </Card>
 
         <p className="px-1 text-xs text-ink-muted">
-          Coming in later phases: the latest log entries, feeders due, your to-dos, and low supplies.
+          Coming in later phases: the latest log entries, your to-dos, and low supplies.
         </p>
       </div>
 
@@ -184,7 +213,18 @@ export function Home() {
               I'm heading out
             </button>
           </li>
-          {['Sighting', 'Log entry', 'Harvest', 'To-do', 'We need…'].map((label) => (
+          {([['Saw something', '/sightings/new'], ['Post a harvest', '/harvests/new'], ['Filled a feeder', '/feeders']] as const).map(([label, to]) => (
+            <li key={to}>
+              <button
+                type="button"
+                onClick={() => { setAddOpen(false); navigate(to) }}
+                className="tap flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-base font-semibold text-ink ring-1 ring-tan-200 active:bg-tan-100"
+              >
+                {label}
+              </button>
+            </li>
+          ))}
+          {['Log entry', 'To-do', 'We need…'].map((label) => (
             <li key={label}>
               <button
                 type="button"
@@ -198,6 +238,7 @@ export function Home() {
           ))}
         </ul>
       </Sheet>
+      <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await reload() }} />
     </Screen>
   )
 }

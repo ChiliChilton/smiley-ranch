@@ -4,15 +4,17 @@ import '../lib/leaflet-global'
 import '@geoman-io/leaflet-geoman-free'
 import L from 'leaflet'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CircleMarker, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet'
 import { useSearchParams } from 'react-router'
 import { Button, Spinner } from '../components/Button'
 import { Header } from '../components/Screen'
 import { Note } from '../components/Note'
 import { Sheet } from '../components/Sheet'
 import { TextArea, TextInput } from '../components/Input'
-import type { AreaRow, PinRow, PinType, StandClaimRow, StandType } from '../lib/database.types'
-import { fmtDate, todayISO } from '../lib/dates'
+import type { AreaRow, FeederFillRow, HarvestRow, PinRow, PinType, SightingRow, StandClaimRow, StandType } from '../lib/database.types'
+import { feederStatus, recordFill, STATUS_STYLE } from '../lib/feeders'
+import { FillDetailsSheet } from './Feeders'
+import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { acres, geometryBounds, isAreaGeometry, parseShapes, type AreaGeometry, type Imported } from '../lib/geo'
 import { useMembers } from '../lib/members'
@@ -290,6 +292,7 @@ export default function MapScreen() {
           ref={mapRef}
         >
           {!DEMO && <TileLayer url={ESRI_URL} attribution={ESRI_ATTR} maxZoom={19} maxNativeZoom={18} />}
+          <ZoomControl position="bottomleft" />
           {fitBounds && <FitOnce bounds={fitBounds} />}
           {areas && (
             <AreasLayer
@@ -644,28 +647,43 @@ function PinSheet({
   const { nameOf } = useMembers()
   const [confirm, setConfirm] = useState(false)
   const [claims, setClaims] = useState<StandClaimRow[] | null>(null)
+  const [lastFill, setLastFill] = useState<FeederFillRow | null | undefined>(undefined)
+  const [activity, setActivity] = useState<{ sightings: SightingRow[]; harvests: HarvestRow[] } | null>(null)
+  const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
+  const [filling, setFilling] = useState(false)
+
+  const loadExtras = useCallback(async (p: PinRow) => {
+    const [cl, fl, si, ha] = await Promise.all([
+      p.type === 'stand' ? supabase.from('stand_claims').select('*').eq('stand_id', p.id).is('released_at', null).gte('date', todayISO()).order('date').order('sit').limit(4) : Promise.resolve({ data: null }),
+      p.type === 'feeder' ? supabase.from('feeder_fills').select('*').eq('feeder_id', p.id).is('deleted_at', null).order('filled_at', { ascending: false }).limit(1) : Promise.resolve({ data: null }),
+      supabase.from('sightings').select('*').eq('pin_id', p.id).is('deleted_at', null).order('seen_at', { ascending: false }).limit(3),
+      supabase.from('harvests').select('*').eq('pin_id', p.id).is('deleted_at', null).order('harvested_on', { ascending: false }).limit(3),
+    ])
+    setClaims(cl.data ?? [])
+    setLastFill(fl.data ? (fl.data[0] ?? null) : undefined)
+    setActivity({ sightings: si.data ?? [], harvests: ha.data ?? [] })
+  }, [])
 
   useEffect(() => {
     setConfirm(false)
     setClaims(null)
-    if (!pin || pin.type !== 'stand') return
-    let cancelled = false
-    supabase
-      .from('stand_claims')
-      .select('*')
-      .eq('stand_id', pin.id)
-      .is('released_at', null)
-      .gte('date', todayISO())
-      .order('date')
-      .order('sit')
-      .limit(4)
-      .then(({ data }) => {
-        if (!cancelled) setClaims(data ?? [])
-      })
-    return () => {
-      cancelled = true
+    setLastFill(undefined)
+    setActivity(null)
+    if (!pin) return
+    void loadExtras(pin)
+  }, [pin, loadExtras])
+
+  async function filledIt() {
+    if (!pin) return
+    setFilling(true)
+    try {
+      const fill = await recordFill(pin.id)
+      setJustFilled({ feeder: pin, fill })
+      await loadExtras(pin)
+    } finally {
+      setFilling(false)
     }
-  }, [pin])
+  }
 
   if (!pin) return null
   const t = PIN_TYPES[pin.type]
@@ -680,6 +698,36 @@ function PinSheet({
       <p className="mb-3 text-sm text-ink-muted">
         <span className="font-mono">{fmtCoords(pin.lat, pin.lng)}</span> · added by {nameOf(pin.created_by)}
       </p>
+
+      {pin.type === 'feeder' && (
+        <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
+          {lastFill === undefined ? (
+            <span className="text-sm text-ink-muted">Loading…</span>
+          ) : (
+            (() => {
+              const st = STATUS_STYLE[feederStatus(pin, lastFill ?? undefined).status]
+              return (
+                <div className="flex items-center gap-2">
+                  <span className={`h-3 w-3 rounded-full ${st.dot}`} />
+                  <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${st.chip}`}>{st.label}</span>
+                  <span className="text-sm text-ink">{lastFill ? `${fmtDateTime(lastFill.filled_at)} · ${nameOf(lastFill.created_by)}` : 'Never filled'}</span>
+                </div>
+              )
+            })()
+          )}
+          <div className="mt-2"><Button busy={filling} onClick={filledIt}>Filled it</Button></div>
+        </div>
+      )}
+
+      {activity && (activity.sightings.length > 0 || activity.harvests.length > 0) && (
+        <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
+          <div className="mb-1 text-xs font-bold uppercase tracking-wide text-clay-800">Recent here</div>
+          <ul className="text-sm text-ink">
+            {activity.harvests.map((h) => <li key={h.id}>🎯 {fmtDate(h.harvested_on)} · {nameOf(h.member_id)} took a {h.species}{h.description ? ` (${h.description})` : ''}</li>)}
+            {activity.sightings.map((x) => <li key={x.id}>👀 {fmtDateTime(x.seen_at)} · {x.count > 1 ? `${x.count} ` : ''}{x.species}{x.description ? ` (${x.description})` : ''} · {nameOf(x.created_by)}</li>)}
+          </ul>
+        </div>
+      )}
 
       {pin.type === 'stand' && (
         <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
@@ -714,6 +762,7 @@ function PinSheet({
           </>
         )}
       </div>
+      <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await loadExtras(pin) }} />
     </Sheet>
   )
 }

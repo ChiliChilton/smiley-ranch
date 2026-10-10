@@ -54,3 +54,14 @@ insert into public.events (title, kind, starts_on, ends_on, notes, created_by) v
 insert into public.event_attendees (event_id, member_id, note, created_by)
 select e.id, '00000000-0000-4000-8000-000000000004', 'Bringing my dog', '00000000-0000-4000-8000-000000000004'
 from public.events e where e.title = 'Opening weekend';
+
+-- Sample sightings and harvests
+insert into public.sightings (species, description, count, seen_at, pin_id, created_by) values
+  ('Deer',   'Big 8, heavy',        1, now() - interval '2 days 5 hours', '00000000-0000-4000-8000-000000000102', '00000000-0000-4000-8000-000000000001'),
+  ('Hog',    'Sow with 6 piglets',  7, now() - interval '5 days',         '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000004'),
+  ('Turkey', 'Flock',              12, now() - interval '9 days',         '00000000-0000-4000-8000-000000000101', '00000000-0000-4000-8000-000000000003');
+
+insert into public.harvests (member_id, harvested_on, species, sex, description, pin_id, tag_number, logged_on_license, created_by) values
+  ('00000000-0000-4000-8000-000000000003', current_date - 30, 'Deer', 'buck', '10 point, 138"', '00000000-0000-4000-8000-000000000101', 'A-4471', true,  '00000000-0000-4000-8000-000000000003'),
+  ('00000000-0000-4000-8000-000000000001', current_date - 20, 'Deer', 'doe',  null,             '00000000-0000-4000-8000-000000000102', null,     false, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000004', current_date - 40, 'Hog',  'male', '180 lb boar',    '00000000-0000-4000-8000-000000000201', null,     false, '00000000-0000-4000-8000-000000000004');

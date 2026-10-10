@@ -57,6 +57,14 @@ export function More() {
         </Card>
 
         <Card title="The place">
+          <Row onClick={() => navigate('/feeders')}>Feeders</Row>
+          <Divider />
+          <Row onClick={() => navigate('/sightings')}>Sightings</Row>
+          <Divider />
+          <Row onClick={() => navigate('/harvests')}>Harvests</Row>
+          <Divider />
+          <Row onClick={() => navigate('/photos')}>Photos</Row>
+          <Divider />
           <Row onClick={() => navigate('/checkout')}>Before you leave</Row>
           <Divider />
           <Row onClick={() => navigate('/log')}>Log</Row>

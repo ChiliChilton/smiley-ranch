@@ -6,7 +6,7 @@ import { seedDb } from './seed'
 
 type Row = Record<string, unknown>
 type Result<T> = { data: T; error: null } | { data: null; error: { code: string; message: string } }
-type Filter = { col: string; op: 'eq' | 'neq' | 'is' | 'gte' | 'lte' | 'gt' | 'lt'; val: unknown }
+type Filter = { col: string; op: 'eq' | 'neq' | 'is' | 'gte' | 'lte' | 'gt' | 'lt' | 'in'; val: unknown }
 
 const KEY = 'back40.demo.v1'
 
@@ -94,6 +94,7 @@ class Query implements PromiseLike<Result<unknown>> {
   lte(col: string, val: unknown) { this.filters.push({ col, op: 'lte', val }); return this }
   gt(col: string, val: unknown) { this.filters.push({ col, op: 'gt', val }); return this }
   lt(col: string, val: unknown) { this.filters.push({ col, op: 'lt', val }); return this }
+  in(col: string, val: unknown[]) { this.filters.push({ col, op: 'in', val }); return this }
   order(col: string, opts?: { ascending?: boolean }) { this.orders.push({ col, asc: opts?.ascending ?? true }); return this }
   limit(n: number) { this.lim = n; return this }
   single() { this.mode = 'single'; return this }
@@ -114,6 +115,7 @@ class Query implements PromiseLike<Result<unknown>> {
         case 'lte': return (x as string) <= (val as string)
         case 'gt': return (x as string) > (val as string)
         case 'lt': return (x as string) < (val as string)
+        case 'in': return (val as unknown[]).includes(x)
       }
     })
   }
@@ -154,7 +156,21 @@ class Query implements PromiseLike<Result<unknown>> {
             Object.assign(existing, r, { updated_at: now }); inserted.push(existing); continue
           }
         }
-        const row: Row = { id: uuid(), created_by: me, created_at: now, updated_at: now, ...(this.table === 'stand_claims' ? { released_at: null, released_by: null } : { deleted_at: null }), ...r }
+        // Column defaults from the migrations that the app relies on.
+        const defaults: Record<string, Row> = {
+          feeder_fills: { filled_at: now, amount: null, feed_type: null },
+          sightings: { seen_at: now, count: 1, description: null, pin_id: null, lat: null, lng: null, notes: null },
+          harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false },
+          photos: { width: null, height: null, pin_id: null, caption: null },
+          checklist_items: { sort_order: 0 },
+          pins: { notes: null, stand_type: null, fill_interval_days: null },
+          events: { notes: null, kind: 'inclusive' },
+          event_attendees: { note: null },
+          checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
+          areas: { is_boundary: false, color: null },
+          members: { is_active: true },
+        }
+        const row: Row = { id: uuid(), created_by: me, created_at: now, updated_at: now, ...(this.table === 'stand_claims' ? { released_at: null, released_by: null } : { deleted_at: null }), ...(defaults[this.table] ?? {}), ...r }
         if (this.table === 'settings') delete row.id
         if (this.table === 'event_attendees') delete row.id
         const denied = canWrite(this.table, 'insert', row)
@@ -255,6 +271,21 @@ function rpc(name: string, args: Row = {}): Promise<Result<unknown>> {
   return new Promise((resolve) => setTimeout(() => resolve(run()), 80))
 }
 
+// Photos live in memory only in the demo (object URLs), so they don't survive a reload.
+const blobs = new Map<string, string>()
+const storage = {
+  from: (_bucket: string) => ({
+    upload: async (path: string, blob: Blob) => {
+      blobs.set(path, URL.createObjectURL(blob))
+      return { data: { path }, error: null }
+    },
+    createSignedUrls: async (paths: string[], _ttl: number) => ({
+      data: paths.map((p) => ({ path: p, signedUrl: blobs.get(p) ?? '', error: null })),
+      error: null,
+    }),
+  }),
+}
+
 const channel = () => {
   const ch = { on: () => ch, subscribe: () => ch, unsubscribe: () => Promise.resolve('ok') }
   return ch
@@ -270,5 +301,6 @@ export function createMockClient() {
     },
     channel,
     removeChannel: async () => 'ok',
+    storage,
   }
 }
