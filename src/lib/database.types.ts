@@ -70,6 +70,50 @@ export type CheckoutRow = {
 
 export type SettingRow = { key: string; value: string; updated_at: string }
 
+export type PinType = 'stand' | 'feeder' | 'camera' | 'water' | 'gate' | 'food_plot' | 'hazard' | 'other'
+export type StandType = 'ladder' | 'box_blind' | 'ground_blind'
+export type Sit = 'am' | 'pm'
+
+export type PinRow = {
+  id: string
+  type: PinType
+  name: string
+  notes: string | null
+  lat: number
+  lng: number
+  stand_type: StandType | null
+  fill_interval_days: number | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type AreaRow = {
+  id: string
+  name: string
+  is_boundary: boolean
+  geometry: Json
+  color: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type StandClaimRow = {
+  id: string
+  stand_id: string
+  member_id: string
+  date: string
+  sit: Sit
+  note: string | null
+  created_by: string | null
+  created_at: string
+  released_at: string | null
+  released_by: string | null
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -118,6 +162,43 @@ export type Database = {
         Update: { title?: string; sort_order?: number; deleted_at?: string | null }
         Relationships: []
       }
+      pins: {
+        Row: PinRow
+        Insert: {
+          id?: string
+          type: PinType
+          name: string
+          notes?: string | null
+          lat: number
+          lng: number
+          stand_type?: StandType | null
+          fill_interval_days?: number | null
+          created_by?: string | null
+        }
+        Update: {
+          type?: PinType
+          name?: string
+          notes?: string | null
+          lat?: number
+          lng?: number
+          stand_type?: StandType | null
+          fill_interval_days?: number | null
+          deleted_at?: string | null
+        }
+        Relationships: []
+      }
+      areas: {
+        Row: AreaRow
+        Insert: { id?: string; name: string; is_boundary?: boolean; geometry: Json; color?: string | null; created_by?: string | null }
+        Update: { name?: string; is_boundary?: boolean; geometry?: Json; color?: string | null; deleted_at?: string | null }
+        Relationships: []
+      }
+      stand_claims: {
+        Row: StandClaimRow
+        Insert: { id?: string; stand_id: string; member_id: string; date: string; sit: Sit; note?: string | null; created_by?: string | null }
+        Update: { note?: string | null; released_at?: string | null; released_by?: string | null }
+        Relationships: []
+      }
       checkouts: {
         Row: CheckoutRow
         Insert: {
@@ -146,9 +227,9 @@ export type Database = {
       set_admin_pin: { Args: { new_pin: string }; Returns: undefined }
     }
     Enums: {
-      pin_type: 'stand' | 'feeder' | 'camera' | 'water' | 'gate' | 'food_plot' | 'hazard' | 'other'
-      stand_type: 'ladder' | 'box_blind' | 'ground_blind'
-      sit: 'am' | 'pm'
+      pin_type: PinType
+      stand_type: StandType
+      sit: Sit
       todo_status: 'open' | 'done'
       supply_level: 'full' | 'some' | 'low' | 'out'
       event_kind: EventKind

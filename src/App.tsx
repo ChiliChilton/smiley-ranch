@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router'
 import { TabBar } from './components/TabBar'
 import { MembersProvider } from './lib/members'
@@ -21,6 +21,10 @@ import { InstallScreen } from './screens/onboarding/InstallScreen'
 import { JoinScreen } from './screens/onboarding/JoinScreen'
 import { NotificationsScreen } from './screens/onboarding/NotificationsScreen'
 import { Placeholder } from './screens/Placeholder'
+import { Stands } from './screens/Stands'
+
+// Leaflet and the drawing tools only load when the map is opened.
+const MapScreen = lazy(() => import('./screens/MapScreen'))
 import { SwitchPerson } from './screens/SwitchPerson'
 
 const NOTIF_KEY = 'back40.notifPrompted'
@@ -90,9 +94,9 @@ function Shell() {
         <Route path="/calendar/:id" element={<EventDetail />} />
         <Route path="/calendar/:id/edit" element={<EventForm />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/stands" element={<Placeholder title="Stands" phase={3} what="Claim a stand for a date and an AM or PM sit." />} />
-        <Route path="/map" element={<Placeholder title="Map" phase={3} what="Satellite map with stands, feeders, cameras, and more." />} />
-        <Route path="/log" element={<Placeholder title="Log" phase={4} what="What's happening on the place." />} />
+        <Route path="/stands" element={<Stands />} />
+        <Route path="/map" element={<Suspense fallback={<LoadingScreen />}><MapScreen /></Suspense>} />
+        <Route path="/log" element={<Placeholder title="Log" phase={5} what="What's happening on the place." />} />
         <Route path="/more" element={<More />} />
         <Route path="/more/switch" element={<SwitchPerson />} />
         <Route path="/more/install" element={<InstallHelp />} />

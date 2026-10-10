@@ -12,9 +12,26 @@ type Props = {
 
 /** Page frame: sticky header that respects the notch, scrollable content, room for the tab bar. */
 export function Screen({ title, back, right, children, tabs = true }: Props) {
-  const navigate = useNavigate()
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
+      <Header title={title} back={back} right={right} />
+      <main
+        className="flex-1 px-4 pt-4"
+        style={{
+          paddingBottom: tabs ? 'calc(var(--tab-bar-height) + var(--safe-bottom) + 24px)' : 'calc(var(--safe-bottom) + 24px)',
+          paddingLeft: 'max(16px, var(--safe-left))',
+          paddingRight: 'max(16px, var(--safe-right))',
+        }}
+      >
+        {children}
+      </main>
+    </div>
+  )
+}
+
+export function Header({ title, back, right }: Pick<Props, 'title' | 'back' | 'right'>) {
+  const navigate = useNavigate()
+  return (
       <header
         className="sticky top-0 z-10 bg-pine-900 text-cream"
         style={{ paddingTop: 'var(--safe-top)' }}
@@ -39,17 +56,6 @@ export function Screen({ title, back, right, children, tabs = true }: Props) {
           {right}
         </div>
       </header>
-      <main
-        className="flex-1 px-4 pt-4"
-        style={{
-          paddingBottom: tabs ? 'calc(var(--tab-bar-height) + var(--safe-bottom) + 24px)' : 'calc(var(--safe-bottom) + 24px)',
-          paddingLeft: 'max(16px, var(--safe-left))',
-          paddingRight: 'max(16px, var(--safe-right))',
-        }}
-      >
-        {children}
-      </main>
-    </div>
   )
 }
 

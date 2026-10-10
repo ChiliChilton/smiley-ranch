@@ -10,7 +10,7 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | --- | --- | --- |
 | 1 | Scaffold, PWA install, Supabase, identity/onboarding, members admin | **Done** |
 | 2 | Calendar (just us / come join), check-out list, emergency info, Home | **Done** |
-| 3 | Map + pins, stands + stand sign-up | Not started |
+| 3 | Satellite map, pins, boundary and areas, stand sign-up | **Done** |
 | 4 | Feeders, sightings, harvests, photos | Not started |
 | 5 | Log + comments, to-dos, needs/supplies | Not started |
 | 6 | Push notifications, offline outbox, CSV/JSON export, polish | Not started |
@@ -30,6 +30,14 @@ This is not real security (the spec says so). It keeps strangers out and makes a
 ## The property
 
 Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP. The parcel map on gonzalescad.org is the source for the boundary; trace it in the app (Phase 3) or export it as KML/GeoJSON and import it.
+
+## Map and stands
+
+- **Satellite map** from Esri World Imagery through Leaflet. No API key. Tiles you've viewed are cached by the service worker for weak signal.
+- **Pins**: stand, feeder, camera, water, gate, food plot, hazard, other. Each has a colored icon and a name label. Tap one for details, coordinates, Directions, and (for stands) the next claimed sits. Members add hazard and other pins; the admin adds everything else, and can edit, move, and remove.
+- **Adding pins**: "Drop a pin at my location" uses the phone's GPS. "Put a pin somewhere on the map" shows a crosshair you line up by panning.
+- **Boundary and areas** (admin): draw by tapping corners (Geoman), adjust corners later, or import a KML/GeoJSON file. The first imported shape becomes the boundary if there isn't one. Tap an area to rename it, make it the boundary, or remove it.
+- **Stand sign-up**: the Stands tab is a week grid, stands down the side, days and AM/PM across the top. Tap a cell to claim it with an optional note, or to release your own claim. The admin can release anyone's. Postgres enforces one live claim per stand per sit. Home shows this weekend's claims.
 
 ## Calendar rules
 

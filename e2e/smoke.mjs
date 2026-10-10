@@ -37,7 +37,17 @@ const seedChecklist = () => [
 ]
 let checklist = seedChecklist()
 let checkouts = []
-let settings = { emergency_address: '1234 County Road 100, Llano, TX 78643', emergency_lat: '30.7560', emergency_lng: '-98.6745', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
+const seedPins = () => [
+  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, fill_interval_days: 14, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2310, lng: -97.6350, stand_type: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+]
+let pins = seedPins()
+let areas = []
+let claims = []
+const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
+let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2310', emergency_lng: '-97.6350', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
 const overlap = (a, b) => a.starts_on <= b.ends_on && b.starts_on <= a.ends_on
 // minimal PostgREST filter support: col=eq.x, col=is.null, col=gte.x, col=lte.x, col=neq.x
 function applyFilters(rows, sp) {
@@ -57,7 +67,7 @@ function applyFilters(rows, sp) {
   return rows
 }
 function restTable(name) {
-  return { events, event_attendees: attendees, checklist_items: checklist, checkouts, members }[name]
+  return { events, event_attendees: attendees, checklist_items: checklist, checkouts, members, pins, areas, stand_claims: claims }[name]
 }
 let secrets = { code: 'deer-camp', pin: '4321' }
 let device = { member_id: null, is_admin: false }
@@ -109,7 +119,7 @@ async function mock(route) {
     if (method === 'GET') return route.fulfill(json(Object.entries(settings).map(([key, value]) => ({ key, value, updated_at: 'x' }))))
     if (method === 'POST') { if (!device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy')); for (const r of (Array.isArray(body) ? body : [body])) settings[r.key] = r.value; return route.fulfill(json([], 201)) }
   }
-  const generic = ['events', 'event_attendees', 'checklist_items', 'checkouts']
+  const generic = ['events', 'event_attendees', 'checklist_items', 'checkouts', 'pins', 'areas', 'stand_claims']
   const tname = path.replace('/rest/v1/', '')
   if (generic.includes(tname)) {
     const rows = restTable(tname)
@@ -125,6 +135,12 @@ async function mock(route) {
     }
     if (method === 'POST') {
       if (tname === 'checklist_items' && !device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy for table "checklist_items"'))
+      if (tname === 'areas' && !device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy for table "areas"'))
+      if (tname === 'pins' && !device.is_admin && !['hazard', 'other'].includes(body.type)) return route.fulfill(pgErr('42501', 'new row violates row-level security policy for table "pins"'))
+      if (tname === 'stand_claims') {
+        const r = Array.isArray(body) ? body[0] : body
+        if (rows.find((c) => c.stand_id === r.stand_id && c.date === r.date && c.sit === r.sit && !c.released_at)) return route.fulfill(pgErr('23505', 'duplicate key value violates unique constraint "stand_claims_unique_live_idx"'))
+      }
       const inserted = []
       for (const r of (Array.isArray(body) ? body : [body])) {
         const row = { id: tname[0] + (rows.length + 1), created_by: device.member_id, created_at: new Date().toISOString(), updated_at: 'x', deleted_at: null, left_at: new Date().toISOString(), notes: null, note: null, ...r }
@@ -180,15 +196,23 @@ async function run(width, standalone) {
     ...devices['iPhone 13'],
     viewport: { width, height: width === 375 ? 667 : 932 },
     serviceWorkers: 'block',
+    geolocation: { latitude: 29.2340, longitude: -97.6340 },
+    permissions: ['geolocation'],
   })
   if (standalone) await ctx.addInitScript(() => { Object.defineProperty(navigator, 'standalone', { get: () => true }) })
   const page = await ctx.newPage()
+  globalThis.__page = page
+  globalThis.__browser = browser
   page.on('pageerror', (e) => { console.error('PAGE ERROR', e); process.exitCode = 1 })
+  page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.error('CONSOLE', m.type(), m.text().slice(0, 300)) })
+  page.on('requestfailed', (r) => console.error('REQ FAILED', r.url().slice(0, 120), r.failure()?.errorText))
   await page.route('https://mock.supabase.co/**', mock)
+  await page.route('https://server.arcgisonline.com/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: TILE }))
   device = { member_id: null, is_admin: false }
   secrets = { code: 'deer-camp', pin: '4321' }
   members = seedMembers()
   events = seedEvents(); attendees = []; checkouts = []; checklist = seedChecklist()
+  pins = seedPins(); areas = []; claims = []
 
   await page.goto(BASE)
   if (!standalone) {
@@ -215,7 +239,7 @@ async function run(width, standalone) {
   await page.getByText('Sighting').waitFor()
   await shot(page, `${tag}-5b-add`)
   await page.getByText('Close', { exact: true }).click()
-  await page.getByText('1234 County Road 100').waitFor()
+  await page.getByText('1932 CR 211').waitFor()
 
   // Calendar: exclusive overlap blocked, inclusive warns, I'm in with a note
   await page.getByRole('link', { name: 'Calendar' }).click()
@@ -257,6 +281,42 @@ async function run(width, standalone) {
   assert(checkouts.length === 1 && checkouts[0].all_done === false, 'checkout saved')
   await page.getByRole('button', { name: 'Back home' }).click()
   await page.getByText('Last out:').waitFor()
+
+  // Stands: claim, see it on Home, release
+  await page.getByRole('link', { name: 'Stands' }).click()
+  await page.getByText('Swipe sideways').waitFor()
+  await shot(page, `${tag}-19-stands`)
+  const openCell = page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first()
+  await openCell.click()
+  await page.getByLabel('Note (optional)').fill('Bringing my nephew')
+  await page.getByRole('button', { name: 'Claim stand' }).click()
+  await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).first().waitFor()
+  assert(claims.length === 1 && claims[0].note === 'Bringing my nephew', 'claim saved')
+  await shot(page, `${tag}-20-stands-claimed`)
+  await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).first().click()
+  await page.getByText('You have this sit.').waitFor()
+  await page.getByRole('button', { name: 'Release my claim' }).click()
+  await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first().waitFor()
+  assert(claims[0].released_at, 'claim released')
+
+  // Map as a member: pins render, pin sheet, only hazard/other offered
+  await page.getByRole('link', { name: 'Map' }).click()
+  await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
+  await page.waitForTimeout(500)
+  await shot(page, `${tag}-21-map`)
+  await page.locator('.pin-icon', { hasText: 'Box Blind' }).locator('.pin').click()
+  await page.getByText('Coming sits').waitFor()
+  await shot(page, `${tag}-22-pin-sheet`)
+  await page.getByText('Close', { exact: true }).click()
+  await page.getByRole('button', { name: 'Add to the map' }).click()
+  await page.getByText('Put a pin somewhere on the map').click()
+  await page.getByRole('button', { name: 'Put pin here' }).click()
+  await page.getByRole('button', { name: /Hazard$/ }).waitFor()
+  assert((await page.getByRole('button', { name: /^S Stand$/ }).count()) === 0, 'member cannot pick Stand')
+  await page.getByLabel('Name').fill('Cut fence')
+  await page.getByRole('button', { name: 'Add pin' }).click()
+  await page.locator('.pin-label', { hasText: 'Cut fence' }).waitFor()
+  assert(pins.find((p) => p.name === 'Cut fence')?.type === 'hazard', 'hazard pin added')
 
   // More: unlock admin
   await page.getByRole('link', { name: 'More' }).click()
@@ -318,8 +378,30 @@ async function run(width, standalone) {
   assert(settings.emergency_extra === 'Sheriff: (325) 247-5767', 'settings saved')
   await shot(page, `${tag}-18-admin-emergency`)
 
+  // Map as admin: import a GeoJSON boundary, drop a stand at my location
+  await page.getByRole('link', { name: 'Map' }).click()
+  await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
+  await page.getByRole('button', { name: 'Add to the map' }).click()
+  await page.getByText('Import a KML or GeoJSON file').click()
+  const geojson = JSON.stringify({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: { name: 'Parcel' }, geometry: { type: 'Polygon', coordinates: [[[-97.640, 29.228], [-97.628, 29.228], [-97.628, 29.242], [-97.640, 29.242], [-97.640, 29.228]]] } }] })
+  await page.getByTestId('import-file').setInputFiles({ name: 'parcel.geojson', mimeType: 'application/json', buffer: Buffer.from(geojson) })
+  await page.getByText(/Parcel · about \d+ acres \(boundary\)/).waitFor()
+  await page.getByRole('button', { name: 'Import shape' }).click()
+  await page.waitForTimeout(600)
+  assert(areas.length === 1 && areas[0].is_boundary === true && areas[0].name === 'Property', 'boundary imported')
+  await shot(page, `${tag}-23-map-boundary`)
+  await page.getByRole('button', { name: 'Add to the map' }).click()
+  await page.getByText('Drop a pin at my location').click()
+  await page.getByRole('button', { name: /^S Stand$/ }).waitFor()
+  await page.getByLabel('Name').fill('Tank Blind')
+  await page.getByRole('button', { name: 'Ground blind' }).click()
+  await page.getByRole('button', { name: 'Add pin' }).click()
+  await page.locator('.pin-label', { hasText: 'Tank Blind' }).waitFor()
+  const tb = pins.find((p) => p.name === 'Tank Blind')
+  assert(tb && tb.type === 'stand' && tb.stand_type === 'ground_blind' && Math.abs(tb.lat - 29.234) < 0.001, 'stand dropped at GPS')
+  await page.getByRole('link', { name: 'More' }).click()
+
   // Switch person
-  await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('button', { name: 'Switch person' }).click()
   await page.getByText('Admin mode will turn off').waitFor()
   await page.getByRole('button', { name: 'Uncle Mike' }).click()
@@ -338,5 +420,14 @@ async function run(width, standalone) {
   console.log(`OK ${tag} (${calls.length} requests)`)
 }
 
-await run(375, false)
-await run(430, true)
+for (const [w, st] of [[375, false], [430, true]]) {
+  try {
+    await run(w, st)
+  } catch (err) {
+    console.error(err.message.split('\n')[0])
+    await globalThis.__page?.screenshot({ path: `${OUT}/FAIL.png` }).catch(() => {})
+    await globalThis.__browser?.close().catch(() => {})
+    process.exitCode = 1
+    break
+  }
+}

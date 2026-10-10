@@ -7,9 +7,11 @@ import { EventListRow } from '../components/EventListRow'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import type { CheckoutRow, EventRow } from '../lib/database.types'
-import { fmtDateTime, todayISO } from '../lib/dates'
+import { loadClaims, SIT_LABEL, weekendDates } from '../lib/claims'
+import type { CheckoutRow, EventRow, PinRow, StandClaimRow } from '../lib/database.types'
+import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { loadEvents } from '../lib/events'
+import { supabase } from '../lib/supabase'
 import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe, useSession } from '../lib/session'
@@ -25,17 +27,25 @@ export function Home() {
   const [addOpen, setAddOpen] = useState(false)
   const [events, setEvents] = useState<EventRow[] | null>(null)
   const [last, setLast] = useState<CheckoutRow | null>(null)
+  const [weekend, setWeekend] = useState<{ days: string[]; claims: StandClaimRow[]; stands: PinRow[] } | null>(null)
 
   const reload = useCallback(async () => {
-    const [ev, co] = await Promise.all([loadEvents(todayISO()).catch(() => null), loadLastCheckout()])
+    const days = weekendDates()
+    const [ev, co, cl, st] = await Promise.all([
+      loadEvents(todayISO()).catch(() => null),
+      loadLastCheckout(),
+      days.length ? loadClaims(days[0], days[days.length - 1]).catch(() => []) : Promise.resolve([]),
+      supabase.from('pins').select('*').eq('type', 'stand').is('deleted_at', null).then((r) => r.data ?? []),
+    ])
     if (ev) setEvents(ev.slice(0, 4))
     setLast(co)
+    setWeekend({ days, claims: cl, stands: st })
   }, [])
 
   useEffect(() => {
     void reload()
   }, [reload])
-  useRealtime(['events', 'checkouts'], reload)
+  useRealtime(['events', 'checkouts', 'stand_claims'], reload)
 
   return (
     <Screen title={greeting(me.name)}>
@@ -46,6 +56,39 @@ export function Home() {
       )}
 
       <div className="space-y-4">
+        <Card title="This weekend's stands">
+          {!weekend ? (
+            <p className="text-sm text-ink-muted">Loading…</p>
+          ) : weekend.claims.length === 0 ? (
+            <p className="text-sm text-ink-muted">Nobody has claimed a stand yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {weekend.days.map((d) => {
+                const dayClaims = weekend.claims.filter((c) => c.date === d)
+                if (dayClaims.length === 0) return null
+                return (
+                  <div key={d}>
+                    <div className="text-sm font-bold text-pine-950">{fmtDate(d)}</div>
+                    {(['am', 'pm'] as const).map((sit) => {
+                      const list = dayClaims.filter((c) => c.sit === sit)
+                      if (list.length === 0) return null
+                      return (
+                        <div key={sit} className="flex gap-2 text-sm text-ink">
+                          <span className="w-8 shrink-0 font-semibold text-ink-muted">{SIT_LABEL[sit]}</span>
+                          <span>{list.map((c) => `${weekend.stands.find((s) => s.id === c.stand_id)?.name ?? 'Stand'} · ${nameOf(c.member_id)}`).join(', ')}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <div className="mt-3">
+            <Button variant="secondary" onClick={() => navigate('/stands')}>Claim a stand</Button>
+          </div>
+        </Card>
+
         <section>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-pine-800">Coming up</h2>
@@ -87,7 +130,7 @@ export function Home() {
         </Card>
 
         <p className="px-1 text-xs text-ink-muted">
-          Coming in later phases: this weekend's stands, the latest log entries, feeders due, your to-dos, and low supplies.
+          Coming in later phases: the latest log entries, feeders due, your to-dos, and low supplies.
         </p>
       </div>
 
@@ -112,6 +155,24 @@ export function Home() {
               className="tap flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-base font-semibold text-ink ring-1 ring-tan-200 active:bg-tan-100"
             >
               Trip, work day, or date
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              onClick={() => { setAddOpen(false); navigate('/stands') }}
+              className="tap flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-base font-semibold text-ink ring-1 ring-tan-200 active:bg-tan-100"
+            >
+              Claim a stand
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              onClick={() => { setAddOpen(false); navigate('/map?drop=1') }}
+              className="tap flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-base font-semibold text-ink ring-1 ring-tan-200 active:bg-tan-100"
+            >
+              Pin at my location
             </button>
           </li>
           <li>

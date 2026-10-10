@@ -19,24 +19,24 @@ update public.members set is_active = false where id = '00000000-0000-4000-8000-
 
 -- Stands (approximate coordinates just south of Smiley, TX, Gonzales County; replace with real pins)
 insert into public.pins (id, type, name, stand_type, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000101', 'stand', 'North Ladder',   'ladder',       29.2410, -97.6330, 'Faces the creek bottom', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000102', 'stand', 'Box Blind',      'box_blind',    29.2386, -97.6291, 'Overlooks the big food plot', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000103', 'stand', 'Tank Blind',     'ground_blind', 29.2357, -97.6367, 'Ground blind by the stock tank', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000104', 'stand', 'South Ladder',   'ladder',       29.2329, -97.6313, null, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000101', 'stand', 'North Ladder',   'ladder',       29.2392, -97.6360, 'Faces the creek bottom', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000102', 'stand', 'Box Blind',      'box_blind',    29.2368, -97.6321, 'Overlooks the big food plot', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000103', 'stand', 'Tank Blind',     'ground_blind', 29.2339, -97.6397, 'Ground blind by the stock tank', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000104', 'stand', 'South Ladder',   'ladder',       29.2311, -97.6343, null, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- Feeders
 insert into public.pins (id, type, name, fill_interval_days, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 29.2391, -97.6299, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 29.2418, -97.6344, 'Protein', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 29.2323, -97.6319, null, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 29.2373, -97.6329, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 29.2400, -97.6374, 'Protein', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 29.2305, -97.6349, null, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- Other pins
 insert into public.pins (id, type, name, lat, lng, created_by) values
-  ('00000000-0000-4000-8000-000000000301', 'camera', 'Plot Cam',       29.2393, -97.6297, '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000302', 'gate',   'Front Gate',     29.2298, -97.6279, '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2353, -97.6369, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000301', 'camera', 'Plot Cam',       29.2375, -97.6327, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000302', 'gate',   'Front Gate',     29.2310, -97.6350, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2335, -97.6399, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- A couple of fills so the feeder colors mean something
@@ -81,9 +81,9 @@ on conflict (key) do nothing;
 -- Emergency info (admin edits this in the app under More > Emergency info)
 insert into public.settings (key, value) values
   ('emergency_address',    '1932 CR 211, Smiley, TX 78159'),
-  ('emergency_directions', 'Placeholder. Admin: put the real gate directions here (More > Emergency info).'),
-  ('emergency_lat',        '29.2358'),
-  ('emergency_lng',        '-97.6320'),
+  ('emergency_directions', 'Gate is on CR 211. Admin: add landmarks here (More > Emergency info).'),
+  ('emergency_lat',        '29.2310'),
+  ('emergency_lng',        '-97.6350'),
   ('emergency_extra',      'Placeholder. Nearest ER and the Gonzales County Sheriff number go here.')
 on conflict (key) do nothing;
 
