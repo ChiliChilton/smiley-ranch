@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#1f3d2b"/>
+  <rect width="512" height="512" fill="#8c3d1f"/>
   <!-- pine tree -->
-  <polygon points="256,72 196,172 230,172 180,252 222,252 160,340 352,340 290,252 332,252 282,172 316,172" fill="#d9c7a3"/>
-  <rect x="240" y="340" width="32" height="40" fill="#d9c7a3"/>
+  <polygon points="256,72 196,172 230,172 180,252 222,252 160,340 352,340 290,252 332,252 282,172 316,172" fill="#e9dcc5"/>
+  <rect x="240" y="340" width="32" height="40" fill="#e9dcc5"/>
   <!-- 40 -->
-  <text x="256" y="462" text-anchor="middle" font-family="Inter, DejaVu Sans, sans-serif" font-weight="700" font-size="104" fill="#f3efe4">40</text>
+  <text x="256" y="462" text-anchor="middle" font-family="Inter, DejaVu Sans, sans-serif" font-weight="700" font-size="104" fill="#f8f2e8">40</text>
 </svg>

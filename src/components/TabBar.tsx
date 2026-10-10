@@ -23,7 +23,7 @@ export function TabBar() {
               end={to === '/'}
               className={({ isActive }) =>
                 `flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${
-                  isActive ? 'text-pine-900' : 'text-ink-muted'
+                  isActive ? 'text-clay-900' : 'text-ink-muted'
                 }`
               }
             >
@@ -73,7 +73,7 @@ function MapIcon({ active }: IconProps) {
   return (
     <svg {...base(active)}>
       <path d="M9 4l6 2 6-2v14l-6 2-6-2-6 2V6z" />
-      <path d="M9 4v14M15 6v14" stroke={active ? '#f3efe4' : 'currentColor'} />
+      <path d="M9 4v14M15 6v14" stroke={active ? '#f8f2e8' : 'currentColor'} />
     </svg>
   )
 }
@@ -81,7 +81,7 @@ function CalendarIcon({ active }: IconProps) {
   return (
     <svg {...base(active)}>
       <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 10h18" stroke={active ? '#f3efe4' : 'currentColor'} />
+      <path d="M3 10h18" stroke={active ? '#f8f2e8' : 'currentColor'} />
       <path d="M8 3v4M16 3v4" />
     </svg>
   )

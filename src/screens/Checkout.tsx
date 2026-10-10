@@ -82,7 +82,7 @@ export function Checkout() {
     return (
       <Screen title="Before you leave" back="/">
         <Card>
-          <p className="text-xl font-bold text-pine-950">You're checked out.</p>
+          <p className="text-xl font-bold text-clay-950">You're checked out.</p>
           <p className="mt-1 text-ink-muted">{fmtDateTime(saved.left_at)}</p>
           {missed.length === 0 ? (
             <Note kind="ok" className="mt-3">Everything on the list is done. Safe travels.</Note>
@@ -113,7 +113,7 @@ export function Checkout() {
       )}
 
       {!items ? (
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : items.length === 0 ? (
         <Note>The admin hasn't set up the list yet. {me.is_admin && <button type="button" className="font-semibold underline" onClick={() => navigate('/more/checklist')}>Set it up</button>}</Note>
       ) : (
@@ -127,12 +127,12 @@ export function Checkout() {
                   onClick={() => toggle(i.id)}
                   aria-pressed={on}
                   className={`tap flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-base ring-1 ${
-                    on ? 'bg-pine-100 ring-pine-600' : 'bg-white ring-tan-200'
+                    on ? 'bg-clay-100 ring-clay-600' : 'bg-white ring-tan-200'
                   }`}
                 >
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
-                      on ? 'border-pine-900 bg-pine-900 text-cream' : 'border-tan-600 bg-white'
+                      on ? 'border-clay-900 bg-clay-900 text-cream' : 'border-tan-600 bg-white'
                     }`}
                     aria-hidden
                   >
@@ -142,7 +142,7 @@ export function Checkout() {
                       </svg>
                     )}
                   </span>
-                  <span className={`font-semibold ${on ? 'text-pine-900' : 'text-ink'}`}>{i.title}</span>
+                  <span className={`font-semibold ${on ? 'text-clay-900' : 'text-ink'}`}>{i.title}</span>
                 </button>
               </li>
             )

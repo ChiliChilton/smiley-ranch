@@ -47,7 +47,7 @@ export function More() {
     <Screen title="More">
       <div className="space-y-4">
         <Card title="You">
-          <p className="text-lg font-bold text-pine-950">{me.name}</p>
+          <p className="text-lg font-bold text-clay-950">{me.name}</p>
           <p className="mb-3 text-sm text-ink-muted">Everything you post shows this name.</p>
           <Button variant="secondary" onClick={() => navigate('/more/switch')}>
             Switch person

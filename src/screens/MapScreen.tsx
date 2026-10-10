@@ -269,7 +269,7 @@ export default function MapScreen() {
       <Header
         title="Map"
         right={
-          <button type="button" onClick={locateMe} aria-label="My location" className="tap flex items-center justify-center rounded-lg px-2 active:bg-pine-800">
+          <button type="button" onClick={locateMe} aria-label="My location" className="tap flex items-center justify-center rounded-lg px-2 active:bg-clay-800">
             {locating ? <Spinner small /> : <LocateIcon />}
           </button>
         }
@@ -323,7 +323,7 @@ export default function MapScreen() {
 
         {loading && (
           <div className="absolute inset-x-0 top-3 z-[1001] flex justify-center">
-            <span className="rounded-full bg-cream/90 px-3 py-1 text-sm text-pine-900"><Spinner small /> Loading…</span>
+            <span className="rounded-full bg-cream/90 px-3 py-1 text-sm text-clay-900"><Spinner small /> Loading…</span>
           </div>
         )}
         {error && (
@@ -337,7 +337,7 @@ export default function MapScreen() {
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label="Add to the map"
-            className="absolute bottom-8 right-4 z-[1001] flex h-16 w-16 items-center justify-center rounded-full bg-pine-900 text-cream shadow-lg active:bg-pine-800"
+            className="absolute bottom-8 right-4 z-[1001] flex h-16 w-16 items-center justify-center rounded-full bg-clay-900 text-cream shadow-lg active:bg-clay-800"
           >
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
               <path d="M12 5v14M5 12h14" />
@@ -504,8 +504,8 @@ function AreasLayer({
       if (!isAreaGeometry(a.geometry)) continue
       const layer = L.geoJSON(a.geometry as never, {
         style: a.is_boundary
-          ? { color: '#f3efe4', weight: 3, dashArray: '8 6', fill: false }
-          : { color: a.color ?? '#d9c7a3', weight: 2, fillColor: a.color ?? '#d9c7a3', fillOpacity: 0.18 },
+          ? { color: '#f8f2e8', weight: 3, dashArray: '8 6', fill: false }
+          : { color: a.color ?? '#dcc9aa', weight: 2, fillColor: a.color ?? '#dcc9aa', fillOpacity: 0.18 },
       })
       layer.on('click', () => clickRef.current(a))
       if (!a.is_boundary) layer.bindTooltip(a.name, { permanent: true, direction: 'center', className: 'area-label' })
@@ -556,9 +556,9 @@ function DrawTool({ active, onCreate }: { active: boolean; onCreate: (g: AreaGeo
       snappable: false,
       allowSelfIntersection: false,
       finishOn: null,
-      templineStyle: { color: '#f3efe4', weight: 2 },
-      hintlineStyle: { color: '#f3efe4', dashArray: '6 6', weight: 2 },
-      pathOptions: { color: '#f3efe4', weight: 3, fillColor: '#d9c7a3', fillOpacity: 0.2 },
+      templineStyle: { color: '#f8f2e8', weight: 2 },
+      hintlineStyle: { color: '#f8f2e8', dashArray: '6 6', weight: 2 },
+      pathOptions: { color: '#f8f2e8', weight: 3, fillColor: '#dcc9aa', fillOpacity: 0.2 },
     })
     return () => {
       map.off('pm:create', handler as L.LeafletEventHandlerFn)
@@ -662,7 +662,7 @@ function PinSheet({
     <Sheet open={true} onClose={onClose} title={pin.name}>
       <div className="mb-3 flex items-center gap-2">
         <span className="pin" style={{ background: t.color, width: 26, height: 26, fontSize: 12 }}>{t.glyph}</span>
-        <span className="font-semibold text-pine-950">{t.label}{pin.stand_type ? ` · ${STAND_TYPES[pin.stand_type]}` : ''}</span>
+        <span className="font-semibold text-clay-950">{t.label}{pin.stand_type ? ` · ${STAND_TYPES[pin.stand_type]}` : ''}</span>
         {pin.type === 'feeder' && pin.fill_interval_days && <span className="text-sm text-ink-muted">· fill every {pin.fill_interval_days} days</span>}
       </div>
       {pin.notes && <p className="mb-3 whitespace-pre-wrap text-ink">{pin.notes}</p>}
@@ -672,7 +672,7 @@ function PinSheet({
 
       {pin.type === 'stand' && (
         <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
-          <div className="mb-1 text-xs font-bold uppercase tracking-wide text-pine-800">Coming sits</div>
+          <div className="mb-1 text-xs font-bold uppercase tracking-wide text-clay-800">Coming sits</div>
           {claims === null ? (
             <span className="text-sm text-ink-muted">Loading…</span>
           ) : claims.length === 0 ? (
@@ -688,7 +688,7 @@ function PinSheet({
       )}
 
       <div className="flex flex-wrap gap-2">
-        <a href={mapsLink(String(pin.lat), String(pin.lng), pin.name)} target="_blank" rel="noreferrer" className="tap inline-flex items-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-pine-950 active:bg-tan-300">
+        <a href={mapsLink(String(pin.lat), String(pin.lng), pin.name)} target="_blank" rel="noreferrer" className="tap inline-flex items-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-clay-950 active:bg-tan-300">
           Directions
         </a>
         {canEdit && (
@@ -724,7 +724,7 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
     <form onSubmit={(e) => { e.preventDefault(); onSave(v) }} className="space-y-3">
       <TextInput label="Name" name="pinName" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="North ladder, cut fence, hog trap…" maxLength={80} autoFocus={!pin} />
       <div>
-        <span className="mb-1 block text-sm font-semibold text-pine-900">What is it</span>
+        <span className="mb-1 block text-sm font-semibold text-clay-900">What is it</span>
         <div className="grid grid-cols-4 gap-2">
           {allowed.map((t) => (
             <button
@@ -732,7 +732,7 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
               type="button"
               onClick={() => setV({ ...v, type: t })}
               aria-pressed={v.type === t}
-              className={`tap flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-xs font-bold ring-1 ${v.type === t ? 'bg-pine-900 text-cream ring-pine-900' : 'bg-white text-pine-950 ring-tan-500'}`}
+              className={`tap flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-xs font-bold ring-1 ${v.type === t ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`}
             >
               <span className="pin" style={{ background: PIN_TYPES[t].color, width: 24, height: 24, fontSize: 11 }}>{PIN_TYPES[t].glyph}</span>
               {PIN_TYPES[t].label}
@@ -742,10 +742,10 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
       </div>
       {v.type === 'stand' && (
         <div>
-          <span className="mb-1 block text-sm font-semibold text-pine-900">Stand type</span>
+          <span className="mb-1 block text-sm font-semibold text-clay-900">Stand type</span>
           <div className="grid grid-cols-3 gap-2">
             {(Object.keys(STAND_TYPES) as StandType[]).map((st) => (
-              <button key={st} type="button" onClick={() => setV({ ...v, stand_type: st })} aria-pressed={v.stand_type === st} className={`tap rounded-xl px-2 py-2 text-sm font-bold ring-1 ${v.stand_type === st ? 'bg-pine-900 text-cream ring-pine-900' : 'bg-white text-pine-950 ring-tan-500'}`}>
+              <button key={st} type="button" onClick={() => setV({ ...v, stand_type: st })} aria-pressed={v.stand_type === st} className={`tap rounded-xl px-2 py-2 text-sm font-bold ring-1 ${v.stand_type === st ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`}>
                 {STAND_TYPES[st]}
               </button>
             ))}
@@ -825,7 +825,7 @@ function ImportForm({ busy, hasBoundary, onImport }: { busy: boolean; hasBoundar
         Export the parcel from Google Earth, the appraisal district map, or any GIS app as KML or GeoJSON.
         {!hasBoundary && ' The first shape becomes the property boundary.'}
       </p>
-      <label className="tap flex w-full cursor-pointer items-center justify-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-pine-950 active:bg-tan-300">
+      <label className="tap flex w-full cursor-pointer items-center justify-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-clay-950 active:bg-tan-300">
         Choose file
         <input type="file" accept=".kml,.geojson,.json,application/json,application/vnd.google-earth.kml+xml" className="sr-only" onChange={pick} data-testid="import-file" />
       </label>

@@ -11,12 +11,12 @@ export function TextInput({ label, hint, error, right, id, className = '', ...re
   const inputId = id ?? rest.name
   return (
     <label htmlFor={inputId} className="block">
-      {label && <span className="mb-1 block text-sm font-semibold text-pine-900">{label}</span>}
+      {label && <span className="mb-1 block text-sm font-semibold text-clay-900">{label}</span>}
       <span className="relative block">
         <input
           id={inputId}
           {...rest}
-          className={`tap w-full rounded-xl border bg-white px-4 py-3 text-ink outline-none placeholder:text-ink-muted/60 focus:border-pine-700 focus:ring-2 focus:ring-pine-700/30 ${
+          className={`tap w-full rounded-xl border bg-white px-4 py-3 text-ink outline-none placeholder:text-ink-muted/60 focus:border-clay-700 focus:ring-2 focus:ring-clay-700/30 ${
             error ? 'border-alert' : 'border-tan-500'
           } ${right ? 'pr-12' : ''} ${className}`}
         />
@@ -37,12 +37,12 @@ export function TextArea({ label, hint, id, className = '', ...rest }: AreaProps
   const inputId = id ?? rest.name
   return (
     <label htmlFor={inputId} className="block">
-      {label && <span className="mb-1 block text-sm font-semibold text-pine-900">{label}</span>}
+      {label && <span className="mb-1 block text-sm font-semibold text-clay-900">{label}</span>}
       <textarea
         id={inputId}
         rows={3}
         {...rest}
-        className={`w-full rounded-xl border border-tan-500 bg-white px-4 py-3 text-ink outline-none placeholder:text-ink-muted/60 focus:border-pine-700 focus:ring-2 focus:ring-pine-700/30 ${className}`}
+        className={`w-full rounded-xl border border-tan-500 bg-white px-4 py-3 text-ink outline-none placeholder:text-ink-muted/60 focus:border-clay-700 focus:ring-2 focus:ring-clay-700/30 ${className}`}
       />
       {hint && <span className="mt-1 block text-sm text-ink-muted">{hint}</span>}
     </label>

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 export function Card({ title, children, className = '' }: { title?: string; children: ReactNode; className?: string }) {
   return (
     <section className={`rounded-2xl bg-white p-4 shadow-sm ring-1 ring-tan-200 ${className}`}>
-      {title && <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-pine-800">{title}</h2>}
+      {title && <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-clay-800">{title}</h2>}
       {children}
     </section>
   )

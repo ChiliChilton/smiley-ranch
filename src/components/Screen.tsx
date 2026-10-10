@@ -33,7 +33,7 @@ export function Header({ title, back, right }: Pick<Props, 'title' | 'back' | 'r
   const navigate = useNavigate()
   return (
       <header
-        className="sticky top-0 z-10 bg-pine-900 text-cream"
+        className="sticky top-0 z-10 bg-clay-900 text-cream"
         style={{ paddingTop: 'var(--safe-top)' }}
       >
         <div className="flex h-14 items-center gap-1 px-2">
@@ -41,7 +41,7 @@ export function Header({ title, back, right }: Pick<Props, 'title' | 'back' | 'r
             <button
               type="button"
               onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))}
-              className="tap -ml-1 flex items-center rounded-lg px-2 text-base font-medium active:bg-pine-800"
+              className="tap -ml-1 flex items-center rounded-lg px-2 text-base font-medium active:bg-clay-800"
               aria-label="Back"
             >
               <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden>

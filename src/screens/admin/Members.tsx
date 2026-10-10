@@ -71,7 +71,7 @@ export function Members() {
       </Card>
 
       {!members ? (
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : (
         <>
           <Card title={`Active (${active.length})`}>

@@ -4,14 +4,14 @@ import { supabase } from './supabase'
 export const KIND: Record<EventKind, { label: string; bar: string; badge: string; help: string }> = {
   inclusive: {
     label: 'Come join',
-    bar: 'bg-pine-600',
-    badge: 'bg-pine-100 text-pine-900',
+    bar: 'bg-sage-600',
+    badge: 'bg-sage-100 text-sage-900',
     help: 'Anyone can come. Tap "I\'m in" to say you\'re going.',
   },
   exclusive: {
     label: 'Just them',
-    bar: 'bg-tan-700',
-    badge: 'bg-tan-200 text-tan-700',
+    bar: 'bg-clay-900',
+    badge: 'bg-clay-100 text-clay-900',
     help: 'They have the place to themselves these dates.',
   },
   info: {

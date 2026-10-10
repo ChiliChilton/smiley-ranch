@@ -68,7 +68,7 @@ export function Home() {
                 if (dayClaims.length === 0) return null
                 return (
                   <div key={d}>
-                    <div className="text-sm font-bold text-pine-950">{fmtDate(d)}</div>
+                    <div className="text-sm font-bold text-clay-950">{fmtDate(d)}</div>
                     {(['am', 'pm'] as const).map((sit) => {
                       const list = dayClaims.filter((c) => c.sit === sit)
                       if (list.length === 0) return null
@@ -91,8 +91,8 @@ export function Home() {
 
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-pine-800">Coming up</h2>
-            <button type="button" onClick={() => navigate('/calendar')} className="tap px-2 text-sm font-semibold text-pine-800">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-clay-800">Coming up</h2>
+            <button type="button" onClick={() => navigate('/calendar')} className="tap px-2 text-sm font-semibold text-clay-800">
               Calendar
             </button>
           </div>
@@ -138,7 +138,7 @@ export function Home() {
         type="button"
         onClick={() => setAddOpen(true)}
         aria-label="Add"
-        className="fixed right-4 z-20 flex h-16 w-16 items-center justify-center rounded-full bg-pine-900 text-cream shadow-lg active:bg-pine-800"
+        className="fixed right-4 z-20 flex h-16 w-16 items-center justify-center rounded-full bg-clay-900 text-cream shadow-lg active:bg-clay-800"
         style={{ bottom: 'calc(var(--tab-bar-height) + var(--safe-bottom) + 16px)' }}
       >
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>

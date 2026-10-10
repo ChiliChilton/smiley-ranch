@@ -51,12 +51,12 @@ export function SwitchPerson() {
   return (
     <Screen title="Switch person" back="/more">
       <p className="mb-4 text-ink-muted">
-        You're <strong className="text-pine-950">{me.name}</strong>. Pick who's using this phone now.
+        You're <strong className="text-clay-950">{me.name}</strong>. Pick who's using this phone now.
         {me.is_admin && ' Admin mode will turn off.'}
       </p>
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!members ? (
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : (
         <ul className="space-y-2">
           {members

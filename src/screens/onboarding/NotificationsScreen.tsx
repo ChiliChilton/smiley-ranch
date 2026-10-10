@@ -26,7 +26,7 @@ export function NotificationsScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <Centered>
-      <h1 className="text-2xl font-bold text-pine-950">Notifications</h1>
+      <h1 className="text-2xl font-bold text-clay-950">Notifications</h1>
       <p className="mb-4 text-ink-muted">Optional. You pick what you get, later in Settings.</p>
 
       <ul className="mb-6 space-y-2 rounded-2xl bg-white p-4 ring-1 ring-tan-200 text-ink">

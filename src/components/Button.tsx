@@ -3,10 +3,10 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 
 const styles: Record<Variant, string> = {
-  primary: 'bg-pine-900 text-cream active:bg-pine-800 disabled:bg-pine-900/40',
-  secondary: 'bg-tan-200 text-pine-950 active:bg-tan-300 disabled:opacity-50',
+  primary: 'bg-clay-900 text-cream active:bg-clay-800 disabled:bg-clay-900/40',
+  secondary: 'bg-tan-200 text-clay-950 active:bg-tan-300 disabled:opacity-50',
   danger: 'bg-alert text-white active:opacity-90 disabled:opacity-50',
-  ghost: 'bg-transparent text-pine-800 underline-offset-4 active:bg-tan-100 disabled:opacity-50',
+  ghost: 'bg-transparent text-clay-800 underline-offset-4 active:bg-tan-100 disabled:opacity-50',
 }
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {

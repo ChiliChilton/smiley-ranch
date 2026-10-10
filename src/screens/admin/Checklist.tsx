@@ -71,7 +71,7 @@ export function Checklist() {
       </Card>
 
       {!items ? (
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : items.length === 0 ? (
         <Note>Nothing on the list yet.</Note>
       ) : (
@@ -82,10 +82,10 @@ export function Checklist() {
                 <span className="w-6 shrink-0 text-sm font-bold text-tan-700">{i + 1}.</span>
                 <span className="truncate font-semibold text-ink">{it.title}</span>
               </button>
-              <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)} className="tap rounded-lg text-pine-900 disabled:opacity-25 active:bg-tan-100">
+              <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)} className="tap rounded-lg text-clay-900 disabled:opacity-25 active:bg-tan-100">
                 <Chev up />
               </button>
-              <button type="button" aria-label="Move down" disabled={i === items.length - 1} onClick={() => move(i, 1)} className="tap rounded-lg text-pine-900 disabled:opacity-25 active:bg-tan-100">
+              <button type="button" aria-label="Move down" disabled={i === items.length - 1} onClick={() => move(i, 1)} className="tap rounded-lg text-clay-900 disabled:opacity-25 active:bg-tan-100">
                 <Chev />
               </button>
             </li>

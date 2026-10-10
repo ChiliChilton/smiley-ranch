@@ -80,7 +80,7 @@ export function EventDetail() {
   if (!event) {
     return (
       <Screen title="Calendar" back="/calendar">
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       </Screen>
     )
   }
@@ -95,7 +95,7 @@ export function EventDetail() {
       back="/calendar"
       right={
         canEdit ? (
-          <button type="button" onClick={() => navigate(`/calendar/${id}/edit`)} className="tap rounded-lg px-3 font-semibold active:bg-pine-800">
+          <button type="button" onClick={() => navigate(`/calendar/${id}/edit`)} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">
             Edit
           </button>
         ) : undefined
@@ -107,7 +107,7 @@ export function EventDetail() {
           <KindBadge kind={event.kind} mine={isHost} />
           <span className="text-sm text-ink-muted">{live ? 'Happening now' : past ? 'Past' : relativeDay(event.starts_on)}</span>
         </div>
-        <p className="text-xl font-bold text-pine-950">{fmtRange(event.starts_on, event.ends_on)}</p>
+        <p className="text-xl font-bold text-clay-950">{fmtRange(event.starts_on, event.ends_on)}</p>
         <p className="mt-1 text-sm text-ink-muted">
           {event.kind === 'exclusive'
             ? `${isHost ? 'You have' : nameOf(event.created_by) + ' has'} the place these dates.`
@@ -123,7 +123,7 @@ export function EventDetail() {
             <div key={a.member_id}>
               {i > 0 && <Divider />}
               <div className="py-2">
-                <div className="font-semibold text-pine-950">
+                <div className="font-semibold text-clay-950">
                   {nameOf(a.member_id)}
                   {a.member_id === me.member_id && <span className="ml-2 text-xs font-medium text-ink-muted">you</span>}
                 </div>

@@ -45,7 +45,7 @@ Build in this order and stop for review after each phase:
 5. Push notifications, offline outbox, CSV/JSON export, polish
 
 ## Style
-- Earthy and simple: dark green, tan, off-white. Readable in sunlight. Dark mode is optional.
+- Earthy and simple: burnt orange / red dirt, tan, warm off-white. Muted, easy on the eyes, readable in sunlight. Dark mode is optional.
 - Use plain language in the UI. Say "Claim stand," not "Create reservation."
 - Keep components small. No extra libraries without a reason.
 

@@ -32,24 +32,24 @@ export function EmergencyCard() {
         <p className="text-sm text-ink-muted">
           The admin hasn't added the property address yet.{' '}
           {me.is_admin && (
-            <button type="button" className="font-semibold text-pine-900 underline" onClick={() => navigate('/more/emergency')}>
+            <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/more/emergency')}>
               Add it now
             </button>
           )}
         </p>
       ) : (
         <>
-          {info.address && <p className="whitespace-pre-wrap text-lg font-bold leading-snug text-pine-950">{info.address}</p>}
+          {info.address && <p className="whitespace-pre-wrap text-lg font-bold leading-snug text-clay-950">{info.address}</p>}
           {hasGps && <p className="mt-1 font-mono text-sm text-ink">{info.lat}, {info.lng}</p>}
           {info.directions && <p className="mt-2 text-sm text-ink">{info.directions}</p>}
           {info.extra && <p className="mt-2 whitespace-pre-wrap text-sm text-ink-muted">{info.extra}</p>}
           <div className="mt-3 flex flex-wrap gap-2">
             <Button onClick={share}>Share</Button>
-            <a href={smsLink(emergencyText(info))} className="tap inline-flex items-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-pine-950 active:bg-tan-300">
+            <a href={smsLink(emergencyText(info))} className="tap inline-flex items-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-clay-950 active:bg-tan-300">
               Text it
             </a>
             {hasGps && (
-              <a href={mapsLink(info.lat, info.lng)} target="_blank" rel="noreferrer" className="tap inline-flex items-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-pine-950 active:bg-tan-300">
+              <a href={mapsLink(info.lat, info.lng)} target="_blank" rel="noreferrer" className="tap inline-flex items-center rounded-xl bg-tan-200 px-5 py-3 font-semibold text-clay-950 active:bg-tan-300">
                 Open in Maps
               </a>
             )}

@@ -13,7 +13,7 @@ export function InstallScreen({ onContinue }: { onContinue: () => void }) {
       <div className="mb-6 flex items-center gap-3">
         <img src="/icons/icon-192.png" alt="" width={56} height={56} className="rounded-xl" />
         <div>
-          <h1 className="text-2xl font-bold text-pine-950">Back 40</h1>
+          <h1 className="text-2xl font-bold text-clay-950">Back 40</h1>
           <p className="text-ink-muted">Put it on your home screen</p>
         </div>
       </div>
@@ -67,9 +67,9 @@ export function InstallScreen({ onContinue }: { onContinue: () => void }) {
 function Step({ n, title, icon, children }: { n: number; title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <li className="flex gap-4 rounded-2xl bg-white p-4 ring-1 ring-tan-200">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pine-100 text-pine-900">{icon}</div>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-clay-100 text-clay-900">{icon}</div>
       <div>
-        <div className="font-bold text-pine-950">
+        <div className="font-bold text-clay-950">
           <span className="mr-2 text-tan-700">{n}.</span>
           {title}
         </div>

@@ -125,7 +125,7 @@ export function EventForm() {
           />
 
           <fieldset>
-            <legend className="mb-1 block text-sm font-semibold text-pine-900">Who's it for</legend>
+            <legend className="mb-1 block text-sm font-semibold text-clay-900">Who's it for</legend>
             <div className="grid grid-cols-3 gap-2">
               {KIND_ORDER.map((k) => (
                 <button
@@ -134,7 +134,7 @@ export function EventForm() {
                   onClick={() => setKind(k)}
                   aria-pressed={kind === k}
                   className={`tap rounded-xl px-2 py-3 text-sm font-bold ring-1 ${
-                    kind === k ? 'bg-pine-900 text-cream ring-pine-900' : 'bg-white text-pine-950 ring-tan-500'
+                    kind === k ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'
                   }`}
                 >
                   {k === 'exclusive' ? 'Just us' : KIND[k].label}
@@ -171,8 +171,8 @@ export function EventForm() {
 
           {!id && kind !== 'info' && (
             <label className="tap flex items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-tan-200">
-              <input type="checkbox" checked={going} onChange={(e) => setGoing(e.target.checked)} className="h-6 w-6 accent-pine-900" />
-              <span className="font-semibold text-pine-950">I'm going</span>
+              <input type="checkbox" checked={going} onChange={(e) => setGoing(e.target.checked)} className="h-6 w-6 accent-clay-900" />
+              <span className="font-semibold text-clay-950">I'm going</span>
             </label>
           )}
 
@@ -202,7 +202,7 @@ export function EventForm() {
         <ul className="mb-4 space-y-2">
           {(warn ?? []).map((e) => (
             <li key={e.id} className="rounded-xl bg-tan-100 px-4 py-3">
-              <div className="font-bold text-pine-950">{nameOf(e.created_by)} has the place</div>
+              <div className="font-bold text-clay-950">{nameOf(e.created_by)} has the place</div>
               <div className="text-sm text-ink">{fmtRange(e.starts_on, e.ends_on)} · {e.title}</div>
             </li>
           ))}

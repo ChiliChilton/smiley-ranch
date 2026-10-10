@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 type Kind = 'info' | 'error' | 'warn' | 'ok'
 
 const styles: Record<Kind, string> = {
-  info: 'bg-pine-100 text-pine-950',
+  info: 'bg-clay-100 text-clay-950',
   error: 'bg-alert/10 text-alert',
   warn: 'bg-warn/15 text-tan-700',
   ok: 'bg-ok/10 text-ok',

@@ -69,7 +69,7 @@ export function Calendar() {
         <button
           type="button"
           onClick={() => navigate('/calendar/new' + (selected ? `?date=${selected}` : ''))}
-          className="tap flex items-center gap-1 rounded-lg px-3 font-semibold active:bg-pine-800"
+          className="tap flex items-center gap-1 rounded-lg px-3 font-semibold active:bg-clay-800"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
             <path d="M12 5v14M5 12h14" />
@@ -82,17 +82,17 @@ export function Calendar() {
 
       <Card className="mb-4 !p-3">
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={() => move(-1)} aria-label="Previous month" className="tap flex items-center justify-center rounded-lg text-pine-900 active:bg-tan-100">
+          <button type="button" onClick={() => move(-1)} aria-label="Previous month" className="tap flex items-center justify-center rounded-lg text-clay-900 active:bg-tan-100">
             <Arrow dir="left" />
           </button>
           <button
             type="button"
             onClick={() => { const d = new Date(); setCursor({ year: d.getFullYear(), month: d.getMonth() }); setSelected(today) }}
-            className="tap px-2 text-lg font-bold text-pine-950"
+            className="tap px-2 text-lg font-bold text-clay-950"
           >
             {monthName(cursor.year, cursor.month)}
           </button>
-          <button type="button" onClick={() => move(1)} aria-label="Next month" className="tap flex items-center justify-center rounded-lg text-pine-900 active:bg-tan-100">
+          <button type="button" onClick={() => move(1)} aria-label="Next month" className="tap flex items-center justify-center rounded-lg text-clay-900 active:bg-tan-100">
             <Arrow dir="right" />
           </button>
         </div>
@@ -115,11 +115,11 @@ export function Calendar() {
                 onClick={() => setSelected(isSel ? null : iso)}
                 aria-label={fmtDate(iso) + (hits.length ? `, ${hits.length} on the calendar` : '')}
                 aria-pressed={isSel}
-                className={`flex h-14 flex-col items-center rounded-lg pt-1 ${isSel ? 'bg-pine-900 text-cream' : inMonth ? 'text-ink active:bg-tan-100' : 'text-ink-muted/50'}`}
+                className={`flex h-14 flex-col items-center rounded-lg pt-1 ${isSel ? 'bg-clay-900 text-cream' : inMonth ? 'text-ink active:bg-tan-100' : 'text-ink-muted/50'}`}
               >
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
-                    isToday && !isSel ? 'bg-tan-300 text-pine-950' : ''
+                    isToday && !isSel ? 'bg-tan-300 text-clay-950' : ''
                   }`}
                 >
                   {Number(iso.slice(8))}
@@ -145,7 +145,7 @@ export function Calendar() {
       </Card>
 
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-pine-800">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-clay-800">
           {selected ? fmtDate(selected) : 'Coming up'}
         </h2>
         {selected && (
@@ -156,7 +156,7 @@ export function Calendar() {
       </div>
 
       {!events ? (
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : listed.length === 0 ? (
         <Card>
           <p className="text-sm text-ink-muted">{selected ? 'Nothing on this day.' : 'Nothing coming up.'}</p>

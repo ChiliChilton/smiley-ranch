@@ -8,7 +8,7 @@ export function InactiveScreen({ name }: { name: string | null }) {
   const { refresh } = useSession()
   return (
     <Centered>
-      <h1 className="text-2xl font-bold text-pine-950">Access turned off</h1>
+      <h1 className="text-2xl font-bold text-clay-950">Access turned off</h1>
       <p className="mt-2 text-ink-muted">
         {name ? `${name}'s` : 'This'} access to Back 40 has been turned off by the admin. Your past posts are still there.
       </p>

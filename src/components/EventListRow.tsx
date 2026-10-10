@@ -22,7 +22,7 @@ export function EventListRow({ event, onClick, compact }: { event: EventRow; onC
         <span className={`w-1.5 shrink-0 rounded-full ${KIND[event.kind].bar}`} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="truncate font-bold text-pine-950">{event.title}</span>
+            <span className="truncate font-bold text-clay-950">{event.title}</span>
             <KindBadge kind={event.kind} />
           </span>
           <span className="block text-sm text-ink">

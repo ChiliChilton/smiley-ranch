@@ -64,7 +64,7 @@ export function Stands() {
         <Button variant="secondary" className="!px-3" aria-label="Earlier week" onClick={() => setWeekStart(addDays(weekStart, -DAYS))} disabled={weekStart <= addDays(today, -DAYS * 4)}>
           ‹
         </Button>
-        <button type="button" onClick={() => setWeekStart(today)} className="tap px-2 font-bold text-pine-950">
+        <button type="button" onClick={() => setWeekStart(today)} className="tap px-2 font-bold text-clay-950">
           {fmtDate(weekStart, { weekday: false })} – {fmtDate(weekEnd, { weekday: false })}
         </button>
         <Button variant="secondary" className="!px-3" aria-label="Later week" onClick={() => setWeekStart(addDays(weekStart, DAYS))}>
@@ -73,7 +73,7 @@ export function Stands() {
       </div>
 
       {!stands ? (
-        <div className="flex justify-center py-8 text-pine-900"><Spinner /></div>
+        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : stands.length === 0 ? (
         <Note>
           No stands on the map yet. {me.is_admin ? <button type="button" className="font-semibold underline" onClick={() => navigate('/map')}>Add them on the map.</button> : 'Ask the admin to add them on the map.'}
@@ -88,7 +88,7 @@ export function Stands() {
                   const dt = parseISODate(d)
                   const weekend = dt.getDay() === 0 || dt.getDay() === 6
                   return (
-                    <th key={d} colSpan={2} className={`rounded-t-lg px-1 pt-1 text-center font-bold ${weekend ? 'bg-tan-200 text-pine-950' : 'text-ink-muted'} ${d === today ? 'underline' : ''}`}>
+                    <th key={d} colSpan={2} className={`rounded-t-lg px-1 pt-1 text-center font-bold ${weekend ? 'bg-tan-200 text-clay-950' : 'text-ink-muted'} ${d === today ? 'underline' : ''}`}>
                       {DOW[dt.getDay()]} {dt.getDate()}
                     </th>
                   )
@@ -106,7 +106,7 @@ export function Stands() {
             <tbody>
               {stands.map((stand) => (
                 <tr key={stand.id}>
-                  <th className="sticky left-0 z-10 max-w-[96px] bg-cream pr-2 text-left text-sm font-bold leading-tight text-pine-950">
+                  <th className="sticky left-0 z-10 max-w-[96px] bg-cream pr-2 text-left text-sm font-bold leading-tight text-clay-950">
                     <span className="block truncate">{stand.name}</span>
                     {stand.stand_type && <span className="block text-[10px] font-medium text-ink-muted">{STAND_TYPES[stand.stand_type]}</span>}
                   </th>
@@ -124,8 +124,8 @@ export function Stands() {
                             className={`tap h-12 w-12 rounded-lg text-[11px] font-bold leading-tight ring-1 ${
                               c
                                 ? mine
-                                  ? 'bg-pine-900 text-cream ring-pine-900'
-                                  : 'bg-tan-300 text-pine-950 ring-tan-500'
+                                  ? 'bg-clay-900 text-cream ring-clay-900'
+                                  : 'bg-tan-300 text-clay-950 ring-tan-500'
                                 : past
                                   ? 'bg-cream-dark text-transparent ring-tan-200'
                                   : 'bg-white text-tan-500 ring-tan-200'
@@ -141,7 +141,7 @@ export function Stands() {
               ))}
             </tbody>
           </table>
-          <p className="mt-1 text-xs text-ink-muted">Swipe sideways for more days. Dark green is you.</p>
+          <p className="mt-1 text-xs text-ink-muted">Swipe sideways for more days. Burnt orange is you.</p>
         </div>
       )}
 
@@ -202,7 +202,7 @@ function ClaimSheet({ cell, claim, onClose, onChanged }: { cell: Cell | null; cl
 
   return (
     <Sheet open={true} onClose={onClose} title={cell.stand.name}>
-      <p className="mb-3 text-lg font-bold text-pine-950">
+      <p className="mb-3 text-lg font-bold text-clay-950">
         {fmtDate(cell.date)} · {SIT_LABEL[cell.sit]} sit
       </p>
       {error && <Note kind="error" className="mb-3">{error}</Note>}

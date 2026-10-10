@@ -19,8 +19,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-tan-500" />
         <div className="mb-3 flex items-center justify-between">
-          {title && <h2 className="text-lg font-bold text-pine-950">{title}</h2>}
-          <button type="button" onClick={onClose} className="tap -mr-2 px-3 text-base font-semibold text-pine-800">
+          {title && <h2 className="text-lg font-bold text-clay-950">{title}</h2>}
+          <button type="button" onClick={onClose} className="tap -mr-2 px-3 text-base font-semibold text-clay-800">
             Close
           </button>
         </div>

@@ -1,29 +1,33 @@
 @import "tailwindcss";
 
-/* Earthy palette: dark green, tan, off-white. Built to be readable in sunlight. */
+/* Burnt orange, red dirt, and tan. Muted so it's easy on the eyes and readable in sunlight. */
 @theme {
-  --color-pine-950: #122619;
-  --color-pine-900: #1f3d2b;
-  --color-pine-800: #2a5039;
-  --color-pine-700: #376548;
-  --color-pine-600: #477a5a;
-  --color-pine-100: #e3ece5;
+  --color-clay-950: #3a1a0f;   /* headings */
+  --color-clay-900: #8c3d1f;   /* header bar, primary buttons: burnt orange */
+  --color-clay-800: #a04824;   /* pressed */
+  --color-clay-700: #b25630;
+  --color-clay-600: #c46a42;   /* lighter accent */
+  --color-clay-100: #f6e6db;   /* tints */
 
-  --color-tan-700: #8a7149;
-  --color-tan-600: #a88c5e;
-  --color-tan-500: #c4ad7f;
-  --color-tan-300: #d9c7a3;
-  --color-tan-200: #e8dcc2;
-  --color-tan-100: #f0e8d6;
+  --color-sage-900: #2f4a2c;   /* the one cool accent: "come join", done, OK */
+  --color-sage-600: #5f7f5a;
+  --color-sage-100: #e6ece2;
 
-  --color-cream: #f3efe4;
-  --color-cream-dark: #e9e3d3;
-  --color-ink: #1c1a16;
-  --color-ink-muted: #5c574d;
+  --color-tan-700: #866546;
+  --color-tan-600: #a68a60;
+  --color-tan-500: #c7ad87;
+  --color-tan-300: #dcc9aa;
+  --color-tan-200: #e9dcc5;
+  --color-tan-100: #f2e9d9;
 
-  --color-alert: #b3261e;
-  --color-warn: #c98a0a;
-  --color-ok: #2f7a3e;
+  --color-cream: #f8f2e8;      /* warm sand background */
+  --color-cream-dark: #eee4d3;
+  --color-ink: #2b1d14;        /* warm dark brown, not black */
+  --color-ink-muted: #6e5c4e;
+
+  --color-alert: #a8231b;
+  --color-warn: #c6860c;
+  --color-ok: #4f7f4a;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -71,17 +75,17 @@ button { user-select: none; -webkit-user-select: none; }
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-weight: 800; font-size: 15px; line-height: 1;
 }
-.pin-selected { outline: 3px solid #f3efe4; outline-offset: 1px; transform: scale(1.15); }
+.pin-selected { outline: 3px solid #f8f2e8; outline-offset: 1px; transform: scale(1.15); }
 .pin-label {
   position: absolute; top: 34px; left: 50%; transform: translateX(-50%);
   white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff;
   text-shadow: 0 0 3px #000, 0 0 3px #000; pointer-events: none;
 }
-.leaflet-container { font-family: var(--font-sans); background: #2a3a2f; }
+.leaflet-container { font-family: var(--font-sans); background: #3a2a20; }
 .leaflet-control-attribution { font-size: 9px; opacity: .8; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .leaflet-pm-toolbar { display: none !important; } /* we use our own buttons */
 /* Geoman vertex handles big enough for a finger */
 .leaflet-pm-draggable, .marker-icon { width: 22px !important; height: 22px !important; margin-left: -11px !important; margin-top: -11px !important; border-radius: 50%; }
 .marker-icon-middle { opacity: .6; }
-.area-label { background: rgba(31,61,43,.75); color: #f3efe4; border: none; box-shadow: none; font-weight: 700; font-size: 12px; padding: 2px 6px; border-radius: 6px; }
+.area-label { background: rgba(58,26,15,.75); color: #f8f2e8; border: none; box-shadow: none; font-weight: 700; font-size: 12px; padding: 2px 6px; border-radius: 6px; }
 .area-label::before { display: none; }
