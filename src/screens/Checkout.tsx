@@ -12,6 +12,7 @@ import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { checkOut } from '../lib/checkins'
+import { createRow } from '../lib/outbox'
 import { supabase } from '../lib/supabase'
 
 export async function loadLastCheckout(): Promise<CheckoutRow | null> {
@@ -68,15 +69,16 @@ export function Checkout() {
     setError(null)
     const snapshot = items.map((i) => ({ id: i.id, title: i.title, done: done.has(i.id) }))
     const allDone = snapshot.every((i) => i.done)
-    const { data, error } = await supabase
-      .from('checkouts')
-      .insert({ member_id: me.member_id, items: snapshot, all_done: allDone, notes: notes.trim() || null })
-      .select('*')
-      .single()
-    if (error) { setBusy(false); return setError(friendlyError(error)) }
-    await checkOut(me.member_id, me.member_id).catch(() => {})
-    setBusy(false)
-    setSaved(data)
+    try {
+      const leftAt = new Date().toISOString()
+      const { row } = await createRow('checkouts', { member_id: me.member_id, left_at: leftAt, items: snapshot, all_done: allDone, notes: notes.trim() || null })
+      await checkOut(me.member_id, me.member_id).catch(() => {})
+      setSaved({ ...row, event_id: null, created_by: me.member_id, created_at: leftAt, deleted_at: null })
+    } catch (err) {
+      setError(friendlyError(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (saved) {

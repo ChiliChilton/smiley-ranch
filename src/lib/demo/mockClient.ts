@@ -23,6 +23,16 @@ let state = load()
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* ignore */ }
 }
+// "Pretend there's no signal": every call fails the way fetch does when the radio is off.
+const OFFLINE_KEY = 'back40.demo.offline'
+export function demoOffline(): boolean {
+  try { return localStorage.getItem(OFFLINE_KEY) === '1' } catch { return false }
+}
+export function setDemoOffline(on: boolean) {
+  try { if (on) localStorage.setItem(OFFLINE_KEY, '1'); else localStorage.removeItem(OFFLINE_KEY) } catch { /* ignore */ }
+}
+const netErr = () => ({ data: null, error: { code: '', message: 'TypeError: Failed to fetch', name: 'TypeError' } }) as unknown as Result<unknown>
+
 export function resetDemo() {
   state = { db: seedDb(), device: { member_id: null, is_admin: false }, secrets: { code: DEMO_CODE, pin: DEMO_PIN } }
   save()
@@ -85,6 +95,7 @@ class Query implements PromiseLike<Result<unknown>> {
   private payload: Row | Row[] | null = null
   private returning = false
   private onConflict: string | null = null
+  private rangeFrom = 0
   private table: string
   constructor(table: string) {
     this.table = table
@@ -103,13 +114,15 @@ class Query implements PromiseLike<Result<unknown>> {
   gt(col: string, val: unknown) { this.filters.push({ col, op: 'gt', val }); return this }
   lt(col: string, val: unknown) { this.filters.push({ col, op: 'lt', val }); return this }
   in(col: string, val: unknown[]) { this.filters.push({ col, op: 'in', val }); return this }
+  match(obj: Record<string, unknown>) { for (const [k, v] of Object.entries(obj)) this.filters.push({ col: k, op: 'eq', val: v }); return this }
+  range(from: number, to: number) { this.rangeFrom = from; this.lim = to - from + 1; return this }
   order(col: string, opts?: { ascending?: boolean }) { this.orders.push({ col, asc: opts?.ascending ?? true }); return this }
   limit(n: number) { this.lim = n; return this }
   single() { this.mode = 'single'; return this }
   maybeSingle() { this.mode = 'maybe'; return this }
 
   then<R1 = Result<unknown>, R2 = never>(onf?: ((v: Result<unknown>) => R1 | PromiseLike<R1>) | null, onr?: ((e: unknown) => R2 | PromiseLike<R2>) | null) {
-    return new Promise<Result<unknown>>((resolve) => setTimeout(() => resolve(this.run()), 60)).then(onf, onr)
+    return new Promise<Result<unknown>>((resolve) => setTimeout(() => resolve(demoOffline() ? netErr() : this.run()), 60)).then(onf, onr)
   }
 
   private matches(r: Row) {
@@ -149,7 +162,7 @@ class Query implements PromiseLike<Result<unknown>> {
           return asc ? c : -c
         })
       }
-      if (this.lim != null) list = list.slice(0, this.lim)
+      if (this.lim != null) list = list.slice(this.rangeFrom, this.rangeFrom + this.lim)
       return this.finish(list)
     }
     if (this.op === 'insert' || this.op === 'upsert') {
@@ -282,7 +295,7 @@ function rpc(name: string, args: Row = {}): Promise<Result<unknown>> {
       default: return err('42883', `function ${name} does not exist`)
     }
   }
-  return new Promise((resolve) => setTimeout(() => resolve(run()), 80))
+  return new Promise((resolve) => setTimeout(() => resolve(demoOffline() && name !== 'whoami' ? netErr() : run()), 80))
 }
 
 const channel = () => {
@@ -297,6 +310,7 @@ export function createMockClient() {
     auth: {
       getSession: async () => ({ data: { session: { user: { id: 'demo-device' } } }, error: null }),
       signInAnonymously: async () => ({ data: { session: { user: { id: 'demo-device' } } }, error: null }),
+      getUser: async () => ({ data: { user: { id: 'demo-device' } }, error: null }),
     },
     channel,
     removeChannel: async () => 'ok',

@@ -39,7 +39,7 @@ try {
   await page.screenshot({ path: 'e2e/shots/demo-home-filled.png' })
 
   await page.getByRole('link', { name: 'More' }).click()
-  await page.getByRole('button', { name: 'Feeders' }).click()
+  await page.getByRole('button', { name: 'Feeders', exact: true }).click()
   await page.getByText('Filled it').first().waitFor()
   await page.screenshot({ path: 'e2e/shots/demo-feeders.png' })
 
@@ -127,6 +127,37 @@ try {
   await page.getByText("You're checked out.").waitFor()
   await page.getByRole('button', { name: 'Back home' }).click()
   await page.getByRole('button', { name: "I'm here" }).waitFor() // check-out closed the check-in
+
+  // Phase 6: offline outbox via the demo's no-signal switch
+  await page.getByRole('link', { name: 'More' }).click()
+  await page.getByText("Pretend there's no signal").click()
+  await page.getByRole('button', { name: 'Log', exact: true }).click()
+  await page.getByPlaceholder(/What happened/).fill('Posted with no signal')
+  await page.getByRole('button', { name: 'Post', exact: true }).click()
+  await page.getByText('1 entry waiting for signal').waitFor()
+  await page.getByText('Posted with no signal').waitFor() // shown locally right away
+  await page.screenshot({ path: 'e2e/shots/demo-outbox.png' })
+  await page.getByRole('link', { name: 'More' }).click()
+  await page.getByText("Pretend there's no signal").click() // back online -> flush
+  await page.waitForTimeout(800)
+  if (await page.getByText('waiting for signal').count()) throw new Error('outbox did not flush')
+  await page.getByRole('button', { name: 'Log', exact: true }).click()
+  await page.getByText('Posted with no signal').waitFor() // now from the "server"
+
+  // Notification settings and export pages render
+  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByRole('button', { name: 'Notification settings' }).click().catch(() => {})
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: 'e2e/shots/demo-notifications.png' })
+  await page.getByRole('link', { name: 'More' }).click()
+  await page.getByRole('button', { name: 'Export data' }).click()
+  await page.getByText('Export everything (JSON)').waitFor()
+  const dl = page.waitForEvent('download', { timeout: 5000 }).catch(() => null)
+  await page.getByRole('button', { name: 'Export map (KML)' }).click()
+  const d = await dl
+  if (d) { const txt = await (await import('node:fs/promises')).readFile(await d.path(), 'utf8'); if (!/Property boundary/.test(txt) || !/Box Blind/.test(txt)) throw new Error('KML missing content') }
+  await page.getByText(/Downloaded|Sent to the share sheet/).waitFor()
+  await page.screenshot({ path: 'e2e/shots/demo-export.png' })
 
   // Map: feeder pin sheet shows status + recent activity
   await page.getByRole('link', { name: 'Map', exact: true }).click()

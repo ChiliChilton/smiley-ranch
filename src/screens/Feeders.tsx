@@ -9,7 +9,7 @@ import { Sheet } from '../components/Sheet'
 import type { FeederFillRow, PinRow } from '../lib/database.types'
 import { fmtDateTime } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
-import { feederStatus, lastFeedType, loadFeeders, recordFill, rememberFeedType, STATUS_STYLE } from '../lib/feeders'
+import { feederStatus, lastFeedType, loadFeeders, recordFill, rememberFeedType, STATUS_STYLE, updateFill } from '../lib/feeders'
 import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
@@ -115,7 +115,7 @@ export function FillDetailsSheet({ entry, onClose, onSaved }: { entry: { feeder:
     if (!entry) return
     setBusy(true)
     rememberFeedType(feed.trim() || null)
-    await supabase.from('feeder_fills').update({ amount: amount.trim() || null, feed_type: feed.trim() || null }).eq('id', entry.fill.id)
+    await updateFill(entry.fill.id, { amount: amount.trim() || null, feed_type: feed.trim() || null })
     setBusy(false)
     await onSaved()
   }
@@ -124,7 +124,7 @@ export function FillDetailsSheet({ entry, onClose, onSaved }: { entry: { feeder:
     <Sheet open={entry !== null} onClose={onClose} title={entry ? `Filled ${entry.feeder.name}` : ''}>
       {entry && (
         <form onSubmit={save} className="space-y-3">
-          <Note kind="ok">Got it. {fmtDateTime(entry.fill.filled_at)}.</Note>
+          <Note kind="ok">Got it. {fmtDateTime(entry.fill.filled_at)}.{(entry.fill as { queued?: boolean }).queued ? ' No signal right now, it will sync later.' : ''}</Note>
           <div className="grid grid-cols-2 gap-3">
             <TextInput label="How much (optional)" name="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="200 lb, 2 bags…" />
             <TextInput label="Feed (optional)" name="feed" value={feed} onChange={(e) => setFeed(e.target.value)} placeholder="corn, protein…" list="feedTypes" />

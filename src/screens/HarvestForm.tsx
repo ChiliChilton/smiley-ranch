@@ -11,6 +11,7 @@ import { useMembers } from '../lib/members'
 import { useMe } from '../lib/session'
 import { SEXES, SPECIES } from '../lib/species'
 import { supabase } from '../lib/supabase'
+import { createRow } from '../lib/outbox'
 
 export function HarvestForm() {
   const { id } = useParams()
@@ -81,8 +82,7 @@ export function HarvestForm() {
         const { error } = await supabase.from('harvests').update(row).eq('id', id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('harvests').insert(row)
-        if (error) throw error
+        await createRow('harvests', row)
       }
       navigate('/harvests', { replace: true })
     } catch (err) {

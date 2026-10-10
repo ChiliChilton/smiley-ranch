@@ -14,6 +14,7 @@ import { loadPins } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import { createRow } from '../lib/outbox'
 import { Comments } from './Log'
 
 type Filter = 'mine' | 'open' | 'done'
@@ -176,10 +177,19 @@ function TodoForm({ todo, initialTitle, initialPin, onDone }: { todo: TodoRow | 
     e.preventDefault()
     setBusy(true); setError(null)
     const row = { title: title.trim(), notes: notes.trim() || null, assignee_id: assignee || null, due_on: due || null, pin_id: where.pin_id }
-    const { error } = todo ? await supabase.from('todos').update(row).eq('id', todo.id) : await supabase.from('todos').insert(row)
-    setBusy(false)
-    if (error) return setError(friendlyError(error))
-    await onDone()
+    try {
+      if (todo) {
+        const { error } = await supabase.from('todos').update(row).eq('id', todo.id)
+        if (error) throw error
+      } else {
+        await createRow('todos', row)
+      }
+      await onDone()
+    } catch (err) {
+      setError(friendlyError(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (

@@ -9,7 +9,8 @@ import { friendlyError } from '../lib/errors'
 import { useMe, useSession } from '../lib/session'
 import { isIOS, isStandalone, pushSupported } from '../lib/standalone'
 import { DEMO, DEMO_PIN } from '../lib/demo'
-import { resetDemo } from '../lib/demo/mockClient'
+import { demoOffline, resetDemo, setDemoOffline } from '../lib/demo/mockClient'
+import { flushOutbox } from '../lib/outbox'
 
 export function More() {
   const me = useMe()
@@ -19,6 +20,7 @@ export function More() {
   const [pin, setPin] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [offline, setOffline] = useState(() => demoOffline())
   const standalone = isStandalone()
 
   async function submitPin(e: FormEvent) {
@@ -84,9 +86,9 @@ export function More() {
               <Divider />
               <Row onClick={() => navigate('/more/emergency')}>Emergency info</Row>
               <Divider />
-              <Row disabled right="soon">Stands, feeders, cameras &amp; map</Row>
+              <Row onClick={() => navigate('/map')}>Stands, feeders, cameras &amp; map</Row>
               <Divider />
-              <Row disabled right="soon">Export data</Row>
+              <Row onClick={() => navigate('/more/export')}>Export data</Row>
               <div className="mt-3">
                 <Button variant="secondary" busy={busy} onClick={lock}>
                   Turn off admin mode
@@ -127,7 +129,10 @@ export function More() {
 
         <Card title="Notifications">
           {pushSupported() ? (
-            <p className="text-sm text-ink-muted">Pick what you want to hear about. Coming in phase 5.</p>
+            <>
+              <p className="mb-3 text-sm text-ink-muted">Pick what you want to hear about.</p>
+              <Button variant="secondary" onClick={() => navigate('/more/notifications')}>Notification settings</Button>
+            </>
           ) : isIOS() && !standalone ? (
             <p className="text-sm text-ink-muted">
               On iPhone, notifications only work once Back 40 is on your home screen.
@@ -151,6 +156,11 @@ export function More() {
             <p className="mb-3 text-sm text-ink-muted">
               Sample data lives only on this device. Satellite imagery, GPS, and notifications are off in the demo. Everything else works.
             </p>
+            <label className="tap mb-3 flex items-center gap-3">
+              <input type="checkbox" checked={offline} onChange={(e) => { setDemoOffline(e.target.checked); setOffline(e.target.checked); if (!e.target.checked) void flushOutbox() }} className="h-6 w-6 accent-clay-900" />
+              <span className="text-sm font-semibold text-clay-950">Pretend there's no signal</span>
+            </label>
+            <p className="mb-3 text-xs text-ink-muted">With this on, new entries wait in the outbox and a badge shows how many. Turn it off and they send.</p>
             <Button variant="secondary" onClick={() => { resetDemo(); window.location.reload() }}>Reset demo data</Button>
           </Card>
         )}

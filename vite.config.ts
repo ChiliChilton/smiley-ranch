@@ -39,6 +39,7 @@ export default defineConfig({
       workbox: {
         // App shell: everything Vite emits is precached so the app opens with no signal.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+        importScripts: ['push-sw.js'],
         navigateFallback: BASE + 'index.html',
         // Never let the service worker answer Supabase calls.
         navigateFallbackDenylist: [/^\/~oauth/],

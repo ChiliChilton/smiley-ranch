@@ -3,22 +3,27 @@ import { Button } from '../../components/Button'
 import { Note } from '../../components/Note'
 import { Centered } from '../../components/Screen'
 import { isIOS, isStandalone, pushSupported } from '../../lib/standalone'
+import { defaultPrefs, enablePush, pushConfigured } from '../../lib/push'
+import { useMe } from '../../lib/session'
 
 /**
  * Optional step after joining. Phase 1 only asks the browser for permission.
  * Phase 5 adds the actual push subscription and per-person choices.
  */
 export function NotificationsScreen({ onDone }: { onDone: () => void }) {
-  const supported = pushSupported()
+  const me = useMe()
+  const supported = pushSupported() && pushConfigured
   const [result, setResult] = useState<NotificationPermission | null>(null)
   const [busy, setBusy] = useState(false)
 
   async function allow() {
     setBusy(true)
     try {
-      const perm = await Notification.requestPermission()
-      setResult(perm)
-      if (perm === 'granted') onDone()
+      if (me.member_id) await enablePush(me.member_id, defaultPrefs(me.is_admin))
+      setResult('granted')
+      onDone()
+    } catch {
+      setResult(Notification.permission === 'denied' ? 'denied' : 'default')
     } finally {
       setBusy(false)
     }

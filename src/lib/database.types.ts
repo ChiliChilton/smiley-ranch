@@ -128,6 +128,28 @@ export type SupplyItemRow = {
   deleted_at: string | null
 }
 
+export type PushPrefs = {
+  stand_claims: boolean
+  harvests: boolean
+  todos_assigned: boolean
+  feeders_overdue: boolean
+  events: boolean
+  overdue_checkin: boolean
+}
+
+export type PushSubscriptionRow = {
+  id: string
+  auth_user_id: string
+  member_id: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  prefs: PushPrefs
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type CheckinRow = {
   id: string
   member_id: string
@@ -136,6 +158,7 @@ export type CheckinRow = {
   note: string | null
   left_at: string | null
   left_by: string | null
+  overdue_notified_at?: string | null
   created_by: string | null
   created_at: string
 }
@@ -389,6 +412,12 @@ export type Database = {
         Row: SupplyItemRow
         Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
         Update: Partial<Omit<SupplyItemRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: PushSubscriptionRow
+        Insert: { id?: string; auth_user_id: string; member_id: string; endpoint: string; p256dh: string; auth: string; prefs: PushPrefs; created_by?: string | null }
+        Update: { member_id?: string; prefs?: PushPrefs; p256dh?: string; auth?: string }
         Relationships: []
       }
       checkins: {

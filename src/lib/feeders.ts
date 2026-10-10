@@ -1,5 +1,6 @@
 import type { FeederFillRow, PinRow } from './database.types'
 import { supabase } from './supabase'
+import { createRow, patchRow } from './outbox'
 
 export type FeederStatus = 'fresh' | 'due' | 'overdue' | 'unknown'
 
@@ -40,14 +41,14 @@ export async function loadFeeders(): Promise<{ feeders: PinRow[]; lastFill: Map<
   return { feeders: feeders ?? [], lastFill }
 }
 
-export async function recordFill(feederId: string, details?: { amount?: string | null; feed_type?: string | null }): Promise<FeederFillRow> {
-  const { data, error } = await supabase
-    .from('feeder_fills')
-    .insert({ feeder_id: feederId, amount: details?.amount ?? null, feed_type: details?.feed_type ?? null })
-    .select('*')
-    .single()
-  if (error) throw error
-  return data
+export async function recordFill(feederId: string, details?: { amount?: string | null; feed_type?: string | null }): Promise<FeederFillRow & { queued: boolean }> {
+  const now = new Date().toISOString()
+  const { row, queued } = await createRow('feeder_fills', { feeder_id: feederId, filled_at: now, amount: details?.amount ?? null, feed_type: details?.feed_type ?? null })
+  return { ...row, created_by: null, created_at: now, deleted_at: null, queued }
+}
+
+export async function updateFill(fillId: string, patch: { amount: string | null; feed_type: string | null }) {
+  await patchRow('feeder_fills', fillId, patch)
 }
 
 const LAST_FEED_KEY = 'back40.lastFeedType'

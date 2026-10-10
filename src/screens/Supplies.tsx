@@ -12,6 +12,7 @@ import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import { createRow } from '../lib/outbox'
 
 const LEVELS: { value: SupplyLevel; label: string; cls: string }[] = [
   { value: 'full', label: 'Full', cls: 'bg-sage-100 text-sage-900 ring-sage-600' },
@@ -56,8 +57,8 @@ export function Supplies() {
     await reload()
   }
 
-  const addNeed = (e: FormEvent) => { e.preventDefault(); const name = newNeed.trim(); if (!name) return; setNewNeed(''); void run(() => supabase.from('supply_items').insert({ name, needed: true })) }
-  const addInv = (e: FormEvent) => { e.preventDefault(); const name = newInv.trim(); if (!name) return; setNewInv(''); void run(() => supabase.from('supply_items').insert({ name, is_inventory: true, level: 'some', needed: false })) }
+  const addNeed = (e: FormEvent) => { e.preventDefault(); const name = newNeed.trim(); if (!name) return; setNewNeed(''); void run(() => createRow('supply_items', { name, needed: true }).then(() => ({ error: null }))) }
+  const addInv = (e: FormEvent) => { e.preventDefault(); const name = newInv.trim(); if (!name) return; setNewInv(''); void run(() => createRow('supply_items', { name, is_inventory: true, level: 'some', needed: false }).then(() => ({ error: null }))) }
   const gotIt = (i: SupplyItemRow) => run(() => supabase.from('supply_items').update({ needed: false, got_by: me.member_id, got_at: new Date().toISOString(), ...(i.is_inventory ? { level: 'full' as SupplyLevel } : {}) }).eq('id', i.id))
   const needAgain = (i: SupplyItemRow) => run(() => supabase.from('supply_items').update({ needed: true, got_by: null, got_at: null }).eq('id', i.id))
   const setLevel = (i: SupplyItemRow, level: SupplyLevel) => run(() => supabase.from('supply_items').update({ level, ...(level === 'full' || level === 'some' ? { needed: false } : {}) }).eq('id', i.id))

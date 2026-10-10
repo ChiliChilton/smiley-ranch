@@ -15,6 +15,7 @@ import { fmtCoords, loadPins } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import { createRow, isNetworkError } from '../lib/outbox'
 
 export async function loadLog(limit = 100): Promise<LogEntryRow[]> {
   const { data, error } = await supabase.from('log_entries').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(limit)
@@ -51,7 +52,7 @@ export function Log() {
       setCounts(m)
       setOpen((cur) => (cur ? (entries.find((e) => e.id === cur.id) ?? null) : null))
     } catch (err) {
-      setError(friendlyError(err))
+      if (!isNetworkError(err)) setError(friendlyError(err))
     }
   }, [])
   useEffect(() => { void reload() }, [reload])
@@ -61,11 +62,16 @@ export function Log() {
     e.preventDefault()
     if (!body.trim()) return
     setBusy(true); setError(null)
-    const { error } = await supabase.from('log_entries').insert({ body: body.trim(), pin_id: where.pin_id, lat: where.lat, lng: where.lng })
-    setBusy(false)
-    if (error) return setError(friendlyError(error))
-    setBody(''); setWhere({ pin_id: null, lat: null, lng: null }); setShowWhere(false)
-    await reload()
+    try {
+      const { row, queued } = await createRow('log_entries', { body: body.trim(), pin_id: where.pin_id, lat: where.lat, lng: where.lng })
+      setBody(''); setWhere({ pin_id: null, lat: null, lng: null }); setShowWhere(false)
+      if (queued) setRows((cur) => [{ ...row, created_by: me.member_id, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), deleted_at: null }, ...(cur ?? [])])
+      else await reload()
+    } catch (err) {
+      setError(friendlyError(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function remove(row: LogEntryRow) {

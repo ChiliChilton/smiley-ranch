@@ -1,4 +1,7 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { startOutbox } from './lib/outbox'
+import { SyncBadge } from './components/SyncBadge'
+import { UpdateBanner } from './components/UpdateBanner'
 import { BrowserRouter, MemoryRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { DEMO } from './lib/demo'
 import { TabBar } from './components/TabBar'
@@ -16,6 +19,7 @@ import { Checklist } from './screens/admin/Checklist'
 import { Emergency } from './screens/admin/Emergency'
 import { Members } from './screens/admin/Members'
 import { Security } from './screens/admin/Security'
+import { Export } from './screens/admin/Export'
 import { More } from './screens/More'
 import { InactiveScreen } from './screens/onboarding/InactiveScreen'
 import { InstallScreen } from './screens/onboarding/InstallScreen'
@@ -30,6 +34,7 @@ import { HarvestForm } from './screens/HarvestForm'
 import { Log } from './screens/Log'
 import { Todos } from './screens/Todos'
 import { Supplies } from './screens/Supplies'
+import { NotificationSettings } from './screens/NotificationSettings'
 
 // Leaflet and the drawing tools only load when the map is opened.
 const MapScreen = lazy(() => import('./screens/MapScreen'))
@@ -99,8 +104,10 @@ function Gate() {
 }
 
 function Shell() {
+  useEffect(() => { startOutbox() }, [])
   return (
     <MembersProvider>
+      <UpdateBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/calendar" element={<Calendar />} />
@@ -123,13 +130,16 @@ function Shell() {
         <Route path="/supplies" element={<Supplies />} />
         <Route path="/more" element={<More />} />
         <Route path="/more/switch" element={<SwitchPerson />} />
+        <Route path="/more/notifications" element={<NotificationSettings />} />
         <Route path="/more/install" element={<InstallHelp />} />
         <Route path="/more/members" element={<AdminOnly><Members /></AdminOnly>} />
         <Route path="/more/security" element={<AdminOnly><Security /></AdminOnly>} />
         <Route path="/more/checklist" element={<AdminOnly><Checklist /></AdminOnly>} />
         <Route path="/more/emergency" element={<AdminOnly><Emergency /></AdminOnly>} />
+        <Route path="/more/export" element={<AdminOnly><Export /></AdminOnly>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <SyncBadge />
       <TabBar />
     </MembersProvider>
   )

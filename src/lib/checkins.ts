@@ -1,5 +1,6 @@
 import type { CheckinRow } from './database.types'
 import { supabase } from './supabase'
+import { createRow } from './outbox'
 
 export async function loadOpenCheckins(): Promise<CheckinRow[]> {
   const { data, error } = await supabase.from('checkins').select('*').is('left_at', null).order('arrived_at')
@@ -8,8 +9,7 @@ export async function loadOpenCheckins(): Promise<CheckinRow[]> {
 }
 
 export async function checkIn(memberId: string, expectedBack: string | null, note: string | null) {
-  const { error } = await supabase.from('checkins').insert({ member_id: memberId, expected_back: expectedBack, note })
-  if (error) throw error
+  await createRow('checkins', { member_id: memberId, arrived_at: new Date().toISOString(), expected_back: expectedBack, note })
 }
 
 /** Close every open check-in for this member (used by "I'm out" and by the before-you-leave list). */

@@ -8,6 +8,7 @@ import { Screen } from '../components/Screen'
 import { friendlyError } from '../lib/errors'
 import { SPECIES } from '../lib/species'
 import { supabase } from '../lib/supabase'
+import { createRow } from '../lib/outbox'
 
 const nowLocal = () => {
   const d = new Date()
@@ -68,8 +69,7 @@ export function SightingForm() {
         const { error } = await supabase.from('sightings').update(row).eq('id', id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('sightings').insert(row)
-        if (error) throw error
+        await createRow('sightings', row)
       }
       navigate('/sightings', { replace: true })
     } catch (err) {

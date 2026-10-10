@@ -13,7 +13,7 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | 3 | Satellite map, pins, boundary and areas, stand sign-up | **Done** |
 | 4 | Feeders with due colors, sightings, harvests with TPWD tags, photos | **Done** |
 | 5 | Log + comments, to-dos, needs/supplies, who's-on-the-place check-in | **Done** |
-| 6 | Push notifications, offline outbox, CSV/JSON export, polish | Not started |
+| 6 | Push notifications, offline outbox, JSON/CSV/KML export, update prompt | **Done** |
 
 The build order was reshuffled after Phase 1: the family calendar, the before-you-leave list, and a shareable emergency address came first.
 
@@ -53,9 +53,17 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 - **Needs & supplies**: "We need" is the shopping list; "Got it" records who bought it. "On hand" tracks rough levels (full / some / low / out); low or out puts the item on the list automatically, and "Got it" sets it back to full.
 - **Who's on the place**: "I'm here" with an optional "back by" time and note; "I'm out" or finishing the before-you-leave list closes it. Past the "back by" time the entry turns red; Phase 6 adds the push.
 
+## Offline, export, updates
+
+- **No signal**: new sightings, harvests, log entries, feeder fills, to-dos, supply items, check-ins, and check-outs go into a local outbox (IndexedDB) and send themselves when signal returns, on app open, or when you tap the yellow "waiting for signal" pill. Claims and calendar entries stay online-only because they can conflict.
+- **Export** (admin, More → Export data): everything as one JSON file, any table as CSV, and the map as KML. Files go to the share sheet on iPhone or download elsewhere. Nothing is locked in.
+- **Updates**: the app checks for a new build on launch and shows a "Reload" bar when one is ready.
+
 ## Upkeep
 
 The goal is near zero. What there is:
+
+- **Nothing to pay for.** GitHub, GitHub Pages, Supabase free tier, Esri imagery, and Web Push are all free. No App Store, no custom domain, no SMS or email service.
 
 - **Supabase free tier pauses after ~7 days without traffic.** `.github/workflows/keep-alive.yml` pings the API twice a week once the repo is on GitHub with two secrets set (`SUPABASE_URL`, `SUPABASE_ANON_KEY`). If a project does get paused, the admin restores it with one click in the Supabase dashboard; no data is lost.
 - **Free-tier limits** are generous for 20 people and text-only data: 500 MB database, 50,000 monthly active users. No Storage is used.
@@ -153,18 +161,29 @@ The build is plain static files (`dist/`). It needs any HTTPS static host; the p
 
 Either way it's free and redeploys itself on push.
 
-### 7. VAPID keys for push (Phase 5)
+### 7. Notifications (optional, about ten minutes)
 
-Generate once and keep the private key secret:
+The app works without this. With it, phones get pushes for stand claims, harvests, to-dos assigned to them, calendar entries, people past their "back by" time, and a morning feeder digest. Each person picks what they want under More → Notifications.
 
-```bash
-npx web-push generate-vapid-keys
-```
+1. Generate keys once (keep the private one secret):
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+2. Deploy the sender and give it its secrets. Pick any long random string for `PUSH_SECRET`:
+   ```bash
+   npx supabase functions deploy push --no-verify-jwt
+   npx supabase secrets set PUSH_SECRET=<random> VAPID_PUBLIC_KEY=<public> VAPID_PRIVATE_KEY=<private> VAPID_SUBJECT=mailto:you@example.com
+   ```
+3. Tell Postgres where to send (SQL editor):
+   ```sql
+   insert into private.config (key, value) values
+     ('push_url', 'https://<project-ref>.supabase.co/functions/v1/push'),
+     ('push_secret', '<the same random string>');
+   ```
+4. Put the public key in the app build: `VITE_VAPID_PUBLIC_KEY` (GitHub secret `VAPID_PUBLIC_KEY`, or the Vercel env).
+5. In the Supabase dashboard, Database → Extensions, make sure **pg_net** and **pg_cron** are enabled (the migration enables them where it can). The two scheduled jobs are created by the migration.
 
-- `VITE_VAPID_PUBLIC_KEY` goes in the app's environment (Vercel).
-- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (a `mailto:` address) go in the Edge Function secrets: `npx supabase secrets set ...`.
-
-Phase 5 adds the Edge Function and the subscription UI.
+On iPhone, pushes only arrive once the app is on the home screen. The app explains this in the Notifications screen.
 
 ## Scripts
 
