@@ -14,9 +14,9 @@ import { TextArea, TextInput } from '../components/Input'
 import type { AreaRow, PinRow, PinType, StandClaimRow, StandType } from '../lib/database.types'
 import { fmtDate, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
-import { acres, geometryBounds, isAreaGeometry, parseShapes, type AreaGeometry, type ImportedShape } from '../lib/geo'
+import { acres, geometryBounds, isAreaGeometry, parseShapes, type AreaGeometry, type Imported } from '../lib/geo'
 import { useMembers } from '../lib/members'
-import { ADMIN_ONLY_TYPES, canEditPin, fmtCoords, loadPins, MEMBER_TYPES, PIN_TYPE_ORDER, PIN_TYPES, STAND_TYPES } from '../lib/pins'
+import { ADMIN_ONLY_TYPES, canEditPin, fmtCoords, guessPinType, loadPins, MEMBER_TYPES, PIN_TYPE_ORDER, PIN_TYPES, STAND_TYPES } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { emergencyFrom, useSettings } from '../lib/settings'
@@ -242,7 +242,7 @@ export default function MapScreen() {
     }
   }
 
-  async function importShapes(shapes: ImportedShape[]) {
+  async function importShapes({ shapes, points }: Imported) {
     setBusy(true)
     setError(null)
     try {
@@ -251,6 +251,11 @@ export default function MapScreen() {
         const { error } = await supabase.from('areas').insert({ name: first ? 'Property' : s.name, geometry: s.geometry, is_boundary: first })
         if (error) throw error
         first = false
+      }
+      if (points.length) {
+        const rows = points.map((p) => ({ name: p.name.slice(0, 80), type: guessPinType(p.name), lat: p.lat, lng: p.lng, notes: p.description.slice(0, 500) || null }))
+        const { error } = await supabase.from('pins').insert(rows)
+        if (error) throw error
       }
       setImportOpen(false)
       await reload()
@@ -801,9 +806,12 @@ function NameForm({ busy, onSave }: { busy: boolean; onSave: (name: string) => v
   )
 }
 
-function ImportForm({ busy, hasBoundary, onImport }: { busy: boolean; hasBoundary: boolean; onImport: (shapes: ImportedShape[]) => void }) {
-  const [shapes, setShapes] = useState<ImportedShape[] | null>(null)
+function ImportForm({ busy, hasBoundary, onImport }: { busy: boolean; hasBoundary: boolean; onImport: (data: Imported) => void }) {
+  const [data, setData] = useState<Imported | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const shapes = data?.shapes ?? null
+  const points = data?.points ?? []
+  const total = (shapes?.length ?? 0) + points.length
 
   async function pick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -811,11 +819,11 @@ function ImportForm({ busy, hasBoundary, onImport }: { busy: boolean; hasBoundar
     setErr(null)
     try {
       const parsed = parseShapes(file.name, await file.text())
-      if (parsed.length === 0) setErr('No polygons found in that file.')
-      setShapes(parsed)
+      if (parsed.shapes.length === 0 && parsed.points.length === 0) setErr('No shapes or points found in that file.')
+      setData(parsed)
     } catch {
       setErr("Couldn't read that file. It should be a .kml or .geojson.")
-      setShapes(null)
+      setData(null)
     }
   }
 
@@ -830,14 +838,17 @@ function ImportForm({ busy, hasBoundary, onImport }: { busy: boolean; hasBoundar
         <input type="file" accept=".kml,.geojson,.json,application/json,application/vnd.google-earth.kml+xml" className="sr-only" onChange={pick} data-testid="import-file" />
       </label>
       {err && <Note kind="error">{err}</Note>}
-      {shapes && shapes.length > 0 && (
+      {data && total > 0 && (
         <>
           <ul className="space-y-1 text-sm text-ink">
-            {shapes.map((s, i) => (
-              <li key={i}>• {s.name} · about {Math.round(acres(s.geometry))} acres{i === 0 && !hasBoundary ? ' (boundary)' : ''}</li>
+            {(shapes ?? []).map((s, i) => (
+              <li key={`s${i}`}>• {s.name} · about {Math.round(acres(s.geometry))} acres{i === 0 && !hasBoundary ? ' (boundary)' : ''}</li>
+            ))}
+            {points.map((p, i) => (
+              <li key={`p${i}`}>• {p.name} · pin ({PIN_TYPES[guessPinType(p.name)].label.toLowerCase()})</li>
             ))}
           </ul>
-          <Button full busy={busy} onClick={() => onImport(shapes)}>Import {shapes.length === 1 ? 'shape' : `${shapes.length} shapes`}</Button>
+          <Button full busy={busy} onClick={() => onImport(data)}>Import {total === 1 ? 'it' : `${total} items`}</Button>
         </>
       )}
     </div>

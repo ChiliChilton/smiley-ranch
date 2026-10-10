@@ -47,7 +47,7 @@ let pins = seedPins()
 let areas = []
 let claims = []
 const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
-let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2272', emergency_lng: '-97.6490', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
+let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2273', emergency_lng: '-97.6519', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
 const overlap = (a, b) => a.starts_on <= b.ends_on && b.starts_on <= a.ends_on
 // minimal PostgREST filter support: col=eq.x, col=is.null, col=gte.x, col=lte.x, col=neq.x
 function applyFilters(rows, sp) {
@@ -384,10 +384,13 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Add to the map' }).click()
   await page.getByText('Import a KML or GeoJSON file').click()
   await page.getByTestId('import-file').setInputFiles('e2e/fixtures/parcel-8554.kml')
-  await page.getByText(/Kiatta Properties LP - Parcel 8554 · about 4\d\d acres \(boundary\)/).waitFor()
-  await page.getByRole('button', { name: 'Import shape' }).click()
+  await page.getByText(/Property · about 4\d\d acres \(boundary\)/).waitFor()
+  await page.getByText('Gate · pin (gate)').waitFor()
+  await page.getByRole('button', { name: 'Import 9 items' }).click()
   await page.waitForTimeout(600)
   assert(areas.length === 1 && areas[0].is_boundary === true && areas[0].name === 'Property' && areas[0].geometry.coordinates[0].length === 14, 'KML boundary imported with 13 corners')
+  assert(pins.filter((p) => p.type === 'water').length === 7 && pins.find((p) => p.name === 'Gate')?.type === 'gate', 'KML points imported as pins')
+  await page.locator('.pin-label', { hasText: 'Mound Creek' }).first().waitFor()
   await shot(page, `${tag}-23-map-boundary`)
   await page.getByRole('button', { name: 'Add to the map' }).click()
   await page.getByText('Drop a pin at my location').click()

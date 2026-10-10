@@ -6,6 +6,8 @@ export type MultiPolygonGeometry = { type: 'MultiPolygon'; coordinates: Position
 export type AreaGeometry = PolygonGeometry | MultiPolygonGeometry
 
 export type ImportedShape = { name: string; geometry: AreaGeometry }
+export type ImportedPoint = { name: string; lat: number; lng: number; description: string }
+export type Imported = { shapes: ImportedShape[]; points: ImportedPoint[] }
 
 export function isAreaGeometry(g: unknown): g is AreaGeometry {
   const x = g as { type?: string; coordinates?: unknown }
@@ -54,19 +56,27 @@ export function acres(g: AreaGeometry): number {
   return m2 / 4046.856
 }
 
-/** Parse a GeoJSON or KML file into named polygon shapes. */
-export function parseShapes(filename: string, text: string): ImportedShape[] {
+/** Parse a GeoJSON or KML file into named polygon shapes and named points. */
+export function parseShapes(filename: string, text: string): Imported {
   if (/\.kml$/i.test(filename) || text.trimStart().startsWith('<')) return parseKml(text)
   return parseGeoJson(text)
 }
 
-function parseGeoJson(text: string): ImportedShape[] {
+function parseGeoJson(text: string): Imported {
   const json = JSON.parse(text) as { type?: string; features?: unknown[]; geometry?: unknown; properties?: Record<string, unknown> }
   const out: ImportedShape[] = []
+  const points: ImportedPoint[] = []
   const push = (geometry: unknown, props?: Record<string, unknown>) => {
+    const name = String(props?.name ?? props?.Name ?? props?.NAME ?? '').trim()
     if (isAreaGeometry(geometry)) {
-      const name = String(props?.name ?? props?.Name ?? props?.NAME ?? '').trim()
       out.push({ name: name || `Area ${out.length + 1}`, geometry })
+    } else {
+      const g = geometry as { type?: string; coordinates?: unknown }
+      if (g?.type === 'Point' && Array.isArray(g.coordinates) && g.coordinates.length >= 2) {
+        const [lng, lat] = g.coordinates as number[]
+        if (Number.isFinite(lat) && Number.isFinite(lng))
+          points.push({ name: name || `Point ${points.length + 1}`, lat, lng, description: String(props?.description ?? '') })
+      }
     }
   }
   if (json.type === 'FeatureCollection') {
@@ -79,15 +89,23 @@ function parseGeoJson(text: string): ImportedShape[] {
   } else {
     push(json)
   }
-  return out
+  return { shapes: out, points }
 }
 
-function parseKml(text: string): ImportedShape[] {
+function parseKml(text: string): Imported {
   const doc = new DOMParser().parseFromString(text, 'application/xml')
   const out: ImportedShape[] = []
+  const points: ImportedPoint[] = []
   const placemarks = Array.from(doc.getElementsByTagName('Placemark'))
   for (const pm of placemarks) {
     const name = pm.getElementsByTagName('name')[0]?.textContent?.trim() ?? ''
+    const description = pm.getElementsByTagName('description')[0]?.textContent?.trim() ?? ''
+    const pt = pm.getElementsByTagName('Point')[0]?.getElementsByTagName('coordinates')[0]?.textContent
+    if (pt) {
+      const [c] = parseKmlCoords(pt)
+      if (c) points.push({ name: name || `Point ${points.length + 1}`, lat: c[1], lng: c[0], description })
+      continue
+    }
     const polys = Array.from(pm.getElementsByTagName('Polygon'))
     const rings: Position[][][] = []
     for (const poly of polys) {
@@ -103,7 +121,7 @@ function parseKml(text: string): ImportedShape[] {
     if (rings.length === 1) out.push({ name: name || `Area ${out.length + 1}`, geometry: { type: 'Polygon', coordinates: rings[0] } })
     else if (rings.length > 1) out.push({ name: name || `Area ${out.length + 1}`, geometry: { type: 'MultiPolygon', coordinates: rings } })
   }
-  return out
+  return { shapes: out, points }
 }
 
 function parseKmlCoords(text: string): Position[] {

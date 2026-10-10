@@ -41,7 +41,10 @@ on conflict (id) do nothing;
 insert into public.pins (id, type, name, lat, lng, created_by) values
   ('00000000-0000-4000-8000-000000000301', 'camera', 'Plot Cam',       29.2325, -97.6608, '00000000-0000-4000-8000-000000000001'),
   ('00000000-0000-4000-8000-000000000302', 'gate',   'Front Gate',     29.2272, -97.6490, '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2300, -97.6580, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2321, -97.6664, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000304', 'water',  'Mound Creek',    29.2284, -97.6535, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000305', 'water',  'Board Branch',   29.2282, -97.6589, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000306', 'other',  'House (911 address point)', 29.2273, -97.6519, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- A couple of fills so the feeder colors mean something
@@ -86,9 +89,9 @@ on conflict (key) do nothing;
 -- Emergency info (admin edits this in the app under More > Emergency info)
 insert into public.settings (key, value) values
   ('emergency_address',    '1932 CR 211, Smiley, TX 78159'),
-  ('emergency_directions', 'Gate is at the east tip of the place on CR 211. Admin: confirm GPS at the gate with "Use my location" and add landmarks (More > Emergency info).'),
-  ('emergency_lat',        '29.2272'),
-  ('emergency_lng',        '-97.6490'),
+  ('emergency_directions', 'GPS is the 911 address point for 1932 CR 211 (inside the place near the east end). Gate is where the east tip meets CR 211. Admin: add landmarks here.'),
+  ('emergency_lat',        '29.2273'),
+  ('emergency_lng',        '-97.6519'),
   ('emergency_extra',      'Placeholder. Nearest ER and the Gonzales County Sheriff number go here.')
 on conflict (key) do nothing;
 

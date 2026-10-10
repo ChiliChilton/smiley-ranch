@@ -38,3 +38,16 @@ export async function loadPins(): Promise<PinRow[]> {
 export function fmtCoords(lat: number, lng: number): string {
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`
 }
+
+/** Best-guess pin type for an imported point, from its name. */
+export function guessPinType(name: string): PinType {
+  const n = name.toLowerCase()
+  if (/gate|entrance/.test(n)) return 'gate'
+  if (/feeder/.test(n)) return 'feeder'
+  if (/cam/.test(n)) return 'camera'
+  if (/stand|blind/.test(n)) return 'stand'
+  if (/tank|pond|creek|branch|stream|lake|water|well|spring/.test(n)) return 'water'
+  if (/plot|field/.test(n)) return 'food_plot'
+  if (/hazard|danger|wash|down/.test(n)) return 'hazard'
+  return 'other'
+}

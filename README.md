@@ -29,14 +29,14 @@ This is not real security (the spec says so). It keeps strangers out and makes a
 
 ## The property
 
-Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP. The parcel polygon is in `docs/parcel-8554.kml` (and as GeoJSON). The seed loads it as the property boundary; the admin can also import it from the Map tab.
+Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP, 1932 CR 211. The 911 address point is 29.2273, -97.6519. The parcel polygon is in `docs/parcel-8554.kml` (and as GeoJSON). The seed loads it as the property boundary; the admin can also import it from the Map tab.
 
 ## Map and stands
 
 - **Satellite map** from Esri World Imagery through Leaflet. No API key. Tiles you've viewed are cached by the service worker for weak signal.
 - **Pins**: stand, feeder, camera, water, gate, food plot, hazard, other. Each has a colored icon and a name label. Tap one for details, coordinates, Directions, and (for stands) the next claimed sits. Members add hazard and other pins; the admin adds everything else, and can edit, move, and remove.
 - **Adding pins**: "Drop a pin at my location" uses the phone's GPS. "Put a pin somewhere on the map" shows a crosshair you line up by panning.
-- **Boundary and areas** (admin): draw by tapping corners (Geoman), adjust corners later, or import a KML/GeoJSON file. The first imported shape becomes the boundary if there isn't one. Tap an area to rename it, make it the boundary, or remove it.
+- **Boundary and areas** (admin): draw by tapping corners (Geoman), adjust corners later, or import a KML/GeoJSON file. The first imported shape becomes the boundary if there isn't one; point placemarks become pins with a type guessed from the name (gate, tank, creek, feeder…). Tap an area to rename it, make it the boundary, or remove it.
 - **Stand sign-up**: the Stands tab is a week grid, stands down the side, days and AM/PM across the top. Tap a cell to claim it with an optional note, or to release your own claim. The admin can release anyone's. Postgres enforces one live claim per stand per sit. Home shows this weekend's claims.
 
 ## Calendar rules
