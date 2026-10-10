@@ -41,13 +41,13 @@ const seedPins = () => [
   { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
   { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
   { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, fill_interval_days: 14, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2310, lng: -97.6350, stand_type: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let pins = seedPins()
 let areas = []
 let claims = []
 const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
-let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2310', emergency_lng: '-97.6350', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
+let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2272', emergency_lng: '-97.6490', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
 const overlap = (a, b) => a.starts_on <= b.ends_on && b.starts_on <= a.ends_on
 // minimal PostgREST filter support: col=eq.x, col=is.null, col=gte.x, col=lte.x, col=neq.x
 function applyFilters(rows, sp) {
@@ -383,12 +383,11 @@ async function run(width, standalone) {
   await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
   await page.getByRole('button', { name: 'Add to the map' }).click()
   await page.getByText('Import a KML or GeoJSON file').click()
-  const geojson = JSON.stringify({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: { name: 'Parcel' }, geometry: { type: 'Polygon', coordinates: [[[-97.640, 29.228], [-97.628, 29.228], [-97.628, 29.242], [-97.640, 29.242], [-97.640, 29.228]]] } }] })
-  await page.getByTestId('import-file').setInputFiles({ name: 'parcel.geojson', mimeType: 'application/json', buffer: Buffer.from(geojson) })
-  await page.getByText(/Parcel · about \d+ acres \(boundary\)/).waitFor()
+  await page.getByTestId('import-file').setInputFiles('e2e/fixtures/parcel-8554.kml')
+  await page.getByText(/Kiatta Properties LP - Parcel 8554 · about 4\d\d acres \(boundary\)/).waitFor()
   await page.getByRole('button', { name: 'Import shape' }).click()
   await page.waitForTimeout(600)
-  assert(areas.length === 1 && areas[0].is_boundary === true && areas[0].name === 'Property', 'boundary imported')
+  assert(areas.length === 1 && areas[0].is_boundary === true && areas[0].name === 'Property' && areas[0].geometry.coordinates[0].length === 14, 'KML boundary imported with 13 corners')
   await shot(page, `${tag}-23-map-boundary`)
   await page.getByRole('button', { name: 'Add to the map' }).click()
   await page.getByText('Drop a pin at my location').click()

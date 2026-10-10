@@ -29,7 +29,7 @@ This is not real security (the spec says so). It keeps strangers out and makes a
 
 ## The property
 
-Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP. The parcel map on gonzalescad.org is the source for the boundary; trace it in the app (Phase 3) or export it as KML/GeoJSON and import it.
+Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP. The parcel polygon is in `docs/parcel-8554.kml` (and as GeoJSON). The seed loads it as the property boundary; the admin can also import it from the Map tab.
 
 ## Map and stands
 

@@ -19,30 +19,29 @@ update public.members set is_active = false where id = '00000000-0000-4000-8000-
 
 -- Stands (approximate coordinates just south of Smiley, TX, Gonzales County; replace with real pins)
 insert into public.pins (id, type, name, stand_type, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000101', 'stand', 'North Ladder',   'ladder',       29.2392, -97.6360, 'Faces the creek bottom', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000102', 'stand', 'Box Blind',      'box_blind',    29.2368, -97.6321, 'Overlooks the big food plot', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000103', 'stand', 'Tank Blind',     'ground_blind', 29.2339, -97.6397, 'Ground blind by the stock tank', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000104', 'stand', 'South Ladder',   'ladder',       29.2311, -97.6343, null, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000101', 'stand', 'North Ladder',   'ladder',       29.2352, -97.6690, 'Faces the creek bottom', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000102', 'stand', 'Box Blind',      'box_blind',    29.2318, -97.6625, 'Overlooks the big food plot', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000103', 'stand', 'Tank Blind',     'ground_blind', 29.2290, -97.6560, 'Ground blind by the stock tank', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000104', 'stand', 'South Ladder',   'ladder',       29.2270, -97.6520, null, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- Feeders
 insert into public.pins (id, type, name, fill_interval_days, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 29.2373, -97.6329, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 29.2400, -97.6374, 'Protein', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 29.2305, -97.6349, null, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 29.2322, -97.6615, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 29.2345, -97.6675, 'Protein', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 29.2278, -97.6530, null, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
--- Property boundary: Gonzales CAD parcel 8554, traced from the CAD outline and anchored to the gate GPS.
--- Replace by importing docs/parcel-8554.geojson (or a CAD export) in the app if it drifts.
+-- Property boundary: Gonzales CAD parcel 8554 polygon (docs/parcel-8554.kml).
 insert into public.areas (id, name, is_boundary, geometry, created_by) values
-  ('00000000-0000-4000-8000-000000000401', 'Property', true, '{"type": "Polygon", "coordinates": [[[-97.656471, 29.239485], [-97.655991, 29.239066], [-97.65846, 29.235026], [-97.637641, 29.224969], [-97.634211, 29.230626], [-97.635789, 29.231374], [-97.636132, 29.231733], [-97.655511, 29.241072], [-97.656471, 29.239485]]]}'::jsonb, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000401', 'Property', true, '{"type": "Polygon", "coordinates": [[[-97.6490144651531, 29.227156194364934], [-97.6508498722829, 29.228053656010548], [-97.65083141257631, 29.228197554274363], [-97.65814991003325, 29.23177693979724], [-97.66647383558266, 29.23576550933583], [-97.67018058302403, 29.237552466516345], [-97.67018243776913, 29.237549551362637], [-97.67119945775156, 29.235950872745835], [-97.67119947770593, 29.235950841361255], [-97.67062239011744, 29.23567521177332], [-97.67320507726228, 29.231603645220353], [-97.6540283840339, 29.222308763919475], [-97.65248044371533, 29.221598490265077], [-97.6490144651531, 29.227156194364934]]]}'::jsonb, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- Other pins
 insert into public.pins (id, type, name, lat, lng, created_by) values
-  ('00000000-0000-4000-8000-000000000301', 'camera', 'Plot Cam',       29.2375, -97.6327, '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000302', 'gate',   'Front Gate',     29.2310, -97.6350, '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2335, -97.6399, '00000000-0000-4000-8000-000000000001')
+  ('00000000-0000-4000-8000-000000000301', 'camera', 'Plot Cam',       29.2325, -97.6608, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000302', 'gate',   'Front Gate',     29.2272, -97.6490, '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2300, -97.6580, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- A couple of fills so the feeder colors mean something
@@ -87,9 +86,9 @@ on conflict (key) do nothing;
 -- Emergency info (admin edits this in the app under More > Emergency info)
 insert into public.settings (key, value) values
   ('emergency_address',    '1932 CR 211, Smiley, TX 78159'),
-  ('emergency_directions', 'Gate is on CR 211. Admin: add landmarks here (More > Emergency info).'),
-  ('emergency_lat',        '29.2310'),
-  ('emergency_lng',        '-97.6350'),
+  ('emergency_directions', 'Gate is at the east tip of the place on CR 211. Admin: confirm GPS at the gate with "Use my location" and add landmarks (More > Emergency info).'),
+  ('emergency_lat',        '29.2272'),
+  ('emergency_lng',        '-97.6490'),
   ('emergency_extra',      'Placeholder. Nearest ER and the Gonzales County Sheriff number go here.')
 on conflict (key) do nothing;
 
