@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { BrowserRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router'
+import { BrowserRouter, MemoryRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { DEMO } from './lib/demo'
 import { TabBar } from './components/TabBar'
 import { MembersProvider } from './lib/members'
@@ -21,14 +21,15 @@ import { InactiveScreen } from './screens/onboarding/InactiveScreen'
 import { InstallScreen } from './screens/onboarding/InstallScreen'
 import { JoinScreen } from './screens/onboarding/JoinScreen'
 import { NotificationsScreen } from './screens/onboarding/NotificationsScreen'
-import { Placeholder } from './screens/Placeholder'
 import { Stands } from './screens/Stands'
 import { Feeders } from './screens/Feeders'
 import { Sightings } from './screens/Sightings'
 import { SightingForm } from './screens/SightingForm'
 import { Harvests } from './screens/Harvests'
 import { HarvestForm } from './screens/HarvestForm'
-import { Gallery } from './screens/Gallery'
+import { Log } from './screens/Log'
+import { Todos } from './screens/Todos'
+import { Supplies } from './screens/Supplies'
 
 // Leaflet and the drawing tools only load when the map is opened.
 const MapScreen = lazy(() => import('./screens/MapScreen'))
@@ -115,9 +116,11 @@ function Shell() {
         <Route path="/harvests" element={<Harvests />} />
         <Route path="/harvests/new" element={<HarvestForm />} />
         <Route path="/harvests/:id/edit" element={<HarvestForm />} />
-        <Route path="/photos" element={<Gallery />} />
         <Route path="/map" element={<Suspense fallback={<LoadingScreen />}><MapScreen /></Suspense>} />
-        <Route path="/log" element={<Placeholder title="Log" phase={5} what="What's happening on the place." />} />
+        <Route path="/log" element={<Log />} />
+        <Route path="/todos" element={<Todos />} />
+        <Route path="/todos/new" element={<TodoNewRedirect />} />
+        <Route path="/supplies" element={<Supplies />} />
         <Route path="/more" element={<More />} />
         <Route path="/more/switch" element={<SwitchPerson />} />
         <Route path="/more/install" element={<InstallHelp />} />
@@ -130,6 +133,13 @@ function Shell() {
       <TabBar />
     </MembersProvider>
   )
+}
+
+function TodoNewRedirect() {
+  const { search } = useLocation()
+  const q = new URLSearchParams(search)
+  q.set('new', '1')
+  return <Navigate to={`/todos?${q.toString()}`} replace />
 }
 
 function AdminOnly({ children }: { children: React.ReactNode }) {

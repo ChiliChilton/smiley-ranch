@@ -68,6 +68,14 @@ function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row, p
   }
 }
 
+/** Mirrors supply_items_auto_need(): low or out puts the item on the shopping list. */
+function supplyTrigger(table: string, row: Row, before: Row | null) {
+  if (table !== 'supply_items') return
+  if (row.is_inventory && (row.level === 'low' || row.level === 'out') && (!before || before.level !== row.level)) {
+    row.needed = true; row.got_by = null; row.got_at = null
+  }
+}
+
 class Query implements PromiseLike<Result<unknown>> {
   private op: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select'
   private filters: Filter[] = []
@@ -161,12 +169,15 @@ class Query implements PromiseLike<Result<unknown>> {
           feeder_fills: { filled_at: now, amount: null, feed_type: null },
           sightings: { seen_at: now, count: 1, description: null, pin_id: null, lat: null, lng: null, notes: null },
           harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false },
-          photos: { width: null, height: null, pin_id: null, caption: null },
           checklist_items: { sort_order: 0 },
           pins: { notes: null, stand_type: null, fill_interval_days: null },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
+          log_entries: { pin_id: null, lat: null, lng: null },
+          todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, status: 'open', completed_by: null, completed_at: null },
+          supply_items: { notes: null, is_inventory: false, level: null, needed: true, got_by: null, got_at: null },
+          checkins: { arrived_at: now, expected_back: null, note: null, left_at: null, left_by: null },
           areas: { is_boundary: false, color: null },
           members: { is_active: true },
         }
@@ -184,6 +195,7 @@ class Query implements PromiseLike<Result<unknown>> {
             return err('23P01', `${who} already has the place those dates (${clash.title})`)
           }
         }
+        supplyTrigger(this.table, row, null)
         rows.push(row); inserted.push(row)
       }
       save()
@@ -206,7 +218,9 @@ class Query implements PromiseLike<Result<unknown>> {
             }
           }
         }
+        const before = { ...r }
         Object.assign(r, this.payload, 'updated_at' in r ? { updated_at: now } : {})
+        supplyTrigger(this.table, r, before)
         updated.push(r)
       }
       save()
@@ -271,21 +285,6 @@ function rpc(name: string, args: Row = {}): Promise<Result<unknown>> {
   return new Promise((resolve) => setTimeout(() => resolve(run()), 80))
 }
 
-// Photos live in memory only in the demo (object URLs), so they don't survive a reload.
-const blobs = new Map<string, string>()
-const storage = {
-  from: (_bucket: string) => ({
-    upload: async (path: string, blob: Blob) => {
-      blobs.set(path, URL.createObjectURL(blob))
-      return { data: { path }, error: null }
-    },
-    createSignedUrls: async (paths: string[], _ttl: number) => ({
-      data: paths.map((p) => ({ path: p, signedUrl: blobs.get(p) ?? '', error: null })),
-      error: null,
-    }),
-  }),
-}
-
 const channel = () => {
   const ch = { on: () => ch, subscribe: () => ch, unsubscribe: () => Promise.resolve('ok') }
   return ch
@@ -301,6 +300,5 @@ export function createMockClient() {
     },
     channel,
     removeChannel: async () => 'ok',
-    storage,
   }
 }

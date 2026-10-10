@@ -70,6 +70,76 @@ export type CheckoutRow = {
 
 export type SettingRow = { key: string; value: string; updated_at: string }
 
+export type LogEntryRow = {
+  id: string
+  body: string
+  pin_id: string | null
+  lat: number | null
+  lng: number | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type CommentParent = 'log_entry' | 'sighting' | 'harvest' | 'todo' | 'event' | 'pin'
+
+export type CommentRow = {
+  id: string
+  parent_type: CommentParent
+  parent_id: string
+  body: string
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type TodoRow = {
+  id: string
+  title: string
+  notes: string | null
+  assignee_id: string | null
+  due_on: string | null
+  pin_id: string | null
+  status: 'open' | 'done'
+  completed_by: string | null
+  completed_at: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type SupplyLevel = 'full' | 'some' | 'low' | 'out'
+
+export type SupplyItemRow = {
+  id: string
+  name: string
+  notes: string | null
+  is_inventory: boolean
+  level: SupplyLevel | null
+  needed: boolean
+  got_by: string | null
+  got_at: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type CheckinRow = {
+  id: string
+  member_id: string
+  arrived_at: string
+  expected_back: string | null
+  note: string | null
+  left_at: string | null
+  left_by: string | null
+  created_by: string | null
+  created_at: string
+}
+
 export type FeederFillRow = {
   id: string
   feeder_id: string
@@ -113,22 +183,6 @@ export type HarvestRow = {
   created_by: string | null
   created_at: string
   updated_at: string
-  deleted_at: string | null
-}
-
-export type PhotoParent = 'log_entry' | 'sighting' | 'harvest' | 'todo' | 'pin' | 'event'
-
-export type PhotoRow = {
-  id: string
-  parent_type: PhotoParent
-  parent_id: string
-  storage_path: string
-  width: number | null
-  height: number | null
-  pin_id: string | null
-  caption: string | null
-  created_by: string | null
-  created_at: string
   deleted_at: string | null
 }
 
@@ -304,20 +358,43 @@ export type Database = {
         Update: Partial<Omit<HarvestRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
         Relationships: []
       }
-      photos: {
-        Row: PhotoRow
+      log_entries: {
+        Row: LogEntryRow
+        Insert: { id?: string; body: string; pin_id?: string | null; lat?: number | null; lng?: number | null; created_by?: string | null }
+        Update: { body?: string; pin_id?: string | null; lat?: number | null; lng?: number | null; deleted_at?: string | null }
+        Relationships: []
+      }
+      comments: {
+        Row: CommentRow
+        Insert: { id?: string; parent_type: CommentParent; parent_id: string; body: string; created_by?: string | null }
+        Update: { body?: string; deleted_at?: string | null }
+        Relationships: []
+      }
+      todos: {
+        Row: TodoRow
         Insert: {
           id?: string
-          parent_type: PhotoParent
-          parent_id: string
-          storage_path: string
-          width?: number | null
-          height?: number | null
+          title: string
+          notes?: string | null
+          assignee_id?: string | null
+          due_on?: string | null
           pin_id?: string | null
-          caption?: string | null
+          status?: 'open' | 'done'
           created_by?: string | null
         }
-        Update: { caption?: string | null; pin_id?: string | null; deleted_at?: string | null }
+        Update: Partial<Omit<TodoRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      supply_items: {
+        Row: SupplyItemRow
+        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
+        Update: Partial<Omit<SupplyItemRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      checkins: {
+        Row: CheckinRow
+        Insert: { id?: string; member_id: string; arrived_at?: string; expected_back?: string | null; note?: string | null; created_by?: string | null }
+        Update: { expected_back?: string | null; note?: string | null; left_at?: string | null; left_by?: string | null }
         Relationships: []
       }
       checkouts: {

@@ -3,15 +3,13 @@ import { useNavigate } from 'react-router'
 import { Button, Spinner } from '../components/Button'
 import { Card } from '../components/Card'
 import { Note } from '../components/Note'
-import { PhotoStrip } from '../components/Photos'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import type { HarvestRow, PhotoRow, PinRow } from '../lib/database.types'
+import type { HarvestRow, PinRow } from '../lib/database.types'
 import { fmtDate, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
 import { fmtCoords, loadPins } from '../lib/pins'
-import { loadPhotosFor, removePhoto } from '../lib/photos'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { seasonLabel, seasonOf, SEXES } from '../lib/species'
@@ -22,7 +20,6 @@ export function Harvests() {
   const me = useMe()
   const { nameOf } = useMembers()
   const [rows, setRows] = useState<HarvestRow[] | null>(null)
-  const [photos, setPhotos] = useState<Map<string, PhotoRow[]>>(new Map())
   const [pins, setPins] = useState<PinRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [season, setSeason] = useState(seasonOf(todayISO()))
@@ -37,13 +34,12 @@ export function Harvests() {
       if (error) throw error
       setRows(data ?? [])
       setPins(allPins)
-      setPhotos(await loadPhotosFor('harvest', (data ?? []).map((r) => r.id)))
     } catch (err) {
       setError(friendlyError(err))
     }
   }, [])
   useEffect(() => { void reload() }, [reload])
-  useRealtime(['harvests', 'photos'], reload)
+  useRealtime(['harvests'], reload)
 
   const seasons = useMemo(() => {
     const set = new Set((rows ?? []).map((r) => seasonOf(r.harvested_on)))
@@ -139,7 +135,6 @@ export function Harvests() {
                     </div>
                     <div className="text-sm text-ink-muted">
                       {fmtDate(r.harvested_on)} · {pinName(r.pin_id) ?? (r.lat != null ? 'GPS spot' : 'somewhere')}
-                      {(photos.get(r.id)?.length ?? 0) > 0 && ` · ${photos.get(r.id)!.length} photo${photos.get(r.id)!.length > 1 ? 's' : ''}`}
                       {!r.logged_on_license && r.species === 'Deer' && <span className="text-warn"> · not logged on license</span>}
                     </div>
                   </button>
@@ -160,7 +155,6 @@ export function Harvests() {
               {open.tag_number ? `Tag ${open.tag_number} · ` : ''}{open.logged_on_license ? 'Logged on license' : 'Not logged on license yet'}
             </p>
             {open.notes && <p className="whitespace-pre-wrap text-ink">{open.notes}</p>}
-            <PhotoStrip photos={photos.get(open.id) ?? []} size="md" onRemove={(open.created_by === me.member_id || me.is_admin) ? async (p) => { await removePhoto(p); await reload() } : undefined} />
             <p className="text-xs text-ink-muted">Posted by {nameOf(open.created_by)}</p>
             {(open.created_by === me.member_id || open.member_id === me.member_id || me.is_admin) && (
               <div className="flex gap-2 pt-1">

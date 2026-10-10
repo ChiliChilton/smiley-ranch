@@ -11,6 +11,7 @@ import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
+import { checkOut } from '../lib/checkins'
 import { supabase } from '../lib/supabase'
 
 export async function loadLastCheckout(): Promise<CheckoutRow | null> {
@@ -72,8 +73,9 @@ export function Checkout() {
       .insert({ member_id: me.member_id, items: snapshot, all_done: allDone, notes: notes.trim() || null })
       .select('*')
       .single()
+    if (error) { setBusy(false); return setError(friendlyError(error)) }
+    await checkOut(me.member_id, me.member_id).catch(() => {})
     setBusy(false)
-    if (error) return setError(friendlyError(error))
     setSaved(data)
   }
 

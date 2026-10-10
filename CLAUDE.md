@@ -5,7 +5,7 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 ## Stack (don't substitute without asking)
 - **Frontend:** Vite + React + TypeScript, Tailwind CSS
 - **PWA:** `vite-plugin-pwa` with a manifest, icons (including a 180×180 apple-touch-icon), and a service worker
-- **Backend:** Supabase. Use Postgres, Storage for photos, Edge Functions, and Realtime.
+- **Backend:** Supabase. Use Postgres, Edge Functions, and Realtime. No Storage (photos were cut to keep upkeep near zero).
 - **Map:** Leaflet (`react-leaflet`) with Esri World Imagery satellite tiles. Use `leaflet-draw` or Geoman for the boundary and areas.
 - **Push:** Web Push with VAPID keys, sent from a Supabase Edge Function
 - **Hosting:** Vercel
@@ -24,7 +24,6 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 - Web push only works on iOS **after** the app is installed to the home screen. Detect this and explain it in the UI.
 - If the app isn't running standalone, detect that and show the "Add to Home Screen" instructions screen.
 - Test layouts at 375px and 430px widths.
-- Use the native camera input (`<input type="file" accept="image/*" capture>`) for photos.
 
 ## Offline / weak signal
 - Cache the app shell with the service worker.
@@ -33,7 +32,7 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 
 ## Data
 - Write SQL migrations in `supabase/migrations/`.
-- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `sightings`, `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `photos` (polymorphic: parent_type + parent_id), and `push_subscriptions`.
+- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `sightings`, `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checkins`, and `push_subscriptions`. (Photos were dropped by decision: no Storage bucket to look after.)
 - Use soft delete (`deleted_at`) for user content.
 
 ## Build order
@@ -43,6 +42,8 @@ Build in this order and stop for review after each phase:
 3. Feeders, sightings, harvests, photos
 4. Log + comments, to-dos, needs/supplies, calendar
 5. Push notifications, offline outbox, CSV/JSON export, polish
+
+Actual order used: 1 identity → 2 calendar + check-out list + emergency info → 3 map + stands → 4 feeders, sightings, harvests → 5 log, to-dos, supplies, check-in board → 6 push, offline, export.
 
 ## Style
 - Earthy and simple: burnt orange / red dirt, tan, warm off-white. Muted, easy on the eyes, readable in sunlight. Dark mode is optional.

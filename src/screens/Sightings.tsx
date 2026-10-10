@@ -4,15 +4,13 @@ import { Button, Spinner } from '../components/Button'
 import { Card } from '../components/Card'
 import { TextInput } from '../components/Input'
 import { Note } from '../components/Note'
-import { PhotoStrip } from '../components/Photos'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import type { PhotoRow, PinRow, SightingRow } from '../lib/database.types'
+import type { PinRow, SightingRow } from '../lib/database.types'
 import { fmtDateTime } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
 import { fmtCoords, loadPins } from '../lib/pins'
-import { loadPhotosFor, removePhoto } from '../lib/photos'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -22,7 +20,6 @@ export function Sightings() {
   const me = useMe()
   const { nameOf } = useMembers()
   const [rows, setRows] = useState<SightingRow[] | null>(null)
-  const [photos, setPhotos] = useState<Map<string, PhotoRow[]>>(new Map())
   const [pins, setPins] = useState<PinRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [species, setSpecies] = useState('')
@@ -43,13 +40,12 @@ export function Sightings() {
       if (error) throw error
       setRows(data ?? [])
       setPins(allPins)
-      setPhotos(await loadPhotosFor('sighting', (data ?? []).map((r) => r.id)))
     } catch (err) {
       setError(friendlyError(err))
     }
   }, [species, pinId, from, to])
   useEffect(() => { void reload() }, [reload])
-  useRealtime(['sightings', 'photos'], reload)
+  useRealtime(['sightings'], reload)
 
   const speciesSeen = useMemo(() => Array.from(new Set((rows ?? []).map((r) => r.species))).sort(), [rows])
   const pinName = (id: string | null) => pins.find((p) => p.id === id)?.name
@@ -104,7 +100,6 @@ export function Sightings() {
                 </div>
                 <div className="text-sm text-ink-muted">
                   {fmtDateTime(r.seen_at)} · {pinName(r.pin_id) ?? (r.lat != null ? 'GPS spot' : 'somewhere')} · {nameOf(r.created_by)}
-                  {(photos.get(r.id)?.length ?? 0) > 0 && ` · ${photos.get(r.id)!.length} photo${photos.get(r.id)!.length > 1 ? 's' : ''}`}
                 </div>
               </button>
             </li>
@@ -146,7 +141,6 @@ export function Sightings() {
               Seen by {nameOf(open.created_by)}
             </p>
             {open.notes && <p className="whitespace-pre-wrap text-ink">{open.notes}</p>}
-            <PhotoStrip photos={photos.get(open.id) ?? []} size="md" onRemove={(open.created_by === me.member_id || me.is_admin) ? async (p) => { await removePhoto(p); await reload() } : undefined} />
             {(open.created_by === me.member_id || me.is_admin) && (
               <div className="flex gap-2 pt-1">
                 <Button variant="secondary" onClick={() => navigate(`/sightings/${open.id}/edit`)}>Edit</Button>

@@ -3,13 +3,11 @@ import { useNavigate, useParams } from 'react-router'
 import { Button } from '../components/Button'
 import { TextArea, TextInput } from '../components/Input'
 import { Note } from '../components/Note'
-import { PhotoPicker } from '../components/Photos'
 import { PinSelect, type Where } from '../components/PinSelect'
 import { Screen } from '../components/Screen'
 import { todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
-import { uploadPhoto } from '../lib/photos'
 import { useMe } from '../lib/session'
 import { SEXES, SPECIES } from '../lib/species'
 import { supabase } from '../lib/supabase'
@@ -29,19 +27,13 @@ export function HarvestForm() {
   const [tag, setTag] = useState('')
   const [logged, setLogged] = useState(false)
   const [notes, setNotes] = useState('')
-  const [files, setFiles] = useState<File[]>([])
-  const [existingPhotos, setExistingPhotos] = useState(0)
   const [busy, setBusy] = useState(false)
-  const [progress, setProgress] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(!id)
 
   useEffect(() => {
     if (!id) return
-    Promise.all([
-      supabase.from('harvests').select('*').eq('id', id).single(),
-      supabase.from('photos').select('id').eq('parent_type', 'harvest').eq('parent_id', id).is('deleted_at', null),
-    ]).then(([{ data, error }, { data: ph }]) => {
+    supabase.from('harvests').select('*').eq('id', id).single().then(({ data, error }) => {
       if (error || !data) return setError(friendlyError(error))
       const known = (SPECIES as readonly string[]).includes(data.species)
       setMemberId(data.member_id)
@@ -54,7 +46,6 @@ export function HarvestForm() {
       setTag(data.tag_number ?? '')
       setLogged(data.logged_on_license)
       setNotes(data.notes ?? '')
-      setExistingPhotos(ph?.length ?? 0)
       setLoaded(true)
     })
   }, [id])
@@ -86,24 +77,17 @@ export function HarvestForm() {
         logged_on_license: logged,
         notes: notes.trim() || null,
       }
-      let harvestId = id
       if (id) {
         const { error } = await supabase.from('harvests').update(row).eq('id', id)
         if (error) throw error
       } else {
-        const { data, error } = await supabase.from('harvests').insert(row).select('id').single()
+        const { error } = await supabase.from('harvests').insert(row)
         if (error) throw error
-        harvestId = data.id
-      }
-      for (let i = 0; i < files.length; i++) {
-        setProgress(`Uploading photo ${i + 1} of ${files.length}…`)
-        await uploadPhoto(files[i], { type: 'harvest', id: harvestId!, pin_id: where.pin_id })
       }
       navigate('/harvests', { replace: true })
     } catch (err) {
       setError(friendlyError(err))
       setBusy(false)
-      setProgress(null)
     }
   }
 
@@ -157,8 +141,6 @@ export function HarvestForm() {
             </div>
           )}
           <TextArea label="Notes" name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" rows={2} />
-          <PhotoPicker files={files} onChange={setFiles} existing={existingPhotos} />
-          {progress && <Note>{progress}</Note>}
           <Button type="submit" full busy={busy} disabled={!finalSpecies || !memberId}>{id ? 'Save' : 'Post harvest'}</Button>
         </form>
       )}

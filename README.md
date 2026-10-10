@@ -12,7 +12,7 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | 2 | Calendar (just us / come join), check-out list, emergency info, Home | **Done** |
 | 3 | Satellite map, pins, boundary and areas, stand sign-up | **Done** |
 | 4 | Feeders with due colors, sightings, harvests with TPWD tags, photos | **Done** |
-| 5 | Log + comments, to-dos, needs/supplies | Not started |
+| 5 | Log + comments, to-dos, needs/supplies, who's-on-the-place check-in | **Done** |
 | 6 | Push notifications, offline outbox, CSV/JSON export, polish | Not started |
 
 The build order was reshuffled after Phase 1: the family calendar, the before-you-leave list, and a shareable emergency address came first.
@@ -39,12 +39,28 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 - **Boundary and areas** (admin): draw by tapping corners (Geoman), adjust corners later, or import a KML/GeoJSON file. The first imported shape becomes the boundary if there isn't one; point placemarks become pins with a type guessed from the name (gate, tank, creek, feeder…). Tap an area to rename it, make it the boundary, or remove it.
 - **Stand sign-up**: the Stands tab is a week grid, stands down the side, days and AM/PM across the top. Tap a cell to claim it with an optional note, or to release your own claim. The admin can release anyone's. Postgres enforces one live claim per stand per sit. Home shows this weekend's claims.
 
-## Feeders, sightings, harvests, photos
+## Feeders, sightings, harvests
 
 - **Feeders**: each feeder pin carries "fill every N days". The Feeders screen, the Home card, and the feeder's map pin show green (fine), yellow (due), or red (overdue, 3 days past due). **Filled it** records the fill with one tap, then offers optional amount and feed type.
 - **Sightings**: species chips, "looked like", count, time, a pin or GPS spot, notes, photos. Filter by species, pin, or date range.
 - **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes, photos. Season totals (Sept–Aug) by person and species.
-- **Photos**: up to 5 per entry, shrunk on the phone to 1600 px on the long side before upload, stored in the private `photos` bucket, shown with short-lived signed URLs. The gallery filters by kind and by pin.
+- **Photos** were cut by decision: photo storage is the one part of the stack that needs looking after over time.
+
+## Log, to-dos, supplies, who's here
+
+- **Log**: a running feed. Post text with an optional spot (pin or GPS). Comments on each entry. "Make a to-do" turns an entry into a to-do with the title and spot filled in.
+- **To-dos**: title, notes, assignee, due date, spot. Tap the circle to mark done (records who and when) or reopen. Filters: Mine, All open, Done. Comments too.
+- **Needs & supplies**: "We need" is the shopping list; "Got it" records who bought it. "On hand" tracks rough levels (full / some / low / out); low or out puts the item on the list automatically, and "Got it" sets it back to full.
+- **Who's on the place**: "I'm here" with an optional "back by" time and note; "I'm out" or finishing the before-you-leave list closes it. Past the "back by" time the entry turns red; Phase 6 adds the push.
+
+## Upkeep
+
+The goal is near zero. What there is:
+
+- **Supabase free tier pauses after ~7 days without traffic.** `.github/workflows/keep-alive.yml` pings the API twice a week once the repo is on GitHub with two secrets set (`SUPABASE_URL`, `SUPABASE_ANON_KEY`). If a project does get paused, the admin restores it with one click in the Supabase dashboard; no data is lost.
+- **Free-tier limits** are generous for 20 people and text-only data: 500 MB database, 50,000 monthly active users. No Storage is used.
+- **Vercel** redeploys on push and needs nothing between deploys.
+- **Anonymous auth users** accumulate one per phone (and again if someone clears Safari data). Harmless; they can be pruned from the dashboard if it ever matters.
 
 ## Calendar rules
 

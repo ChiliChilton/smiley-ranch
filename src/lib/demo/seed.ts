@@ -84,5 +84,30 @@ export function seedDb(): Record<string, Row[]> {
     { id: 'h2', member_id: M(1), harvested_on: `${seasonYear}-11-15`, species: 'Deer', sex: 'doe', description: null, pin_id: 'p2', lat: null, lng: null, notes: 'Management doe', tag_number: null, logged_on_license: false, ...base(20) },
     { id: 'h3', member_id: M(4), harvested_on: `${seasonYear}-10-02`, species: 'Hog', sex: 'male', description: '180 lb boar', pin_id: 'p5', lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, ...base(40), created_by: M(4) },
   ]
-  return { members, checklist_items: checklist, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, sightings, harvests, photos: [] }
+  const log_entries = [
+    { id: 'l1', body: 'Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', pin_id: 'p11', lat: null, lng: null, ...base(1), created_by: M(3) },
+    { id: 'l2', body: 'Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', pin_id: 'p10', lat: null, lng: null, ...base(4), created_by: M(4) },
+    { id: 'l3', body: 'Filled the propane at the house. Gauge reads 70%.', pin_id: null, lat: null, lng: null, ...base(9), created_by: M(3) },
+  ]
+  const comments = [
+    { id: 'cm1', parent_type: 'log_entry', parent_id: 'l1', body: "I've got posts in the barn. Can fix it Saturday.", ...base(1), created_by: M(1) },
+  ]
+  const todos = [
+    { id: 't1', title: 'Fix the north fence', notes: 'Two T-posts and wire. Posts are in the barn.', assignee_id: M(3), due_on: addDays(today, 6), pin_id: 'p11', status: 'open', completed_by: null, completed_at: null, ...base(1) },
+    { id: 't2', title: 'Replace Plot Cam batteries', notes: null, assignee_id: M(1), due_on: addDays(today, -2), pin_id: 'p7', status: 'open', completed_by: null, completed_at: null, ...base(10), created_by: M(4) },
+    { id: 't3', title: 'Grade the road to the tank', notes: null, assignee_id: null, due_on: null, pin_id: null, status: 'open', completed_by: null, completed_at: null, ...base(12) },
+    { id: 't4', title: 'Mow around the cabin', notes: null, assignee_id: M(5), due_on: null, pin_id: null, status: 'done', completed_by: M(5), completed_at: ts(3), ...base(15) },
+  ]
+  const supply_items = [
+    { id: 'su1', name: 'Corn (50 lb bags)', notes: '6 bags', is_inventory: true, level: 'low', needed: true, got_by: null, got_at: null, ...base(20) },
+    { id: 'su2', name: 'Protein pellets', notes: null, is_inventory: true, level: 'some', needed: false, got_by: null, got_at: null, ...base(20) },
+    { id: 'su3', name: 'Propane', notes: null, is_inventory: true, level: 'full', needed: false, got_by: null, got_at: null, ...base(20) },
+    { id: 'su4', name: 'AA batteries', notes: 'For the cameras', is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(3), created_by: M(4) },
+    { id: 'su5', name: 'Gate latch', notes: null, is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(2), created_by: M(3) },
+    { id: 'su6', name: 'Trash bags', notes: null, is_inventory: false, level: null, needed: false, got_by: M(2), got_at: ts(8), ...base(12), created_by: M(2) },
+  ]
+  const checkins = [
+    { id: 'ci1', member_id: M(3), arrived_at: ts(0, 6), expected_back: null, note: 'Sitting the North Ladder', left_at: null, left_by: null, created_by: M(3), created_at: ts(0, 6) },
+  ]
+  return { members, checklist_items: checklist, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, sightings, harvests, log_entries, comments, todos, supply_items, checkins }
 }

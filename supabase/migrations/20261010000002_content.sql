@@ -263,22 +263,8 @@ create trigger supply_items_auto_need before insert or update on public.supply_i
   for each row execute function public.supply_items_auto_need();
 
 -- ---------------------------------------------------------------------------
--- Photos (polymorphic) and push subscriptions
+-- Push subscriptions
 -- ---------------------------------------------------------------------------
-
-create table public.photos (
-  id            uuid primary key default gen_random_uuid(),
-  parent_type   text not null check (parent_type in ('log_entry', 'sighting', 'harvest', 'todo', 'pin', 'event')),
-  parent_id     uuid not null,
-  storage_path  text not null unique,
-  width         integer,
-  height        integer,
-  created_by    uuid references public.members(id),
-  created_at    timestamptz not null default now(),
-  deleted_at    timestamptz
-);
-
-create index photos_parent_idx on public.photos(parent_type, parent_id) where deleted_at is null;
 
 create table public.push_subscriptions (
   id            uuid primary key default gen_random_uuid(),
@@ -307,7 +293,7 @@ begin
   foreach t in array array[
     'pins', 'areas', 'stand_claims', 'sightings', 'harvests', 'feeder_fills',
     'log_entries', 'comments', 'events', 'event_attendees', 'todos',
-    'supply_items', 'photos', 'push_subscriptions'
+    'supply_items', 'push_subscriptions'
   ] loop
     execute format(
       'create trigger %I_set_created_by before insert on public.%I
@@ -336,7 +322,7 @@ begin
   foreach t in array array[
     'pins', 'areas', 'stand_claims', 'sightings', 'harvests', 'feeder_fills',
     'log_entries', 'comments', 'events', 'event_attendees', 'todos',
-    'supply_items', 'photos', 'push_subscriptions'
+    'supply_items', 'push_subscriptions'
   ] loop
     execute format('alter table public.%I enable row level security', t);
   end loop;
@@ -351,7 +337,7 @@ declare
 begin
   foreach t in array array[
     'sightings', 'harvests', 'feeder_fills', 'log_entries', 'comments',
-    'events', 'todos', 'supply_items', 'photos'
+    'events', 'todos', 'supply_items'
   ] loop
     execute format($f$
       create policy %1$I_select on public.%1$I for select to authenticated
@@ -434,23 +420,6 @@ create policy push_subscriptions_update on public.push_subscriptions for update 
   using (auth_user_id = auth.uid()) with check (auth_user_id = auth.uid());
 create policy push_subscriptions_delete on public.push_subscriptions for delete to authenticated
   using (auth_user_id = auth.uid());
-
--- ---------------------------------------------------------------------------
--- Storage: one private bucket for photos
--- ---------------------------------------------------------------------------
-
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('photos', 'photos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
-on conflict (id) do nothing;
-
-create policy photos_bucket_select on storage.objects for select to authenticated
-  using (bucket_id = 'photos' and public.is_active_member());
-
-create policy photos_bucket_insert on storage.objects for insert to authenticated
-  with check (bucket_id = 'photos' and public.is_active_member());
-
-create policy photos_bucket_delete on storage.objects for delete to authenticated
-  using (bucket_id = 'photos' and (public.is_admin() or owner = auth.uid()));
 
 -- ---------------------------------------------------------------------------
 -- Realtime

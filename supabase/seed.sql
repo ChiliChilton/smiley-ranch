@@ -65,3 +65,21 @@ insert into public.harvests (member_id, harvested_on, species, sex, description,
   ('00000000-0000-4000-8000-000000000003', current_date - 30, 'Deer', 'buck', '10 point, 138"', '00000000-0000-4000-8000-000000000101', 'A-4471', true,  '00000000-0000-4000-8000-000000000003'),
   ('00000000-0000-4000-8000-000000000001', current_date - 20, 'Deer', 'doe',  null,             '00000000-0000-4000-8000-000000000102', null,     false, '00000000-0000-4000-8000-000000000001'),
   ('00000000-0000-4000-8000-000000000004', current_date - 40, 'Hog',  'male', '180 lb boar',    '00000000-0000-4000-8000-000000000201', null,     false, '00000000-0000-4000-8000-000000000004');
+
+-- Sample log, to-dos, supplies, check-in
+insert into public.log_entries (body, created_by, created_at) values
+  ('Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', '00000000-0000-4000-8000-000000000003', now() - interval '1 day'),
+  ('Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', '00000000-0000-4000-8000-000000000004', now() - interval '4 days');
+
+insert into public.todos (title, notes, assignee_id, due_on, status, created_by) values
+  ('Fix the north fence', 'Two T-posts and wire. Posts are in the barn.', '00000000-0000-4000-8000-000000000003', current_date + 6, 'open', '00000000-0000-4000-8000-000000000001'),
+  ('Replace Plot Cam batteries', null, '00000000-0000-4000-8000-000000000001', current_date - 2, 'open', '00000000-0000-4000-8000-000000000004'),
+  ('Grade the road to the tank', null, null, null, 'open', '00000000-0000-4000-8000-000000000001');
+
+insert into public.supply_items (name, notes, is_inventory, level, needed, created_by) values
+  ('Corn (50 lb bags)', '6 bags', true, 'low', true, '00000000-0000-4000-8000-000000000001'),
+  ('Protein pellets', null, true, 'some', false, '00000000-0000-4000-8000-000000000001'),
+  ('AA batteries', 'For the cameras', false, null, true, '00000000-0000-4000-8000-000000000004');
+
+insert into public.checkins (member_id, arrived_at, note, created_by) values
+  ('00000000-0000-4000-8000-000000000003', now() - interval '5 hours', 'Sitting the North Ladder', '00000000-0000-4000-8000-000000000003');

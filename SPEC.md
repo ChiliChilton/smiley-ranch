@@ -47,11 +47,11 @@ A shared app for one family hunting property. It answers four questions for ever
 - Members can add hazard and other pins. Only the admin can add, edit, or move stands, feeders, and cameras.
 
 ### 4. Sightings Log
-- Captures species, description (like "big 8"), count, time, location (a pin or GPS point), an optional photo, and who saw it.
+- Captures species, description (like "big 8"), count, time, location (a pin or GPS point), and who saw it.
 - Filter by species, stand, or date range.
 
 ### 5. Harvest Log
-- Captures who, date, species, sex, description/score, stand or location, photo, and notes.
+- Captures who, date, species, sex, description/score, stand or location, Texas tag number, logged-on-license, and notes.
 - Season totals by person and species.
 
 ### 6. Feeder Tracker
@@ -61,7 +61,7 @@ A shared app for one family hunting property. It answers four questions for ever
 
 ### 7. General Log / Feed
 - A running "what happened" timeline, like "fence down by north gate" or "creek crossing washed out."
-- Text plus optional photos plus an optional map pin.
+- Text plus an optional map pin.
 - Comments on entries.
 
 ### 8. Calendar
@@ -70,7 +70,7 @@ A shared app for one family hunting property. It answers four questions for ever
 - Stand claims also show on the calendar.
 
 ### 9. To-Dos
-- A to-do has a title, notes, an optional assignee, an optional due date, an optional map pin, and an optional photo.
+- A to-do has a title, notes, an optional assignee, an optional due date, and an optional map pin.
 - Statuses are open and done. Record who completed it and when.
 - Filters: mine, all open, done.
 
@@ -79,9 +79,7 @@ A shared app for one family hunting property. It answers four questions for ever
 - **Inventory:** items with a rough on-hand level (full / some / low / out). Setting an item to low or out automatically adds it to the shopping list.
 
 ### 11. Photos
-- Any entry can have up to 5 photos.
-- Photos are compressed on the phone before upload, to about 1600px longest side.
-- A gallery view shows all photos, filterable by type and pin.
+Dropped by decision (Oct 2026): photo storage needs upkeep over time. Entries are text only.
 
 ### 12. Notifications (push, optional per person)
 Each person chooses which of these they want:
@@ -90,6 +88,11 @@ Each person chooses which of these they want:
 - To-do assigned to me
 - Feeder overdue (daily digest, sent to the admin only by default)
 - New calendar event
+- Someone is past their "back by" time and hasn't checked out
+
+### 12b. Who's on the place
+- "I'm here" with an optional "back by" time and note. "I'm out" closes it. Checking out on the before-you-leave list also closes it.
+- Home shows who's on the place right now. If someone is past their "back by" time, the family gets a push (see Notifications).
 
 ### 13. Admin
 - Add, rename, or deactivate members. Deactivated members keep their history.

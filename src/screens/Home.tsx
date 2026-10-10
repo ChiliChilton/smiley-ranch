@@ -11,6 +11,11 @@ import { loadClaims, SIT_LABEL, weekendDates } from '../lib/claims'
 import type { CheckoutRow, EventRow, FeederFillRow, PinRow, StandClaimRow } from '../lib/database.types'
 import { feederStatus, loadFeeders, recordFill } from '../lib/feeders'
 import { FeederCard, FillDetailsSheet } from './Feeders'
+import { CheckinCard } from '../components/CheckinCard'
+import { loadLog } from './Log'
+import { loadMyOpenTodos } from './Todos'
+import { loadSupplies } from './Supplies'
+import type { LogEntryRow, SupplyItemRow, TodoRow } from '../lib/database.types'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { loadEvents } from '../lib/events'
 import { supabase } from '../lib/supabase'
@@ -31,27 +36,36 @@ export function Home() {
   const [last, setLast] = useState<CheckoutRow | null>(null)
   const [weekend, setWeekend] = useState<{ days: string[]; claims: StandClaimRow[]; stands: PinRow[] } | null>(null)
   const [feeders, setFeeders] = useState<{ feeders: PinRow[]; lastFill: Map<string, FeederFillRow> } | null>(null)
+  const [log, setLog] = useState<LogEntryRow[]>([])
+  const [todos, setTodos] = useState<TodoRow[]>([])
+  const [needs, setNeeds] = useState<SupplyItemRow[]>([])
   const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
 
   const reload = useCallback(async () => {
     const days = weekendDates()
-    const [ev, co, cl, st, fd] = await Promise.all([
+    const [ev, co, cl, st, fd, lg, td, sp] = await Promise.all([
       loadEvents(todayISO()).catch(() => null),
       loadLastCheckout(),
       days.length ? loadClaims(days[0], days[days.length - 1]).catch(() => []) : Promise.resolve([]),
       supabase.from('pins').select('*').eq('type', 'stand').is('deleted_at', null).then((r) => r.data ?? []),
       loadFeeders().catch(() => null),
+      loadLog(5).catch(() => []),
+      me.member_id ? loadMyOpenTodos(me.member_id).catch(() => []) : Promise.resolve([]),
+      loadSupplies().catch(() => []),
     ])
     if (ev) setEvents(ev.slice(0, 4))
     setLast(co)
     setWeekend({ days, claims: cl, stands: st })
     setFeeders(fd)
-  }, [])
+    setLog(lg)
+    setTodos(td)
+    setNeeds(sp.filter((i) => i.needed))
+  }, [me.member_id])
 
   useEffect(() => {
     void reload()
   }, [reload])
-  useRealtime(['events', 'checkouts', 'stand_claims', 'feeder_fills'], reload)
+  useRealtime(['events', 'checkouts', 'stand_claims', 'feeder_fills', 'log_entries', 'todos', 'supply_items'], reload)
 
   const feedersDue = (feeders?.feeders ?? []).filter((f) => ['due', 'overdue'].includes(feederStatus(f, feeders!.lastFill.get(f.id)).status))
 
@@ -64,6 +78,8 @@ export function Home() {
       )}
 
       <div className="space-y-4">
+        <CheckinCard />
+
         <Card title="This weekend's stands">
           {!weekend ? (
             <p className="text-sm text-ink-muted">Loading…</p>
@@ -141,6 +157,43 @@ export function Home() {
           </section>
         )}
 
+        <Card title="Latest on the place">
+          {log.length === 0 ? (
+            <p className="text-sm text-ink-muted">Nothing in the log yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {log.map((e) => (
+                <li key={e.id} className="text-sm">
+                  <span className="text-ink">{e.body.length > 140 ? e.body.slice(0, 140) + '…' : e.body}</span>
+                  <span className="block text-xs text-ink-muted">{nameOf(e.created_by)} · {fmtDateTime(e.created_at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3"><Button variant="secondary" onClick={() => navigate('/log')}>Open the log</Button></div>
+        </Card>
+
+        {todos.length > 0 && (
+          <Card title="My to-dos">
+            <ul className="space-y-1 text-sm">
+              {todos.map((t) => (
+                <li key={t.id} className="text-ink">
+                  • {t.title}
+                  {t.due_on && <span className={t.due_on < todayISO() ? ' font-semibold text-alert' : ' text-ink-muted'}> · {t.due_on < todayISO() ? 'was due' : 'due'} {fmtDate(t.due_on)}</span>}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3"><Button variant="secondary" onClick={() => navigate('/todos')}>All to-dos</Button></div>
+          </Card>
+        )}
+
+        {needs.length > 0 && (
+          <Card title="We need">
+            <p className="text-sm text-ink">{needs.slice(0, 6).map((i) => i.name).join(', ')}{needs.length > 6 ? ` and ${needs.length - 6} more` : ''}</p>
+            <div className="mt-3"><Button variant="secondary" onClick={() => navigate('/supplies')}>Shopping list</Button></div>
+          </Card>
+        )}
+
         <EmergencyCard />
 
         <Card title="Before you leave">
@@ -158,9 +211,7 @@ export function Home() {
           </div>
         </Card>
 
-        <p className="px-1 text-xs text-ink-muted">
-          Coming in later phases: the latest log entries, your to-dos, and low supplies.
-        </p>
+        <p className="px-1 text-xs text-ink-muted">Coming in the last phase: notifications, posting with no signal, and export.</p>
       </div>
 
       <button
@@ -213,7 +264,7 @@ export function Home() {
               I'm heading out
             </button>
           </li>
-          {([['Saw something', '/sightings/new'], ['Post a harvest', '/harvests/new'], ['Filled a feeder', '/feeders']] as const).map(([label, to]) => (
+          {([['Log entry', '/log'], ['To-do', '/todos/new'], ['We need…', '/supplies'], ['Saw something', '/sightings/new'], ['Post a harvest', '/harvests/new'], ['Filled a feeder', '/feeders']] as const).map(([label, to]) => (
             <li key={to}>
               <button
                 type="button"
@@ -221,18 +272,6 @@ export function Home() {
                 className="tap flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-base font-semibold text-ink ring-1 ring-tan-200 active:bg-tan-100"
               >
                 {label}
-              </button>
-            </li>
-          ))}
-          {['Log entry', 'To-do', 'We need…'].map((label) => (
-            <li key={label}>
-              <button
-                type="button"
-                disabled
-                className="tap flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-base font-semibold text-ink ring-1 ring-tan-200 disabled:opacity-50"
-              >
-                {label}
-                <span className="text-xs font-medium uppercase text-ink-muted">soon</span>
               </button>
             </li>
           ))}

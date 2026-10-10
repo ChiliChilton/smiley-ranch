@@ -46,7 +46,7 @@ const seedPins = () => [
 let pins = seedPins()
 let areas = []
 let claims = []
-let fills = [], sightings = [], harvests = [], photos = []
+let fills = [], sightings = [], harvests = [], logs = [], comments = [], todos = [], supplies = [], checkins = []
 const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
 let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2273', emergency_lng: '-97.6519', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
 const overlap = (a, b) => a.starts_on <= b.ends_on && b.starts_on <= a.ends_on
@@ -68,7 +68,7 @@ function applyFilters(rows, sp) {
   return rows
 }
 function restTable(name) {
-  return { events, event_attendees: attendees, checklist_items: checklist, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, photos }[name]
+  return { events, event_attendees: attendees, checklist_items: checklist, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
 }
 let secrets = { code: 'deer-camp', pin: '4321' }
 let device = { member_id: null, is_admin: false }
@@ -120,7 +120,7 @@ async function mock(route) {
     if (method === 'GET') return route.fulfill(json(Object.entries(settings).map(([key, value]) => ({ key, value, updated_at: 'x' }))))
     if (method === 'POST') { if (!device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy')); for (const r of (Array.isArray(body) ? body : [body])) settings[r.key] = r.value; return route.fulfill(json([], 201)) }
   }
-  const generic = ['events', 'event_attendees', 'checklist_items', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'photos']
+  const generic = ['events', 'event_attendees', 'checklist_items', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
   const tname = path.replace('/rest/v1/', '')
   if (generic.includes(tname)) {
     const rows = restTable(tname)
@@ -213,7 +213,7 @@ async function run(width, standalone) {
   secrets = { code: 'deer-camp', pin: '4321' }
   members = seedMembers()
   events = seedEvents(); attendees = []; checkouts = []; checklist = seedChecklist()
-  pins = seedPins(); areas = []; claims = []; fills = []; sightings = []; harvests = []; photos = []
+  pins = seedPins(); areas = []; claims = []; fills = []; sightings = []; harvests = []; logs = []; comments = []; todos = []; supplies = []; checkins = []
 
   await page.goto(BASE)
   if (!standalone) {
