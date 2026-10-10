@@ -45,12 +45,32 @@ insert into public.feeder_fills (feeder_id, filled_at, amount, feed_type, create
   ('00000000-0000-4000-8000-000000000202', now() - interval '19 days', '100 lb', 'protein', '00000000-0000-4000-8000-000000000003'),
   ('00000000-0000-4000-8000-000000000203', now() - interval '30 days', '150 lb', 'corn',    '00000000-0000-4000-8000-000000000001');
 
--- Check-out list (placeholder until the real one comes in)
-insert into public.checklist_items (title, sort_order, created_by) values
-  ('Turn off the water',            1, '00000000-0000-4000-8000-000000000001'),
-  ('Take the trash out',            2, '00000000-0000-4000-8000-000000000001'),
-  ('Lock the cabin',                3, '00000000-0000-4000-8000-000000000001'),
-  ('Lock the front gate',           4, '00000000-0000-4000-8000-000000000001');
+-- Check-out list ("Smiley check list before you go")
+insert into public.checklist_items (title, sort_order, created_by)
+select title, row_number() over (), '00000000-0000-4000-8000-000000000001'
+from unnest(array[
+  'Winter: leave the heater in the house and trailer on 67. Summer: house AC on 84, trailer AC off',
+  'Turn off the breaker for the hot water heater in the trailer (in the bunk bed room)',
+  'Check the freezer, fridge and pantry. No opened leftovers, no duplicates, nothing that can expire. Leave open pantry space for the next group',
+  'No dirty dishes in the sink',
+  'Empty the dishwasher',
+  'Take dirty dish towels home to wash and bring back. If you''re not coming back soon, wash, dry and put them away',
+  'Turn all lights off in the house, trailer and porch',
+  'Take all your trash home with you, including bathrooms and barn',
+  'Leave $110 for cleaning on the kitchen counter, or Cash App Elvira',
+  'Winter: turn the water off and drain the pipes if it was off when you arrived (leave it the way you found it unless told otherwise)',
+  'Empty the dehumidifier in the gun room',
+  'Lock the gun room (pull the door hard to close)',
+  'Lock the house',
+  'Lock the trailer',
+  'Leave hog traps open so nothing gets trapped and dies',
+  'Make sure the yard gates are closed',
+  'Lock the ranch gate at the road properly (lock looped through the other lock)',
+  'Rinse off the Mule, Polaris and truck if muddy',
+  'Put the boat away in its spot',
+  'Don''t leave the truck with less than 1/4 tank of gas',
+  'Fill the mules with gas'
+]) as t(title);
 
 -- Emergency info (admin edits this in the app under More > Emergency info)
 insert into public.settings (key, value) values
