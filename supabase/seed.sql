@@ -44,3 +44,30 @@ insert into public.feeder_fills (feeder_id, filled_at, amount, feed_type, create
   ('00000000-0000-4000-8000-000000000201', now() - interval '3 days',  '200 lb', 'corn',    '00000000-0000-4000-8000-000000000004'),
   ('00000000-0000-4000-8000-000000000202', now() - interval '19 days', '100 lb', 'protein', '00000000-0000-4000-8000-000000000003'),
   ('00000000-0000-4000-8000-000000000203', now() - interval '30 days', '150 lb', 'corn',    '00000000-0000-4000-8000-000000000001');
+
+-- Check-out list (placeholder until the real one comes in)
+insert into public.checklist_items (title, sort_order, created_by) values
+  ('Turn off the water',            1, '00000000-0000-4000-8000-000000000001'),
+  ('Take the trash out',            2, '00000000-0000-4000-8000-000000000001'),
+  ('Lock the cabin',                3, '00000000-0000-4000-8000-000000000001'),
+  ('Lock the front gate',           4, '00000000-0000-4000-8000-000000000001');
+
+-- Emergency info (admin edits this in the app under More > Emergency info)
+insert into public.settings (key, value) values
+  ('emergency_address',    '1234 County Road 100, Llano, TX 78643'),
+  ('emergency_directions', 'Front gate is 2.1 mi north of FM 152 on CR 100, green pipe gate on the left. Cabin is 0.6 mi in.'),
+  ('emergency_lat',        '30.7560'),
+  ('emergency_lng',        '-98.6745'),
+  ('emergency_extra',      'Nearest ER: Llano Memorial, 200 W Ollie St. Llano County Sheriff: (325) 247-5767')
+on conflict (key) do nothing;
+
+-- Calendar
+insert into public.events (title, kind, starts_on, ends_on, notes, created_by) values
+  ('Opening weekend',    'inclusive', date_trunc('week', current_date)::date + 5,  date_trunc('week', current_date)::date + 7,  'Everybody welcome. Potluck Saturday night.', '00000000-0000-4000-8000-000000000001'),
+  ('Mike + friends',     'exclusive', current_date + 12, current_date + 14, 'Have the place to ourselves this weekend.', '00000000-0000-4000-8000-000000000003'),
+  ('Work day',           'inclusive', current_date + 20, current_date + 20, 'Fix the north fence, fill feeders.', '00000000-0000-4000-8000-000000000001'),
+  ('Season ends',        'info',      current_date + 90, current_date + 90, null, '00000000-0000-4000-8000-000000000001');
+
+insert into public.event_attendees (event_id, member_id, note, created_by)
+select e.id, '00000000-0000-4000-8000-000000000004', 'Bringing my dog', '00000000-0000-4000-8000-000000000004'
+from public.events e where e.title = 'Opening weekend';

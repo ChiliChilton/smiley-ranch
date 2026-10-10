@@ -1,4 +1,4 @@
-// Hand-written for Phase 1. Once the Supabase CLI is linked you can regenerate with:
+// Hand-written. Once the Supabase CLI is linked you can regenerate with:
 //   supabase gen types typescript --linked > src/lib/database.types.ts
 // Only the tables and RPCs the app currently touches are typed here.
 
@@ -20,6 +20,56 @@ export type MemberRow = {
   updated_at: string
 }
 
+export type EventKind = 'exclusive' | 'inclusive' | 'info'
+
+export type EventRow = {
+  id: string
+  title: string
+  kind: EventKind
+  starts_on: string
+  ends_on: string
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type EventAttendeeRow = {
+  event_id: string
+  member_id: string
+  note: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export type ChecklistItemRow = {
+  id: string
+  title: string
+  sort_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type CheckoutItem = { id: string; title: string; done: boolean }
+
+export type CheckoutRow = {
+  id: string
+  member_id: string
+  event_id: string | null
+  left_at: string
+  items: CheckoutItem[]
+  all_done: boolean
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  deleted_at: string | null
+}
+
+export type SettingRow = { key: string; value: string; updated_at: string }
+
 export type Database = {
   public: {
     Tables: {
@@ -30,9 +80,57 @@ export type Database = {
         Relationships: []
       }
       settings: {
-        Row: { key: string; value: string; updated_at: string }
+        Row: SettingRow
         Insert: { key: string; value: string }
         Update: { value?: string }
+        Relationships: []
+      }
+      events: {
+        Row: EventRow
+        Insert: {
+          id?: string
+          title: string
+          kind: EventKind
+          starts_on: string
+          ends_on: string
+          notes?: string | null
+          created_by?: string | null
+        }
+        Update: {
+          title?: string
+          kind?: EventKind
+          starts_on?: string
+          ends_on?: string
+          notes?: string | null
+          deleted_at?: string | null
+        }
+        Relationships: []
+      }
+      event_attendees: {
+        Row: EventAttendeeRow
+        Insert: { event_id: string; member_id: string; note?: string | null; created_by?: string | null }
+        Update: { note?: string | null }
+        Relationships: []
+      }
+      checklist_items: {
+        Row: ChecklistItemRow
+        Insert: { id?: string; title: string; sort_order?: number; created_by?: string | null }
+        Update: { title?: string; sort_order?: number; deleted_at?: string | null }
+        Relationships: []
+      }
+      checkouts: {
+        Row: CheckoutRow
+        Insert: {
+          id?: string
+          member_id: string
+          event_id?: string | null
+          left_at?: string
+          items: CheckoutItem[]
+          all_done: boolean
+          notes?: string | null
+          created_by?: string | null
+        }
+        Update: { notes?: string | null; deleted_at?: string | null }
         Relationships: []
       }
     }
@@ -53,6 +151,7 @@ export type Database = {
       sit: 'am' | 'pm'
       todo_status: 'open' | 'done'
       supply_level: 'full' | 'some' | 'low' | 'out'
+      event_kind: EventKind
     }
     CompositeTypes: Record<string, never>
   }

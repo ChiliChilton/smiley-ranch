@@ -2,9 +2,9 @@ import { NavLink } from 'react-router'
 
 const tabs = [
   { to: '/', label: 'Home', icon: HomeIcon },
+  { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
   { to: '/stands', label: 'Stands', icon: StandIcon },
   { to: '/map', label: 'Map', icon: MapIcon },
-  { to: '/log', label: 'Log', icon: LogIcon },
   { to: '/more', label: 'More', icon: MoreIcon },
 ]
 
@@ -77,11 +77,12 @@ function MapIcon({ active }: IconProps) {
     </svg>
   )
 }
-function LogIcon({ active }: IconProps) {
+function CalendarIcon({ active }: IconProps) {
   return (
     <svg {...base(active)}>
-      <rect x="4" y="3" width="16" height="18" rx="2" />
-      <path d="M8 8h8M8 12h8M8 16h5" stroke={active ? '#f3efe4' : 'currentColor'} />
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18" stroke={active ? '#f3efe4' : 'currentColor'} />
+      <path d="M8 3v4M16 3v4" />
     </svg>
   )
 }

@@ -54,6 +54,12 @@ export function More() {
           </Button>
         </Card>
 
+        <Card title="The place">
+          <Row onClick={() => navigate('/checkout')}>Before you leave</Row>
+          <Divider />
+          <Row onClick={() => navigate('/log')}>Log</Row>
+        </Card>
+
         <Card title="Admin">
           {me.is_admin ? (
             <>
@@ -61,6 +67,10 @@ export function More() {
               <Row onClick={() => navigate('/more/members')}>Members</Row>
               <Divider />
               <Row onClick={() => navigate('/more/security')}>Family code &amp; admin PIN</Row>
+              <Divider />
+              <Row onClick={() => navigate('/more/checklist')}>Check-out list</Row>
+              <Divider />
+              <Row onClick={() => navigate('/more/emergency')}>Emergency info</Row>
               <Divider />
               <Row disabled right="soon">Stands, feeders, cameras &amp; map</Row>
               <Divider />

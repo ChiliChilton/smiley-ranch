@@ -9,10 +9,13 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | Phase | What | State |
 | --- | --- | --- |
 | 1 | Scaffold, PWA install, Supabase, identity/onboarding, members admin | **Done** |
-| 2 | Map + pins, stands + stand sign-up, Home/Today | Not started |
-| 3 | Feeders, sightings, harvests, photos | Not started |
-| 4 | Log + comments, to-dos, needs/supplies, calendar | Not started |
-| 5 | Push notifications, offline outbox, CSV/JSON export, polish | Not started |
+| 2 | Calendar (just us / come join), check-out list, emergency info, Home | **Done** |
+| 3 | Map + pins, stands + stand sign-up | Not started |
+| 4 | Feeders, sightings, harvests, photos | Not started |
+| 5 | Log + comments, to-dos, needs/supplies | Not started |
+| 6 | Push notifications, offline outbox, CSV/JSON export, polish | Not started |
+
+The build order was reshuffled after Phase 1: the family calendar, the before-you-leave list, and a shareable emergency address came first.
 
 The full database schema (all tables, RLS, storage bucket) is already in `supabase/migrations/` so later phases only add UI and functions.
 
@@ -23,6 +26,14 @@ No passwords. Each phone signs in with Supabase **anonymous auth**, which gives 
 Admin mode is per phone: `unlock_admin(pin)` flips `member_devices.is_admin`. The family code and admin PIN are stored as bcrypt hashes in `settings` and never leave Postgres. Row Level Security is on every table, so an anonymous user who hasn't joined can read nothing.
 
 This is not real security (the spec says so). It keeps strangers out and makes attribution automatic.
+
+## Calendar rules
+
+- Every entry is **Come join** (anyone can tap "I'm in" and leave a note), **Just us** (that person has the place to themselves), or a **Note** (season dates, reminders).
+- Two **Just us** stays can't overlap. Postgres enforces it with an exclusion constraint and a trigger that says who already has the dates.
+- Adding a **Come join** stay over someone's **Just us** dates only warns: "Someone else has these dates", with the option to add it anyway.
+- The admin edits the **check-out list** (More → Check-out list). Anyone leaving opens "Before you leave", ticks the steps, adds a note, and taps "I'm heading out". The last check-out shows on Home, including anything skipped.
+- The admin sets the **emergency info** (More → Emergency info): 911 address, gate directions, GPS, and extras. It shows on Home with Share, Text it, Open in Maps, and Call 911.
 
 ## Setup
 
