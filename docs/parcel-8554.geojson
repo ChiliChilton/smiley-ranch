@@ -1,0 +1,57 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Property",
+        "parcel": "Gonzales CAD 8554",
+        "acres": 418.5,
+        "source": "traced from CAD outline screenshot, anchored to gate GPS 29.2310,-97.6350"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -97.656471,
+              29.239485
+            ],
+            [
+              -97.655991,
+              29.239066
+            ],
+            [
+              -97.65846,
+              29.235026
+            ],
+            [
+              -97.637641,
+              29.224969
+            ],
+            [
+              -97.634211,
+              29.230626
+            ],
+            [
+              -97.635789,
+              29.231374
+            ],
+            [
+              -97.636132,
+              29.231733
+            ],
+            [
+              -97.655511,
+              29.241072
+            ],
+            [
+              -97.656471,
+              29.239485
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

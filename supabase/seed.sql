@@ -32,6 +32,12 @@ insert into public.pins (id, type, name, fill_interval_days, lat, lng, notes, cr
   ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 29.2305, -97.6349, null, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
+-- Property boundary: Gonzales CAD parcel 8554, traced from the CAD outline and anchored to the gate GPS.
+-- Replace by importing docs/parcel-8554.geojson (or a CAD export) in the app if it drifts.
+insert into public.areas (id, name, is_boundary, geometry, created_by) values
+  ('00000000-0000-4000-8000-000000000401', 'Property', true, '{"type": "Polygon", "coordinates": [[[-97.656471, 29.239485], [-97.655991, 29.239066], [-97.65846, 29.235026], [-97.637641, 29.224969], [-97.634211, 29.230626], [-97.635789, 29.231374], [-97.636132, 29.231733], [-97.655511, 29.241072], [-97.656471, 29.239485]]]}'::jsonb, '00000000-0000-4000-8000-000000000001')
+on conflict (id) do nothing;
+
 -- Other pins
 insert into public.pins (id, type, name, lat, lng, created_by) values
   ('00000000-0000-4000-8000-000000000301', 'camera', 'Plot Cam',       29.2375, -97.6327, '00000000-0000-4000-8000-000000000001'),
