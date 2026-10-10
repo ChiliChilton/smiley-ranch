@@ -80,7 +80,7 @@ on conflict (key) do nothing;
 
 -- Emergency info (admin edits this in the app under More > Emergency info)
 insert into public.settings (key, value) values
-  ('emergency_address',    '1234 County Road 123, Smiley, TX 78159'),
+  ('emergency_address',    '1932 CR 211, Smiley, TX 78159'),
   ('emergency_directions', 'Placeholder. Admin: put the real gate directions here (More > Emergency info).'),
   ('emergency_lat',        '29.2358'),
   ('emergency_lng',        '-97.6320'),
