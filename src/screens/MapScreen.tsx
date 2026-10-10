@@ -23,6 +23,7 @@ import { emergencyFrom, useSettings } from '../lib/settings'
 import { mapsLink } from '../lib/share'
 import { supabase } from '../lib/supabase'
 import { SIT_LABEL } from '../lib/claims'
+import { DEMO } from '../lib/demo'
 
 const ESRI_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 const ESRI_ATTR = '&copy; Esri, Maxar, Earthstar Geographics, GIS User Community'
@@ -288,7 +289,7 @@ export default function MapScreen() {
           className="absolute inset-0"
           ref={mapRef}
         >
-          <TileLayer url={ESRI_URL} attribution={ESRI_ATTR} maxZoom={19} maxNativeZoom={18} />
+          {!DEMO && <TileLayer url={ESRI_URL} attribution={ESRI_ATTR} maxZoom={19} maxNativeZoom={18} />}
           {fitBounds && <FitOnce bounds={fitBounds} />}
           {areas && (
             <AreasLayer
@@ -326,6 +327,11 @@ export default function MapScreen() {
           </div>
         )}
 
+        {DEMO && !loading && (
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-[1001] flex justify-center">
+            <span className="rounded-full bg-cream/90 px-3 py-1 text-xs text-ink-muted">Demo: satellite imagery is off here. The real app shows Esri aerial photos.</span>
+          </div>
+        )}
         {loading && (
           <div className="absolute inset-x-0 top-3 z-[1001] flex justify-center">
             <span className="rounded-full bg-cream/90 px-3 py-1 text-sm text-clay-900"><Spinner small /> Loading…</span>

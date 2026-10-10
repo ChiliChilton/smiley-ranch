@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router'
+import { BrowserRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router'
+import { DEMO } from './lib/demo'
 import { TabBar } from './components/TabBar'
 import { MembersProvider } from './lib/members'
 import { SessionProvider, useSession } from './lib/session'
@@ -32,9 +33,15 @@ const NOTIF_KEY = 'back40.notifPrompted'
 export default function App() {
   return (
     <SessionProvider>
-      <BrowserRouter>
-        <Gate />
-      </BrowserRouter>
+      {DEMO ? (
+        <MemoryRouter>
+          <Gate />
+        </MemoryRouter>
+      ) : (
+        <BrowserRouter>
+          <Gate />
+        </BrowserRouter>
+      )}
     </SessionProvider>
   )
 }
@@ -50,7 +57,7 @@ export default function App() {
  */
 function Gate() {
   const session = useSession()
-  const [skipInstall, setSkipInstall] = useState(skippedInstall)
+  const [skipInstall, setSkipInstall] = useState(() => DEMO || skippedInstall())
   const [notifDone, setNotifDone] = useState(() => readJSON<boolean>(NOTIF_KEY) === true)
 
   if (!isStandalone() && !skipInstall) {

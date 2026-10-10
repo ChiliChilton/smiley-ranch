@@ -8,6 +8,8 @@ import { Screen } from '../components/Screen'
 import { friendlyError } from '../lib/errors'
 import { useMe, useSession } from '../lib/session'
 import { isIOS, isStandalone, pushSupported } from '../lib/standalone'
+import { DEMO, DEMO_PIN } from '../lib/demo'
+import { resetDemo } from '../lib/demo/mockClient'
 
 export function More() {
   const me = useMe()
@@ -105,7 +107,7 @@ export function More() {
             </form>
           ) : (
             <>
-              <p className="mb-3 text-sm text-ink-muted">Manage members, the map, and the family code.</p>
+              <p className="mb-3 text-sm text-ink-muted">Manage members, the map, and the family code.{DEMO && ` Demo PIN: ${DEMO_PIN}.`}</p>
               <Button variant="secondary" onClick={() => setPinOpen(true)}>
                 Unlock admin
               </Button>
@@ -131,6 +133,15 @@ export function More() {
             <Button variant="secondary" onClick={() => navigate('/more/install')}>
               Show me how
             </Button>
+          </Card>
+        )}
+
+        {DEMO && (
+          <Card title="Demo">
+            <p className="mb-3 text-sm text-ink-muted">
+              Sample data lives only on this device. Satellite imagery, GPS, and notifications are off in the demo. Everything else works.
+            </p>
+            <Button variant="secondary" onClick={() => { resetDemo(); window.location.reload() }}>Reset demo data</Button>
           </Card>
         )}
 

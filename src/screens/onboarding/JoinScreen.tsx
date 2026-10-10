@@ -5,6 +5,7 @@ import { Note } from '../../components/Note'
 import { Centered } from '../../components/Screen'
 import { friendlyError } from '../../lib/errors'
 import { useSession } from '../../lib/session'
+import { DEMO, DEMO_CODE } from '../../lib/demo'
 
 type Member = { id: string; name: string }
 
@@ -83,7 +84,7 @@ export function JoinScreen() {
   return (
     <Centered>
       <div className="mb-8 flex items-center gap-3">
-        <img src="/icons/icon-192.png" alt="" width={56} height={56} className="rounded-xl" />
+        <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={56} height={56} className="rounded-xl" />
         <div>
           <h1 className="text-2xl font-bold text-clay-950">Back 40</h1>
           <p className="text-ink-muted">The family hunting place</p>
@@ -95,7 +96,7 @@ export function JoinScreen() {
           name="code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="From the group text"
+          placeholder={DEMO ? `Demo: type ${DEMO_CODE}` : 'From the group text'}
           autoCapitalize="none"
           autoCorrect="off"
           autoComplete="off"
@@ -112,6 +113,11 @@ export function JoinScreen() {
       <p className="mt-6 text-center text-sm text-ink-muted">
         No passwords. The code just keeps strangers out.
       </p>
+      {DEMO && (
+        <Note className="mt-4">
+          This is a demo with sample data. Family code <strong>{DEMO_CODE}</strong>. Pick any name; Dad is the admin in the samples.
+        </Note>
+      )}
     </Centered>
   )
 }

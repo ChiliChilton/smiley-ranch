@@ -1,12 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
+import { DEMO } from './demo'
+import { createMockClient } from './demo/mockClient'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-export const supabaseConfigured = Boolean(url && key)
+export const supabaseConfigured = DEMO || Boolean(url && key)
 
-export const supabase = createClient<Database>(
+const real = () => createClient<Database>(
   url ?? 'http://localhost:54321',
   key ?? 'missing-key',
   {
@@ -19,3 +21,5 @@ export const supabase = createClient<Database>(
     },
   },
 )
+
+export const supabase: SupabaseClient<Database> = DEMO ? (createMockClient() as unknown as SupabaseClient<Database>) : real()

@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "oxlint",
     "typecheck": "tsc -b",
-    "e2e": "node e2e/smoke.mjs"
+    "e2e": "node e2e/smoke.mjs",
+    "build:demo": "node scripts/build-demo.mjs",
+    "e2e:demo": "node e2e/demo-check.mjs"
   },
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.20.2",

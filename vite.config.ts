@@ -4,12 +4,16 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
+const DEMO = process.env.VITE_DEMO === '1'
+
 export default defineConfig({
+  base: DEMO ? './' : '/',
   define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0') },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
+      disable: DEMO,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.png', 'apple-touch-icon.png'],
       manifest: {

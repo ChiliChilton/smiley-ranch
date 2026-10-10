@@ -170,3 +170,7 @@ npm run preview &
 npx playwright install chromium   # once
 npm run e2e
 ```
+
+## Demo mode (review without a backend)
+
+`npm run build:demo` builds the app with `VITE_DEMO=1`: an in-browser stand-in for Supabase (`src/lib/demo/`) with sample members, the real boundary, the check-out list, and emergency info, all kept in the viewer's localStorage. It enforces the same admin rules as the RLS policies. Family code `deer-camp`, admin PIN `4321`. Satellite tiles, GPS, push, and the service worker are off in demo mode. The output in `dist-demo/` is shaped for publishing as a claude.ai artifact; `npm run e2e:demo` smoke-tests it against `npm run preview`.
