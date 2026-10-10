@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* Earthy palette: dark green, tan, off-white. Built to be readable in sunlight. */
+@theme {
+  --color-pine-950: #122619;
+  --color-pine-900: #1f3d2b;
+  --color-pine-800: #2a5039;
+  --color-pine-700: #376548;
+  --color-pine-600: #477a5a;
+  --color-pine-100: #e3ece5;
+
+  --color-tan-700: #8a7149;
+  --color-tan-600: #a88c5e;
+  --color-tan-500: #c4ad7f;
+  --color-tan-300: #d9c7a3;
+  --color-tan-200: #e8dcc2;
+  --color-tan-100: #f0e8d6;
+
+  --color-cream: #f3efe4;
+  --color-cream-dark: #e9e3d3;
+  --color-ink: #1c1a16;
+  --color-ink-muted: #5c574d;
+
+  --color-alert: #b3261e;
+  --color-warn: #c98a0a;
+  --color-ok: #2f7a3e;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Safe areas for the notch and home indicator when launched from the home screen. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --tab-bar-height: 56px;
+}
+
+/* No zoom-on-focus in iOS Safari: inputs must be 16px or larger. */
+input, select, textarea, button { font-size: 16px; font-family: inherit; }
+
+/* Stop iOS from showing a text cursor while tapping around. */
+button { user-select: none; -webkit-user-select: none; }
+
+@utility tap {
+  min-height: 44px;
+  min-width: 44px;
+}

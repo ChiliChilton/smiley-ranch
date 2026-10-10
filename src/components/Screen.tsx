@@ -1,0 +1,71 @@
+import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+
+type Props = {
+  title: string
+  back?: boolean | string
+  right?: ReactNode
+  children: ReactNode
+  /** Leave room for the bottom tab bar. Default true. */
+  tabs?: boolean
+}
+
+/** Page frame: sticky header that respects the notch, scrollable content, room for the tab bar. */
+export function Screen({ title, back, right, children, tabs = true }: Props) {
+  const navigate = useNavigate()
+  return (
+    <div className="flex min-h-dvh flex-col bg-cream">
+      <header
+        className="sticky top-0 z-10 bg-pine-900 text-cream"
+        style={{ paddingTop: 'var(--safe-top)' }}
+      >
+        <div className="flex h-14 items-center gap-1 px-2">
+          {back ? (
+            <button
+              type="button"
+              onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))}
+              className="tap -ml-1 flex items-center rounded-lg px-2 text-base font-medium active:bg-pine-800"
+              aria-label="Back"
+            >
+              <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden>
+                <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Back
+            </button>
+          ) : (
+            <span className="w-2" />
+          )}
+          <h1 className="min-w-0 flex-1 truncate px-1 text-lg font-bold">{title}</h1>
+          {right}
+        </div>
+      </header>
+      <main
+        className="flex-1 px-4 pt-4"
+        style={{
+          paddingBottom: tabs ? 'calc(var(--tab-bar-height) + var(--safe-bottom) + 24px)' : 'calc(var(--safe-bottom) + 24px)',
+          paddingLeft: 'max(16px, var(--safe-left))',
+          paddingRight: 'max(16px, var(--safe-right))',
+        }}
+      >
+        {children}
+      </main>
+    </div>
+  )
+}
+
+/** Full-bleed centered layout for onboarding screens (no tab bar). */
+export function Centered({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="flex min-h-dvh flex-col bg-cream"
+      style={{
+        paddingTop: 'calc(var(--safe-top) + 24px)',
+        paddingBottom: 'calc(var(--safe-bottom) + 24px)',
+        paddingLeft: 'max(20px, var(--safe-left))',
+        paddingRight: 'max(20px, var(--safe-right))',
+      }}
+    >
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>
+    </div>
+  )
+}
