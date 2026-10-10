@@ -85,7 +85,13 @@ insert into public.members (name) values ('Dad');
 
 After that, the admin manages everything from the app (More → Unlock admin).
 
-For a throwaway test project you can run `supabase/seed.sql` instead. It sets family code `deer-camp`, PIN `4321`, and adds sample members, stands, and feeders.
+Then load the real property data (boundary, 911 address point, water features, the check-out list, emergency info):
+
+```sql
+-- paste supabase/property.sql into the SQL editor
+```
+
+For a throwaway test project you can run `supabase/seed.sql` instead. It sets family code `deer-camp`, PIN `4321`, and adds sample members, stands, and feeders. Run `property.sql` after it to get the real boundary too.
 
 ### 4. Environment variables
 
@@ -142,7 +148,8 @@ Phase 5 adds the Edge Function and the subscription UI.
 
 ```
 supabase/migrations/   SQL migrations (schema, RLS, RPCs, storage bucket)
-supabase/seed.sql      Sample data for a test project
+supabase/property.sql  Real property data for the live project (boundary, 911 point, water, check-out list)
+supabase/seed.sql      Sample members, stands, feeders for a test project
 src/lib/               Supabase client, session (identity), device detection
 src/components/        Small shared UI pieces (Button, Screen, TabBar, Sheet…)
 src/screens/           One file per screen
