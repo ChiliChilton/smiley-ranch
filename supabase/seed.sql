@@ -72,6 +72,12 @@ from unnest(array[
   'Fill the mules with gas'
 ]) as t(title);
 
+-- Property record (Gonzales CAD). Non-secret; members can read it.
+insert into public.settings (key, value) values
+  ('property_name',   'Smiley'),
+  ('property_parcel', 'Gonzales CAD parcel 8554, Abstract 380 George W. Petty survey, 418.5 ac, owner Kiatta Properties LP')
+on conflict (key) do nothing;
+
 -- Emergency info (admin edits this in the app under More > Emergency info)
 insert into public.settings (key, value) values
   ('emergency_address',    '1234 County Road 123, Smiley, TX 78159'),

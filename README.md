@@ -27,6 +27,10 @@ Admin mode is per phone: `unlock_admin(pin)` flips `member_devices.is_admin`. Th
 
 This is not real security (the spec says so). It keeps strangers out and makes attribution automatic.
 
+## The property
+
+Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP. The parcel map on gonzalescad.org is the source for the boundary; trace it in the app (Phase 3) or export it as KML/GeoJSON and import it.
+
 ## Calendar rules
 
 - Every entry is **Come join** (anyone can tap "I'm in" and leave a note), **Just us** (that person has the place to themselves), or a **Note** (season dates, reminders).
