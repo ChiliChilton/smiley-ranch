@@ -1,8 +1,8 @@
 -- Back 40: the REAL property data for Smiley (Gonzales CAD parcel 8554).
 -- Run this on the live Supabase project after the migrations and after adding the first member:
 --   psql ... -f supabase/property.sql     (or paste into the SQL editor)
--- It is safe to run more than once. It does NOT add sample members, stands, or feeders;
--- the admin places those in the app (Map > + > Drop a pin / Put a pin).
+-- Safe to run more than once. Map-wise it adds ONLY the property boundary;
+-- the admin places everything else in the app (Map > + > Drop a pin / Put a pin).
 
 -- Property record (Gonzales CAD). Non-secret; members can read it.
 insert into public.settings (key, value) values
@@ -51,11 +51,5 @@ insert into public.areas (id, name, is_boundary, geometry, created_by) values
   ('00000000-0000-4000-8000-000000000401', 'Property', true, '{"type": "Polygon", "coordinates": [[[-97.6490144651531, 29.227156194364934], [-97.6508498722829, 29.228053656010548], [-97.65083141257631, 29.228197554274363], [-97.65814991003325, 29.23177693979724], [-97.66647383558266, 29.23576550933583], [-97.67018058302403, 29.237552466516345], [-97.67018243776913, 29.237549551362637], [-97.67119945775156, 29.235950872745835], [-97.67119947770593, 29.235950841361255], [-97.67062239011744, 29.23567521177332], [-97.67320507726228, 29.231603645220353], [-97.6540283840339, 29.222308763919475], [-97.65248044371533, 29.221598490265077], [-97.6490144651531, 29.227156194364934]]]}'::jsonb, (select id from public.members order by created_at limit 1))
 on conflict (id) do nothing;
 
--- Real pins from the parcel KML (gate at the CR 211 frontage, 911 address point, NHD water)
-insert into public.pins (id, type, name, lat, lng, created_by) values
-  ('00000000-0000-4000-8000-000000000302', 'gate',   'Front Gate',     29.2272, -97.6490, (select id from public.members order by created_at limit 1)),
-  ('00000000-0000-4000-8000-000000000303', 'water',  'Stock Tank',     29.2321, -97.6664, (select id from public.members order by created_at limit 1)),
-  ('00000000-0000-4000-8000-000000000304', 'water',  'Mound Creek',    29.2284, -97.6535, (select id from public.members order by created_at limit 1)),
-  ('00000000-0000-4000-8000-000000000305', 'water',  'Board Branch',   29.2282, -97.6589, (select id from public.members order by created_at limit 1)),
-  ('00000000-0000-4000-8000-000000000306', 'other',  'House (911 address point)', 29.2273, -97.6519, (select id from public.members order by created_at limit 1))
-on conflict (id) do nothing;
+-- No pins on purpose. The admin places stands, feeders, cameras, gates, and water in the app.
+-- Mapped water from the parcel KML (Mound Creek, Board Branch, stock tank) is in docs/parcel-8554.kml if wanted later.
