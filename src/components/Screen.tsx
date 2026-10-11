@@ -7,16 +7,18 @@ type Props = {
   right?: ReactNode
   /** Something to show before the title, like the brand mark. */
   leading?: ReactNode
+  /** Photo to run behind the header. Makes it a tall, non-sticky banner. */
+  hero?: string
   children: ReactNode
   /** Leave room for the bottom tab bar. Default true. */
   tabs?: boolean
 }
 
 /** Page frame: sticky header that respects the notch, scrollable content, room for the tab bar. */
-export function Screen({ title, back, right, leading, children, tabs = true }: Props) {
+export function Screen({ title, back, right, leading, hero, children, tabs = true }: Props) {
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
-      <Header title={title} back={back} right={right} leading={leading} />
+      <Header title={title} back={back} right={right} leading={leading} hero={hero} />
       <main
         className="flex-1 px-4 pt-4"
         style={{
@@ -31,8 +33,27 @@ export function Screen({ title, back, right, leading, children, tabs = true }: P
   )
 }
 
-export function Header({ title, back, right, leading }: Pick<Props, 'title' | 'back' | 'right' | 'leading'>) {
+export function Header({ title, back, right, leading, hero }: Pick<Props, 'title' | 'back' | 'right' | 'leading' | 'hero'>) {
   const navigate = useNavigate()
+  if (hero) {
+    return (
+      <header
+        className="relative bg-clay-900 text-cream"
+        style={{
+          backgroundImage: `linear-gradient(to bottom, rgba(40,16,6,0.25) 0%, rgba(40,16,6,0.05) 35%, rgba(40,16,6,0.72) 100%), url(${hero})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 40%',
+          paddingTop: 'calc(var(--safe-top) + 92px)',
+        }}
+      >
+        <div className="flex items-end gap-3 px-4 pb-3">
+          {leading && <span className="flex shrink-0 items-center text-cream drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">{leading}</span>}
+          <h1 className="min-w-0 flex-1 truncate text-xl font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">{title}</h1>
+          {right}
+        </div>
+      </header>
+    )
+  }
   return (
       <header
         className="sticky top-0 z-10 bg-clay-900 text-cream"

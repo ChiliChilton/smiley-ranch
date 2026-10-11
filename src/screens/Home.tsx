@@ -101,7 +101,7 @@ export function Home() {
   }
 
   return (
-    <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={26} />}>
+    <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={34} />} hero={`${import.meta.env.BASE_URL}banner.jpg`}>
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
       <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
