@@ -56,22 +56,36 @@ export function Stands() {
 
   const claimAt = (standId: string, date: string, sit: Sit) => claims.find((c) => c.stand_id === standId && c.date === date && c.sit === sit)
 
+  const [day, setDay] = useState(today)
+  const dayClaims = claims.filter((c) => c.date === day)
+
   return (
-    <Screen title="Stands">
+    <Screen title="Stands" back="/">
       {error && <Note kind="error" className="mb-3">{error}</Note>}
 
-      <div className="mb-3 flex items-center justify-between">
-        <Button variant="secondary" className="!px-3" aria-label="Earlier week" onClick={() => setWeekStart(addDays(weekStart, -DAYS))} disabled={weekStart <= addDays(today, -DAYS * 4)}>
-          ‹
-        </Button>
-        <button type="button" onClick={() => setWeekStart(today)} className="tap px-2 font-bold text-clay-950">
+      <div className="mb-1 flex items-center justify-between">
+        <Button variant="secondary" className="!px-3" aria-label="Earlier week" onClick={() => { const w = addDays(weekStart, -DAYS); setWeekStart(w); setDay(w) }} disabled={weekStart <= addDays(today, -DAYS * 4)}>‹</Button>
+        <button type="button" onClick={() => { setWeekStart(today); setDay(today) }} className="tap px-2 text-sm font-bold text-clay-950">
           {fmtDate(weekStart, { weekday: false })} – {fmtDate(weekEnd, { weekday: false })}
         </button>
-        <Button variant="secondary" className="!px-3" aria-label="Later week" onClick={() => setWeekStart(addDays(weekStart, DAYS))}>
-          ›
-        </Button>
+        <Button variant="secondary" className="!px-3" aria-label="Later week" onClick={() => { const w = addDays(weekStart, DAYS); setWeekStart(w); setDay(w) }}>›</Button>
+      </div>
+      <div className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        {days.map((d) => {
+          const dt = parseISODate(d)
+          const weekend = dt.getDay() === 0 || dt.getDay() === 6
+          const n = claims.filter((c) => c.date === d).length
+          return (
+            <button key={d} type="button" onClick={() => setDay(d)} aria-pressed={day === d} aria-label={fmtDate(d)} className={`tap flex w-[52px] shrink-0 flex-col items-center rounded-md py-1.5 ring-1 ${day === d ? 'bg-clay-900 text-cream ring-clay-900' : weekend ? 'bg-tan-200 text-clay-950 ring-tan-300' : 'bg-white text-clay-950 ring-tan-300'}`}>
+              <span className="text-[10px] font-bold uppercase">{DOW[dt.getDay()]}</span>
+              <span className="text-lg font-extrabold leading-tight">{dt.getDate()}</span>
+              <span className={`text-[10px] ${day === d ? 'text-cream/80' : 'text-ink-muted'}`}>{n ? `${n} taken` : d === today ? 'today' : ' '}</span>
+            </button>
+          )
+        })}
       </div>
 
+      <h2 className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-clay-900">{fmtDate(day)}</h2>
       {!stands ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : stands.length === 0 ? (
@@ -79,71 +93,37 @@ export function Stands() {
           No stands on the map yet. {me.is_admin ? <button type="button" className="font-semibold underline" onClick={() => navigate('/map')}>Add them on the map.</button> : 'Ask the admin to add them on the map.'}
         </Note>
       ) : (
-        <div className="-mx-4 overflow-x-auto px-4 pb-2">
-          <table className="border-separate border-spacing-1 text-xs">
-            <thead>
-              <tr>
-                <th className="sticky left-0 z-10 bg-cream" />
-                {days.map((d) => {
-                  const dt = parseISODate(d)
-                  const weekend = dt.getDay() === 0 || dt.getDay() === 6
-                  return (
-                    <th key={d} colSpan={2} className={`rounded-t-lg px-1 pt-1 text-center font-bold ${weekend ? 'bg-tan-200 text-clay-950' : 'text-ink-muted'} ${d === today ? 'underline' : ''}`}>
-                      {DOW[dt.getDay()]} {dt.getDate()}
-                    </th>
-                  )
-                })}
-              </tr>
-              <tr>
-                <th className="sticky left-0 z-10 bg-cream" />
-                {days.map((d) =>
-                  SITS.map((s) => (
-                    <th key={d + s} className="pb-1 text-center text-[10px] font-semibold text-ink-muted">{SIT_LABEL[s]}</th>
-                  )),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {stands.map((stand) => (
-                <tr key={stand.id}>
-                  <th className="sticky left-0 z-10 max-w-[96px] bg-cream pr-2 text-left text-sm font-bold leading-tight text-clay-950">
-                    <span className="block truncate">{stand.name}</span>
-                    {stand.stand_type && <span className="block text-[10px] font-medium text-ink-muted">{STAND_TYPES[stand.stand_type]}</span>}
-                  </th>
-                  {days.map((d) =>
-                    SITS.map((s) => {
-                      const c = claimAt(stand.id, d, s)
-                      const mine = c?.member_id === me.member_id
-                      const past = d < today
-                      return (
-                        <td key={d + s} className="p-0">
-                          <button
-                            type="button"
-                            onClick={() => setCell({ stand, date: d, sit: s })}
-                            aria-label={`${stand.name}, ${fmtDate(d)} ${SIT_LABEL[s]}${c ? `, ${nameOf(c.member_id)}` : ', open'}`}
-                            className={`tap h-12 w-12 rounded-lg text-[11px] font-bold leading-tight ring-1 ${
-                              c
-                                ? mine
-                                  ? 'bg-clay-900 text-cream ring-clay-900'
-                                  : 'bg-tan-300 text-clay-950 ring-tan-500'
-                                : past
-                                  ? 'bg-cream-dark text-transparent ring-tan-200'
-                                  : 'bg-white text-tan-500 ring-tan-200'
-                            }`}
-                          >
-                            {c ? <span className="block truncate px-0.5">{nameOf(c.member_id).split(' ')[0]}</span> : past ? '' : '+'}
-                          </button>
-                        </td>
-                      )
-                    }),
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-1 text-xs text-ink-muted">Swipe sideways for more days. Burnt orange is you.</p>
-        </div>
+        <ul className="divide-y divide-tan-200 border-y border-tan-200">
+          {stands.map((stand) => (
+            <li key={stand.id} className="flex items-center gap-3 py-2">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-bold text-clay-950">{stand.name}</div>
+                {stand.stand_type && <div className="text-xs text-ink-muted">{STAND_TYPES[stand.stand_type]}</div>}
+              </div>
+              {SITS.map((s) => {
+                const c = dayClaims.find((x) => x.stand_id === stand.id && x.sit === s)
+                const mine = c?.member_id === me.member_id
+                const past = day < today
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setCell({ stand, date: day, sit: s })}
+                    aria-label={`${stand.name}, ${fmtDate(day)} ${SIT_LABEL[s]}${c ? `, ${nameOf(c.member_id)}` : ', open'}`}
+                    className={`tap flex h-12 w-[88px] shrink-0 flex-col items-center justify-center rounded-md text-xs font-bold leading-tight ring-1 ${
+                      c ? (mine ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-tan-300 text-clay-950 ring-tan-500') : past ? 'bg-cream-dark text-ink-muted ring-tan-200' : 'bg-white text-clay-950 ring-tan-400'
+                    }`}
+                  >
+                    <span className={`text-[10px] ${c && mine ? 'text-cream/80' : 'text-ink-muted'}`}>{SIT_LABEL[s]}</span>
+                    <span className="max-w-full truncate px-1">{c ? nameOf(c.member_id).split(' ')[0] : past ? '—' : 'Open'}</span>
+                  </button>
+                )
+              })}
+            </li>
+          ))}
+        </ul>
       )}
+      <p className="mt-2 text-xs text-ink-muted">Tap a sit to claim it or let it go. Burnt orange is you.</p>
 
       <ClaimSheet
         cell={cell}

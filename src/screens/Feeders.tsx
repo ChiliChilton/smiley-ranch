@@ -7,7 +7,7 @@ import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
 import type { FeederFillRow, PinRow } from '../lib/database.types'
-import { fmtDateTime } from '../lib/dates'
+import { fmtDate, fmtDateTime } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { feederStatus, lastFeedType, loadFeeders, recordFill, rememberFeedType, STATUS_STYLE, updateFill } from '../lib/feeders'
 import { useMembers } from '../lib/members'
@@ -62,7 +62,7 @@ export function Feeders() {
           ))}
         </ul>
       )}
-      <p className="mt-4 text-xs text-ink-muted">Green is fine, yellow is due, red is overdue. The admin sets how many days between fills on each feeder's pin.</p>
+      <p className="mt-4 text-xs text-ink-muted">Record how many bags go in and the app guesses when it runs out. Yellow means within 2 days, red means it's probably empty. The admin sets how long a bag lasts on each feeder's pin.</p>
 
       <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await reload() }} />
       <HistorySheet feeder={history} onClose={() => setHistory(null)} />
@@ -72,8 +72,12 @@ export function Feeders() {
 
 export function FeederCard({ feeder, fill, onFilled, onHistory, compact }: { feeder: PinRow; fill: FeederFillRow | undefined; onFilled: () => void; onHistory?: () => void; compact?: boolean }) {
   const { nameOf } = useMembers()
-  const { status, days } = feederStatus(feeder, fill)
+  const { status, days, runsOut, daysLeft, mode } = feederStatus(feeder, fill)
   const st = STATUS_STYLE[status]
+  const estimate =
+    mode === 'bags' && runsOut
+      ? daysLeft! < 0 ? `Ran out about ${fmtDate(runsOut)}` : daysLeft === 0 ? 'Runs out today' : `Runs out about ${fmtDate(runsOut)} (${daysLeft} day${daysLeft === 1 ? '' : 's'})`
+      : mode === 'interval' ? `Every ${feeder.fill_interval_days} days${days != null ? ` · ${days} days ago` : ''}` : null
   const [busy, setBusy] = useState(false)
   return (
     <Card className={compact ? '!p-3' : ''}>
@@ -82,17 +86,17 @@ export function FeederCard({ feeder, fill, onFilled, onHistory, compact }: { fee
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-bold text-clay-950">{feeder.name}</span>
-            <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${st.chip}`}>{st.label}{days != null && status !== 'fresh' ? ` · ${days} days` : ''}</span>
+            <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${st.chip}`}>{st.label}</span>
           </div>
           {fill ? (
             <p className="text-sm text-ink">
-              Filled {fmtDateTime(fill.filled_at)} by {nameOf(fill.created_by)}
-              {fill.amount || fill.feed_type ? <span className="text-ink-muted"> · {[fill.amount, fill.feed_type].filter(Boolean).join(' ')}</span> : null}
+              {fill.bags != null ? `${fill.bags} bag${Number(fill.bags) === 1 ? '' : 's'}${fill.feed_type ? ` of ${fill.feed_type}` : ''} ` : fill.amount ? `${fill.amount} ` : ''}{fmtDateTime(fill.filled_at)} by {nameOf(fill.created_by)}
             </p>
           ) : (
             <p className="text-sm text-ink-muted">No fills recorded yet.</p>
           )}
-          {feeder.fill_interval_days && <p className="text-xs text-ink-muted">Every {feeder.fill_interval_days} days{days != null && status === 'fresh' ? ` · ${days} days ago` : ''}</p>}
+          {estimate && <p className={`text-xs ${status === 'fresh' ? 'text-ink-muted' : 'font-semibold text-ink'}`}>{estimate}</p>}
+          {!feeder.days_per_bag && !feeder.fill_interval_days && <p className="text-xs text-ink-muted">Admin: set how long a bag lasts on this feeder's pin to get run-out guesses.</p>}
         </div>
       </div>
       <div className="mt-3 flex gap-2">
@@ -105,20 +109,21 @@ export function FeederCard({ feeder, fill, onFilled, onHistory, compact }: { fee
 
 /** After the one-tap fill: optional amount and feed type. */
 export function FillDetailsSheet({ entry, onClose, onSaved }: { entry: { feeder: PinRow; fill: FeederFillRow } | null; onClose: () => void; onSaved: () => Promise<void> }) {
-  const [amount, setAmount] = useState('')
+  const [bags, setBags] = useState('')
   const [feed, setFeed] = useState('')
   const [busy, setBusy] = useState(false)
-  useEffect(() => { setAmount(entry?.fill.amount ?? ''); setFeed(entry?.fill.feed_type ?? lastFeedType()) }, [entry])
+  useEffect(() => { setBags(entry?.fill.bags != null ? String(entry.fill.bags) : ''); setFeed(entry?.fill.feed_type ?? lastFeedType()) }, [entry])
 
   async function save(e: FormEvent) {
     e.preventDefault()
     if (!entry) return
     setBusy(true)
     rememberFeedType(feed.trim() || null)
-    await updateFill(entry.fill.id, { amount: amount.trim() || null, feed_type: feed.trim() || null })
+    await updateFill(entry.fill.id, { bags: bags ? Number(bags) : null, feed_type: feed.trim() || null })
     setBusy(false)
     await onSaved()
   }
+  const lasts = entry?.feeder.days_per_bag && bags ? Math.round(Number(bags) * Number(entry.feeder.days_per_bag)) : null
 
   return (
     <Sheet open={entry !== null} onClose={onClose} title={entry ? `Filled ${entry.feeder.name}` : ''}>
@@ -126,7 +131,7 @@ export function FillDetailsSheet({ entry, onClose, onSaved }: { entry: { feeder:
         <form onSubmit={save} className="space-y-3">
           <Note kind="ok">Got it. {fmtDateTime(entry.fill.filled_at)}.{(entry.fill as { queued?: boolean }).queued ? ' No signal right now, it will sync later.' : ''}</Note>
           <div className="grid grid-cols-2 gap-3">
-            <TextInput label="How much (optional)" name="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="200 lb, 2 bags…" />
+            <TextInput label="How many bags" name="bags" inputMode="decimal" value={bags} onChange={(e) => setBags(e.target.value.replace(/[^\d.]/g, ''))} placeholder="4" hint={lasts ? `Should last about ${lasts} days` : entry.feeder.days_per_bag ? undefined : 'Set days-per-bag on the pin for a run-out guess'} />
             <TextInput label="Feed (optional)" name="feed" value={feed} onChange={(e) => setFeed(e.target.value)} placeholder="corn, protein…" list="feedTypes" />
           </div>
           <datalist id="feedTypes"><option value="corn" /><option value="protein" /><option value="mix" /></datalist>
@@ -156,7 +161,7 @@ function HistorySheet({ feeder, onClose }: { feeder: PinRow | null; onClose: () 
           {fills.map((f) => (
             <li key={f.id} className="py-2 text-sm text-ink">
               {fmtDateTime(f.filled_at)} · {nameOf(f.created_by)}
-              {f.amount || f.feed_type ? <span className="text-ink-muted"> · {[f.amount, f.feed_type].filter(Boolean).join(' ')}</span> : null}
+              {f.bags != null || f.feed_type ? <span className="text-ink-muted"> · {[f.bags != null ? `${f.bags} bag${Number(f.bags) === 1 ? '' : 's'}` : null, f.feed_type].filter(Boolean).join(' ')}</span> : null}
             </li>
           ))}
         </ul>

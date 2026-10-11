@@ -27,10 +27,10 @@ insert into public.pins (id, type, name, stand_type, lat, lng, notes, created_by
 on conflict (id) do nothing;
 
 -- Feeders
-insert into public.pins (id, type, name, fill_interval_days, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 29.2322, -97.6615, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 29.2345, -97.6675, 'Protein', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 29.2278, -97.6530, null, '00000000-0000-4000-8000-000000000001')
+insert into public.pins (id, type, name, fill_interval_days, days_per_bag, lat, lng, notes, created_by) values
+  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 4, 29.2322, -97.6615, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 10, 29.2345, -97.6675, 'Protein', '00000000-0000-4000-8000-000000000001'),
+  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 5, 29.2278, -97.6530, null, '00000000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
 
 -- Other sample pins
@@ -39,10 +39,10 @@ insert into public.pins (id, type, name, lat, lng, created_by) values
 on conflict (id) do nothing;
 
 -- A couple of fills so the feeder colors mean something
-insert into public.feeder_fills (feeder_id, filled_at, amount, feed_type, created_by) values
-  ('00000000-0000-4000-8000-000000000201', now() - interval '3 days',  '200 lb', 'corn',    '00000000-0000-4000-8000-000000000004'),
-  ('00000000-0000-4000-8000-000000000202', now() - interval '19 days', '100 lb', 'protein', '00000000-0000-4000-8000-000000000003'),
-  ('00000000-0000-4000-8000-000000000203', now() - interval '30 days', '150 lb', 'corn',    '00000000-0000-4000-8000-000000000001');
+insert into public.feeder_fills (feeder_id, filled_at, bags, feed_type, created_by) values
+  ('00000000-0000-4000-8000-000000000201', now() - interval '3 days',  4, 'corn',    '00000000-0000-4000-8000-000000000004'),
+  ('00000000-0000-4000-8000-000000000202', now() - interval '19 days', 2, 'protein', '00000000-0000-4000-8000-000000000003'),
+  ('00000000-0000-4000-8000-000000000203', now() - interval '30 days', 3, 'corn',    '00000000-0000-4000-8000-000000000001');
 
 -- Calendar
 insert into public.events (title, kind, starts_on, ends_on, notes, created_by) values
@@ -55,18 +55,13 @@ insert into public.event_attendees (event_id, member_id, note, created_by)
 select e.id, '00000000-0000-4000-8000-000000000004', 'Bringing my dog', '00000000-0000-4000-8000-000000000004'
 from public.events e where e.title = 'Opening weekend';
 
--- Sample sightings and harvests
-insert into public.sightings (species, description, count, seen_at, pin_id, created_by) values
-  ('Deer',   'Big 8, heavy',        1, now() - interval '2 days 5 hours', '00000000-0000-4000-8000-000000000102', '00000000-0000-4000-8000-000000000001'),
-  ('Hog',    'Sow with 6 piglets',  7, now() - interval '5 days',         '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000004'),
-  ('Turkey', 'Flock',              12, now() - interval '9 days',         '00000000-0000-4000-8000-000000000101', '00000000-0000-4000-8000-000000000003');
-
+-- Sample harvests
 insert into public.harvests (member_id, harvested_on, species, sex, description, pin_id, tag_number, logged_on_license, created_by) values
   ('00000000-0000-4000-8000-000000000003', current_date - 30, 'Deer', 'buck', '10 point, 138"', '00000000-0000-4000-8000-000000000101', 'A-4471', true,  '00000000-0000-4000-8000-000000000003'),
   ('00000000-0000-4000-8000-000000000001', current_date - 20, 'Deer', 'doe',  null,             '00000000-0000-4000-8000-000000000102', null,     false, '00000000-0000-4000-8000-000000000001'),
   ('00000000-0000-4000-8000-000000000004', current_date - 40, 'Hog',  'male', '180 lb boar',    '00000000-0000-4000-8000-000000000201', null,     false, '00000000-0000-4000-8000-000000000004');
 
--- Sample log, to-dos, supplies, check-in
+-- Sample log, to-dos, supplies
 insert into public.log_entries (body, created_by, created_at) values
   ('Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', '00000000-0000-4000-8000-000000000003', now() - interval '1 day'),
   ('Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', '00000000-0000-4000-8000-000000000004', now() - interval '4 days');
@@ -76,10 +71,10 @@ insert into public.todos (title, notes, assignee_id, due_on, status, created_by)
   ('Replace Plot Cam batteries', null, '00000000-0000-4000-8000-000000000001', current_date - 2, 'open', '00000000-0000-4000-8000-000000000004'),
   ('Grade the road to the tank', null, null, null, 'open', '00000000-0000-4000-8000-000000000001');
 
-insert into public.supply_items (name, notes, is_inventory, level, needed, created_by) values
-  ('Corn (50 lb bags)', '6 bags', true, 'low', true, '00000000-0000-4000-8000-000000000001'),
-  ('Protein pellets', null, true, 'some', false, '00000000-0000-4000-8000-000000000001'),
-  ('AA batteries', 'For the cameras', false, null, true, '00000000-0000-4000-8000-000000000004');
+insert into public.supply_items (name, notes, place, is_inventory, level, needed, created_by) values
+  ('Corn (50 lb bags)', '6 bags', 'barn', true, 'low', true, '00000000-0000-4000-8000-000000000001'),
+  ('Protein pellets', null, 'barn', true, 'some', false, '00000000-0000-4000-8000-000000000001'),
+  ('Propane', null, 'house', true, 'full', false, '00000000-0000-4000-8000-000000000001'),
+  ('AA batteries', 'For the cameras', null, false, null, true, '00000000-0000-4000-8000-000000000004'),
+  ('Dish soap', null, 'trailer', false, null, true, '00000000-0000-4000-8000-000000000002');
 
-insert into public.checkins (member_id, arrived_at, note, created_by) values
-  ('00000000-0000-4000-8000-000000000003', now() - interval '5 hours', 'Sitting the North Ladder', '00000000-0000-4000-8000-000000000003');

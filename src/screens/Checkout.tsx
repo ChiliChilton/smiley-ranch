@@ -11,7 +11,6 @@ import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
-import { checkOut } from '../lib/checkins'
 import { createRow } from '../lib/outbox'
 import { supabase } from '../lib/supabase'
 
@@ -72,7 +71,6 @@ export function Checkout() {
     try {
       const leftAt = new Date().toISOString()
       const { row } = await createRow('checkouts', { member_id: me.member_id, left_at: leftAt, items: snapshot, all_done: allDone, notes: notes.trim() || null })
-      await checkOut(me.member_id, me.member_id).catch(() => {})
       setSaved({ ...row, event_id: null, created_by: me.member_id, created_at: leftAt, deleted_at: null })
     } catch (err) {
       setError(friendlyError(err))
@@ -84,7 +82,7 @@ export function Checkout() {
   if (saved) {
     const missed = saved.items.filter((i) => !i.done)
     return (
-      <Screen title="Before you leave" back="/">
+      <Screen title="Before you leave">
         <Card>
           <p className="text-xl font-bold text-clay-950">You're checked out.</p>
           <p className="mt-1 text-ink-muted">{fmtDateTime(saved.left_at)}</p>
@@ -107,7 +105,7 @@ export function Checkout() {
   const count = items ? items.filter((i) => done.has(i.id)).length : 0
 
   return (
-    <Screen title="Before you leave" back="/">
+    <Screen title="Before you leave">
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {last && (
         <p className="mb-3 text-sm text-ink-muted">

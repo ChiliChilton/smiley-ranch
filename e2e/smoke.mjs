@@ -234,7 +234,8 @@ async function run(width, standalone) {
   await page.getByRole('heading', { name: 'Notifications' }).waitFor()
   await shot(page, `${tag}-4-notif`)
   await page.getByRole('button', { name: /Not now|Continue/ }).click()
-  await page.getByText("This weekend's stands").waitFor()
+  await page.getByText(/Current stay|Next stay/).waitFor()
+  await page.getByText('Needs').first().waitFor()
   await shot(page, `${tag}-5-home`)
   await page.getByText('1932 CR 211').waitFor()
 
@@ -266,9 +267,8 @@ async function run(width, standalone) {
   await page.getByText('Bringing my nephew').waitFor()
   assert(attendees.length === 1 && attendees[0].note === 'Bringing my nephew', 'attendee note saved')
 
-  // Check out
-  await page.getByRole('link', { name: 'Home' }).click()
-  await page.getByRole('button', { name: 'Before you leave' }).click()
+  // Check out (far-left tab)
+  await page.getByRole('link', { name: 'Check out' }).click()
   await page.getByText('Turn off the water').waitFor()
   await page.getByRole('button', { name: 'Turn off the water' }).click()
   await shot(page, `${tag}-16-checkout`)
@@ -277,11 +277,11 @@ async function run(width, standalone) {
   await page.getByText('Skipped: Lock the front gate').waitFor()
   assert(checkouts.length === 1 && checkouts[0].all_done === false, 'checkout saved')
   await page.getByRole('button', { name: 'Back home' }).click()
-  await page.getByText('Last out:').waitFor()
+  await page.getByText('Last checked out:').waitFor()
 
-  // Stands: claim, see it on Home, release
+  // Stands: pick a day, claim, release, back to Home
   await page.getByRole('button', { name: 'Stands', exact: true }).click()
-  await page.getByText('Swipe sideways').waitFor()
+  await page.getByRole('heading', { name: 'Stands' }).waitFor()
   await shot(page, `${tag}-19-stands`)
   const openCell = page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first()
   await openCell.click()
@@ -295,9 +295,10 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Release my claim' }).click()
   await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first().waitFor()
   assert(claims[0].released_at, 'claim released')
+  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByText(/Current stay|Next stay/).waitFor()
 
   // Map as a member: pins render, pin sheet, only hazard/other offered
-  await page.getByRole('link', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Map', exact: true }).click()
   await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
   await page.waitForTimeout(500)
@@ -406,7 +407,7 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Switch person' }).click()
   await page.getByText('Admin mode will turn off').waitFor()
   await page.getByRole('button', { name: 'Uncle Mike' }).click()
-  await page.getByText('On the place').waitFor() // back on the board
+  await page.getByText(/Current stay|Next stay/).waitFor() // back on the board
   await page.getByRole('link', { name: 'More' }).click()
   await page.getByText('Uncle Mike', { exact: true }).waitFor() // now signed in as Mike
   await page.getByRole('button', { name: 'Unlock admin' }).waitFor() // admin dropped

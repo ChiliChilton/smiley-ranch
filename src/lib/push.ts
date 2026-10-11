@@ -7,12 +7,11 @@ export const PREF_LABELS: { key: keyof PushPrefs; label: string; hint: string }[
   { key: 'harvests', label: 'Harvests', hint: 'A new harvest was posted' },
   { key: 'todos_assigned', label: 'To-dos for me', hint: 'Someone assigned you a to-do' },
   { key: 'events', label: 'Calendar', hint: 'A new trip, work day, or date was added' },
-  { key: 'overdue_checkin', label: 'Not back yet', hint: "Someone is past their “back by” time and hasn't checked out" },
   { key: 'feeders_overdue', label: 'Feeders due (daily)', hint: 'A morning digest of feeders that are due. Admin usually takes this one.' },
 ]
 
 export function defaultPrefs(isAdmin: boolean): PushPrefs {
-  return { stand_claims: true, harvests: true, todos_assigned: true, events: true, overdue_checkin: true, feeders_overdue: isAdmin }
+  return { stand_claims: true, harvests: true, todos_assigned: true, events: true, feeders_overdue: isAdmin }
 }
 
 const VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
@@ -53,7 +52,7 @@ export async function enablePush(memberId: string, prefs: PushPrefs): Promise<vo
   if (!pushSupported()) throw new Error("This phone can't do notifications here.")
   if (!VAPID) throw new Error('Notifications are not set up yet (missing VAPID key).')
   const perm = await Notification.requestPermission()
-  if (perm !== 'granted') throw new Error("Notifications are blocked. Turn them on in your phone's Settings for Back 40.")
+  if (perm !== 'granted') throw new Error("Notifications are blocked. Turn them on in your phone's Settings for Smiley Ranch.")
   const reg = await registration()
   const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID) as BufferSource }))
   const json = sub.toJSON()

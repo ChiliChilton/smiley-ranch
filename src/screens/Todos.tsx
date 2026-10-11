@@ -161,12 +161,12 @@ export function Todos() {
   )
 }
 
-function TodoForm({ todo, initialTitle, initialPin, onDone }: { todo: TodoRow | null; initialTitle: string; initialPin: string | null; onDone: () => Promise<void> }) {
+export function TodoForm({ todo, initialTitle = '', initialPin = null, onDone }: { todo: TodoRow | null; initialTitle?: string; initialPin?: string | null; onDone: () => Promise<void> }) {
   const me = useMe()
   const { active } = useMembers()
   const [title, setTitle] = useState(todo?.title ?? initialTitle)
   const [notes, setNotes] = useState(todo?.notes ?? '')
-  const [assignee, setAssignee] = useState(todo?.assignee_id ?? '')
+  const [assignee, setAssignee] = useState(todo ? (todo.assignee_id ?? '') : (me.member_id ?? ''))
   const [due, setDue] = useState(todo?.due_on ?? '')
   const [where, setWhere] = useState<Where>({ pin_id: todo?.pin_id ?? initialPin ?? null, lat: null, lng: null })
   const [busy, setBusy] = useState(false)

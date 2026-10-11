@@ -179,18 +179,16 @@ class Query implements PromiseLike<Result<unknown>> {
         }
         // Column defaults from the migrations that the app relies on.
         const defaults: Record<string, Row> = {
-          feeder_fills: { filled_at: now, amount: null, feed_type: null },
-          sightings: { seen_at: now, count: 1, description: null, pin_id: null, lat: null, lng: null, notes: null },
+          feeder_fills: { filled_at: now, bags: null, amount: null, feed_type: null },
           harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false },
           checklist_items: { sort_order: 0 },
-          pins: { notes: null, stand_type: null, fill_interval_days: null },
+          pins: { notes: null, stand_type: null, fill_interval_days: null, days_per_bag: null },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
           log_entries: { pin_id: null, lat: null, lng: null },
           todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, status: 'open', completed_by: null, completed_at: null },
-          supply_items: { notes: null, is_inventory: false, level: null, needed: true, got_by: null, got_at: null },
-          checkins: { arrived_at: now, expected_back: null, note: null, left_at: null, left_by: null },
+          supply_items: { notes: null, is_inventory: false, place: null, level: null, needed: true, got_by: null, got_at: null },
           areas: { is_boundary: false, color: null },
           members: { is_active: true },
         }

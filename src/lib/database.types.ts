@@ -82,7 +82,7 @@ export type LogEntryRow = {
   deleted_at: string | null
 }
 
-export type CommentParent = 'log_entry' | 'sighting' | 'harvest' | 'todo' | 'event' | 'pin'
+export type CommentParent = 'log_entry' | 'harvest' | 'todo' | 'event' | 'pin'
 
 export type CommentRow = {
   id: string
@@ -112,12 +112,14 @@ export type TodoRow = {
 }
 
 export type SupplyLevel = 'full' | 'some' | 'low' | 'out'
+export type SupplyPlace = 'house' | 'trailer' | 'barn'
 
 export type SupplyItemRow = {
   id: string
   name: string
   notes: string | null
   is_inventory: boolean
+  place: SupplyPlace | null
   level: SupplyLevel | null
   needed: boolean
   got_by: string | null
@@ -134,7 +136,6 @@ export type PushPrefs = {
   todos_assigned: boolean
   feeders_overdue: boolean
   events: boolean
-  overdue_checkin: boolean
 }
 
 export type PushSubscriptionRow = {
@@ -150,43 +151,16 @@ export type PushSubscriptionRow = {
   updated_at: string
 }
 
-export type CheckinRow = {
-  id: string
-  member_id: string
-  arrived_at: string
-  expected_back: string | null
-  note: string | null
-  left_at: string | null
-  left_by: string | null
-  overdue_notified_at?: string | null
-  created_by: string | null
-  created_at: string
-}
 
 export type FeederFillRow = {
   id: string
   feeder_id: string
   filled_at: string
+  bags: number | null
   amount: string | null
   feed_type: string | null
   created_by: string | null
   created_at: string
-  deleted_at: string | null
-}
-
-export type SightingRow = {
-  id: string
-  species: string
-  description: string | null
-  count: number
-  seen_at: string
-  pin_id: string | null
-  lat: number | null
-  lng: number | null
-  notes: string | null
-  created_by: string | null
-  created_at: string
-  updated_at: string
   deleted_at: string | null
 }
 
@@ -222,6 +196,7 @@ export type PinRow = {
   lng: number
   stand_type: StandType | null
   fill_interval_days: number | null
+  days_per_bag: number | null
   created_by: string | null
   created_at: string
   updated_at: string
@@ -312,6 +287,7 @@ export type Database = {
           lng: number
           stand_type?: StandType | null
           fill_interval_days?: number | null
+          days_per_bag?: number | null
           created_by?: string | null
         }
         Update: {
@@ -322,6 +298,7 @@ export type Database = {
           lng?: number
           stand_type?: StandType | null
           fill_interval_days?: number | null
+          days_per_bag?: number | null
           deleted_at?: string | null
         }
         Relationships: []
@@ -340,25 +317,8 @@ export type Database = {
       }
       feeder_fills: {
         Row: FeederFillRow
-        Insert: { id?: string; feeder_id: string; filled_at?: string; amount?: string | null; feed_type?: string | null; created_by?: string | null }
-        Update: { amount?: string | null; feed_type?: string | null; filled_at?: string; deleted_at?: string | null }
-        Relationships: []
-      }
-      sightings: {
-        Row: SightingRow
-        Insert: {
-          id?: string
-          species: string
-          description?: string | null
-          count?: number
-          seen_at?: string
-          pin_id?: string | null
-          lat?: number | null
-          lng?: number | null
-          notes?: string | null
-          created_by?: string | null
-        }
-        Update: Partial<Omit<SightingRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Insert: { id?: string; feeder_id: string; filled_at?: string; bags?: number | null; amount?: string | null; feed_type?: string | null; created_by?: string | null }
+        Update: { bags?: number | null; amount?: string | null; feed_type?: string | null; filled_at?: string; deleted_at?: string | null }
         Relationships: []
       }
       harvests: {
@@ -410,7 +370,7 @@ export type Database = {
       }
       supply_items: {
         Row: SupplyItemRow
-        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
+        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; place?: SupplyPlace | null; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
         Update: Partial<Omit<SupplyItemRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
         Relationships: []
       }
@@ -418,12 +378,6 @@ export type Database = {
         Row: PushSubscriptionRow
         Insert: { id?: string; auth_user_id: string; member_id: string; endpoint: string; p256dh: string; auth: string; prefs: PushPrefs; created_by?: string | null }
         Update: { member_id?: string; prefs?: PushPrefs; p256dh?: string; auth?: string }
-        Relationships: []
-      }
-      checkins: {
-        Row: CheckinRow
-        Insert: { id?: string; member_id: string; arrived_at?: string; expected_back?: string | null; note?: string | null; created_by?: string | null }
-        Update: { expected_back?: string | null; note?: string | null; left_at?: string | null; left_by?: string | null }
         Relationships: []
       }
       checkouts: {

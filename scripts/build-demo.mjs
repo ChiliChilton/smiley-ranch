@@ -8,7 +8,7 @@ execSync('npm run build', { stdio: 'inherit', env: { ...process.env, VITE_DEMO: 
 
 const html = fs.readFileSync('dist/index.html', 'utf8')
 const tags = [...html.matchAll(/<(script|link)\b[^>]*>(?:<\/script>)?/g)].map((m) => m[0]).filter((t) => !/rel="(icon|apple-touch-icon)"/.test(t))
-const page = `<title>Back 40</title>
+const page = `<title>Smiley Ranch</title>
 <style>html,body{height:100%}</style>
 ${tags.join('\n')}
 <div id="root"></div>

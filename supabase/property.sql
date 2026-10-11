@@ -6,7 +6,7 @@
 
 -- Property record (Gonzales CAD). Non-secret; members can read it.
 insert into public.settings (key, value) values
-  ('property_name',   'Smiley'),
+  ('property_name',   'Smiley Ranch'),
   ('property_parcel', 'Gonzales CAD parcel 8554, Abstract 380 George W. Petty survey, 418.5 ac, owner Kiatta Properties LP')
 on conflict (key) do nothing;
 

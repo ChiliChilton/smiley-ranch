@@ -4,5 +4,5 @@
   <polygon points="256,72 196,172 230,172 180,252 222,252 160,340 352,340 290,252 332,252 282,172 316,172" fill="#e9dcc5"/>
   <rect x="240" y="340" width="32" height="40" fill="#e9dcc5"/>
   <!-- 40 -->
-  <text x="256" y="462" text-anchor="middle" font-family="Inter, DejaVu Sans, sans-serif" font-weight="700" font-size="104" fill="#f8f2e8">40</text>
+  <text x="256" y="462" text-anchor="middle" font-family="Inter, DejaVu Sans, sans-serif" font-weight="700" font-size="104" fill="#f8f2e8">SR</text>
 </svg>

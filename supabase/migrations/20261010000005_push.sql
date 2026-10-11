@@ -4,7 +4,7 @@
 --   * Phones subscribe (Web Push) and store the subscription + their preferences in push_subscriptions.
 --   * Postgres triggers call public.notify_push(kind, title, body, url, only, exclude), which POSTs to the
 --     "push" Edge Function through pg_net. The function fans out to every subscription whose prefs[kind] is true.
---   * Two scheduled jobs (pg_cron) handle the feeder digest and "not back by" alerts.
+--   * A scheduled job (pg_cron) sends the morning feeder digest.
 --   * Nothing here fails if pg_net / pg_cron / the function URL aren't set up: notify_push just does nothing.
 --
 -- One-time setup (README): deploy the function, then in the SQL editor
@@ -25,7 +25,7 @@ create table if not exists private.config (
 );
 
 -- Notification kinds (keys of push_subscriptions.prefs):
---   stand_claims, harvests, todos_assigned, feeders_overdue, events, overdue_checkin
+--   stand_claims, harvests, todos_assigned, feeders_overdue, events
 
 create or replace function public.notify_push(
   p_kind text, p_title text, p_body text, p_url text default '/',
@@ -156,62 +156,51 @@ create trigger events_push after insert on public.events
   for each row execute function public.trg_push_event();
 
 -- ---------------------------------------------------------------------------
--- Scheduled: feeders overdue digest, and people past their "back by" time
+-- Scheduled: feeders due / running out digest
 -- ---------------------------------------------------------------------------
-alter table public.checkins add column if not exists overdue_notified_at timestamptz;
-
 create or replace function public.push_feeders_overdue() returns void
 language plpgsql security definer set search_path = public
 as $$
 declare
   v_list text;
 begin
-  select string_agg(name || ' (' || days || 'd)', ', ' order by days desc) into v_list
+  -- A feeder is "due" when the bag estimate says it runs out within 2 days (or already has),
+  -- or, with no bag info, when the fixed interval has passed.
+  select string_agg(name || ' (' || note || ')', ', ' order by sort_key) into v_list
   from (
     select p.name,
-           extract(day from now() - max(f.filled_at))::int as days,
-           p.fill_interval_days
+           case
+             when lf.bags is not null and p.days_per_bag is not null then
+               case when lf.filled_at + make_interval(days => (lf.bags * p.days_per_bag)::int) < now()
+                    then 'empty' else 'runs out ' || to_char(lf.filled_at + make_interval(days => (lf.bags * p.days_per_bag)::int), 'Dy') end
+             when lf.filled_at is null then 'never filled'
+             else extract(day from now() - lf.filled_at)::int || ' days'
+           end as note,
+           coalesce(lf.filled_at, 'epoch'::timestamptz) as sort_key,
+           lf.filled_at, lf.bags, p.days_per_bag, p.fill_interval_days
     from public.pins p
-    left join public.feeder_fills f on f.feeder_id = p.id and f.deleted_at is null
-    where p.type = 'feeder' and p.deleted_at is null and p.fill_interval_days is not null
-    group by p.id, p.name, p.fill_interval_days
-    having max(f.filled_at) is null or now() - max(f.filled_at) >= make_interval(days => p.fill_interval_days)
-  ) d;
+    left join lateral (
+      select f.filled_at, f.bags from public.feeder_fills f
+      where f.feeder_id = p.id and f.deleted_at is null order by f.filled_at desc limit 1
+    ) lf on true
+    where p.type = 'feeder' and p.deleted_at is null
+  ) d
+  where (bags is not null and days_per_bag is not null and filled_at + make_interval(days => (bags * days_per_bag)::int) <= now() + interval '2 days')
+     or (not (bags is not null and days_per_bag is not null) and fill_interval_days is not null
+         and (filled_at is null or now() - filled_at >= make_interval(days => fill_interval_days)));
   if v_list is not null then
     perform public.notify_push('feeders_overdue', 'Feeders due', v_list, '/feeders');
   end if;
 end;
 $$;
 
-create or replace function public.push_overdue_checkins() returns void
-language plpgsql security definer set search_path = public
-as $$
-declare
-  r record;
-begin
-  for r in
-    select c.id, c.member_id, c.expected_back
-    from public.checkins c
-    where c.left_at is null and c.overdue_notified_at is null
-      and c.expected_back is not null and c.expected_back < now() - interval '15 minutes'
-  loop
-    perform public.notify_push('overdue_checkin', 'Not back yet',
-      public.member_name(r.member_id) || ' said back by ' || to_char(r.expected_back at time zone 'America/Chicago', 'HH12:MI AM') || ' and hasn''t checked out',
-      '/', null, r.member_id);
-    update public.checkins set overdue_notified_at = now() where id = r.id;
-  end loop;
-end;
-$$;
-
 revoke execute on function public.push_feeders_overdue() from public, anon, authenticated;
-revoke execute on function public.push_overdue_checkins() from public, anon, authenticated;
 
 do $$
 begin
   if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
     create extension if not exists pg_cron;
-    perform cron.schedule('back40-feeders-digest', '0 12 * * *', $job$select public.push_feeders_overdue()$job$);   -- 7am Central
-    perform cron.schedule('back40-overdue-checkins', '*/15 * * * *', $job$select public.push_overdue_checkins()$job$);
+    perform cron.schedule('smiley-feeders-digest', '0 12 * * *', $job$select public.push_feeders_overdue()$job$);   -- 7am Central
   end if;
 end;
 $$;

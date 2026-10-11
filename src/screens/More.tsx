@@ -61,11 +61,9 @@ export function More() {
         <Card title="The place">
           <Row onClick={() => navigate('/feeders')}>Feeders</Row>
           <Divider />
-          <Row onClick={() => navigate('/sightings')}>Sightings</Row>
-          <Divider />
           <Row onClick={() => navigate('/harvests')}>Harvests</Row>
           <Divider />
-          <Row onClick={() => navigate('/log')}>Log</Row>
+          <Row onClick={() => navigate('/log')}>Property notes</Row>
           <Divider />
           <Row onClick={() => navigate('/stands')}>Stands</Row>
           <Divider />
@@ -135,7 +133,7 @@ export function More() {
             </>
           ) : isIOS() && !standalone ? (
             <p className="text-sm text-ink-muted">
-              On iPhone, notifications only work once Back 40 is on your home screen.
+              On iPhone, notifications only work once Smiley Ranch is on your home screen.
             </p>
           ) : (
             <p className="text-sm text-ink-muted">This browser can't do notifications.</p>
@@ -144,7 +142,7 @@ export function More() {
 
         {!standalone && (
           <Card title="Install">
-            <p className="mb-3 text-sm text-ink-muted">Put Back 40 on your home screen so it opens like an app.</p>
+            <p className="mb-3 text-sm text-ink-muted">Put Smiley Ranch on your home screen so it opens like an app.</p>
             <Button variant="secondary" onClick={() => navigate('/more/install')}>
               Show me how
             </Button>
@@ -166,7 +164,7 @@ export function More() {
         )}
 
         <p className="pt-2 text-center text-xs text-ink-muted">
-          Back 40 · {standalone ? 'Installed' : 'Browser'} · v{__APP_VERSION__}
+          Smiley Ranch · {standalone ? 'Installed' : 'Browser'} · v{__APP_VERSION__}
         </p>
       </div>
     </Screen>

@@ -1,4 +1,4 @@
-# CLAUDE.md: Back 40
+# CLAUDE.md: Smiley Ranch (working name Back 40)
 
 Read `SPEC.md` first. It's the source of truth for features. This file covers how to build them.
 
@@ -8,7 +8,7 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 - **Backend:** Supabase. Use Postgres, Edge Functions, and Realtime. No Storage (photos were cut to keep upkeep near zero).
 - **Map:** Leaflet (`react-leaflet`) with Esri World Imagery satellite tiles. Use `leaflet-draw` or Geoman for the boundary and areas.
 - **Push:** Web Push with VAPID keys, sent from a Supabase Edge Function
-- **Hosting:** Vercel
+- **Hosting:** static. GitHub Pages workflow included; Vercel works too. Nothing paid.
 
 ## Identity model
 - Each device signs in with **Supabase Anonymous Auth**, so every device gets a real session.
@@ -32,18 +32,18 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 
 ## Data
 - Write SQL migrations in `supabase/migrations/`.
-- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `sightings`, `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checkins`, and `push_subscriptions`. (Photos were dropped by decision: no Storage bucket to look after.)
+- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checklist_items`, `checkouts`, and `push_subscriptions`. (Photos, sightings, and the who's-here check-in board were dropped by decision to keep it bare-bones.)
 - Use soft delete (`deleted_at`) for user content.
 
 ## Build order
 Build in this order and stop for review after each phase:
 1. Scaffold, PWA install, Supabase, identity/onboarding, members admin
 2. Map + pins, stands + stand sign-up, Home/Today
-3. Feeders, sightings, harvests, photos
+3. Feeders, harvests
 4. Log + comments, to-dos, needs/supplies, calendar
 5. Push notifications, offline outbox, CSV/JSON export, polish
 
-Actual order used: 1 identity → 2 calendar + check-out list + emergency info → 3 map + stands → 4 feeders, sightings, harvests → 5 log, to-dos, supplies, check-in board → 6 push, offline, export.
+Actual order used: 1 identity → 2 calendar + check-out list + emergency info → 3 map + stands → 4 feeders, harvests → 5 property notes, projects, needs → 6 push, offline, export. Sightings, photos, and the check-in board were removed afterwards.
 
 ## Style
 - Earthy and simple: burnt orange / red dirt, tan, warm off-white. Muted, easy on the eyes, readable in sunlight. Dark mode is optional.
@@ -52,5 +52,5 @@ Actual order used: 1 identity → 2 calendar + check-out list + emergency info �
 - Keep components small. No extra libraries without a reason.
 
 ## Deliverables beyond code
-- `README.md` with setup steps: create the Supabase project, run migrations, set env vars, generate VAPID keys, deploy to Vercel, set the first family code and admin PIN.
+- `README.md` with setup steps: create the Supabase project, run migrations, set env vars, generate VAPID keys, deploy to GitHub Pages or Vercel, set the first family code and admin PIN.
 - A seed script with sample members, stands, and feeders for testing.

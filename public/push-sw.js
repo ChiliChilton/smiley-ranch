@@ -2,7 +2,7 @@
 self.addEventListener('push', (event) => {
   let data = {}
   try { data = event.data ? event.data.json() : {} } catch { data = { body: event.data && event.data.text() } }
-  const title = data.title || 'Back 40'
+  const title = data.title || 'Smiley Ranch'
   const base = self.registration.scope
   event.waitUntil(
     self.registration.showNotification(title, {

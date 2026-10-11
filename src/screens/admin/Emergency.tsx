@@ -52,7 +52,7 @@ function EmergencyForm({ initial, save }: { initial: EmergencyInfo; save: (entri
         setLocating(false)
       },
       () => {
-        setError("Couldn't get your location. Check Location Services for Back 40.")
+        setError("Couldn't get your location. Check Location Services for Smiley Ranch.")
         setLocating(false)
       },
       { enableHighAccuracy: true, timeout: 15000 },

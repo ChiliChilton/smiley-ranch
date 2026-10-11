@@ -18,7 +18,7 @@ export function EmergencyCard({ compact = false }: { compact?: boolean }) {
   const empty = !loading && !info.address && !hasGps
 
   async function share() {
-    const r = await shareText('Back 40 address', emergencyText(info))
+    const r = await shareText('Smiley Ranch address', emergencyText(info))
     if (r === 'copied') {
       setFlash('Copied. Paste it into a text.')
       setTimeout(() => setFlash(null), 2500)

@@ -3,9 +3,9 @@ import { supabase } from './supabase'
 import { isAreaGeometry } from './geo'
 
 export const EXPORT_TABLES = [
-  'members', 'pins', 'areas', 'stand_claims', 'sightings', 'harvests', 'feeder_fills',
+  'members', 'pins', 'areas', 'stand_claims', 'harvests', 'feeder_fills',
   'log_entries', 'comments', 'events', 'event_attendees', 'todos', 'supply_items',
-  'checklist_items', 'checkouts', 'checkins', 'settings',
+  'checklist_items', 'checkouts', 'settings',
 ] as const
 export type ExportTable = (typeof EXPORT_TABLES)[number]
 
@@ -41,7 +41,7 @@ export function toCSV(rows: Row[]): string {
 const esc = (s: unknown) => String(s ?? '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c] ?? c)
 
 /** Pins as placemarks, boundary and areas as polygons. Opens in Google Earth, onX, Gaia, etc. */
-export function toKML(pins: Row[], areas: Row[], name = 'Back 40'): string {
+export function toKML(pins: Row[], areas: Row[], name = 'Smiley Ranch'): string {
   const pts = pins
     .filter((p) => !p.deleted_at)
     .map((p) => `  <Placemark><name>${esc(p.name)}</name><description>${esc(p.type)}${p.notes ? ': ' + esc(p.notes) : ''}</description><Point><coordinates>${p.lng},${p.lat},0</coordinates></Point></Placemark>`)

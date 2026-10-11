@@ -58,7 +58,7 @@ export function NotificationSettings() {
       {!supported ? (
         <Note kind="warn">
           {isIOS() && !isStandalone()
-            ? 'On iPhone, notifications only work once Back 40 is on your home screen. Add it, open it from there, and come back here.'
+            ? 'On iPhone, notifications only work once Smiley Ranch is on your home screen. Add it, open it from there, and come back here.'
             : "This browser can't do notifications."}
         </Note>
       ) : !pushConfigured && !DEMO ? (

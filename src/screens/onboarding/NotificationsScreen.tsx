@@ -43,7 +43,7 @@ export function NotificationsScreen({ onDone }: { onDone: () => void }) {
 
       {!supported && isIOS() && !isStandalone() && (
         <Note kind="warn" className="mb-4">
-          On iPhone, notifications only work after you add Back 40 to your home screen. You can turn them on from Settings once it's installed.
+          On iPhone, notifications only work after you add Smiley Ranch to your home screen. You can turn them on from Settings once it's installed.
         </Note>
       )}
       {!supported && !(isIOS() && !isStandalone()) && (
@@ -51,7 +51,7 @@ export function NotificationsScreen({ onDone }: { onDone: () => void }) {
       )}
       {result === 'denied' && (
         <Note kind="warn" className="mb-4">
-          Notifications are blocked. You can turn them on later in your phone's Settings for Back 40.
+          Notifications are blocked. You can turn them on later in your phone's Settings for Smiley Ranch.
         </Note>
       )}
 

@@ -83,11 +83,11 @@ export function Log() {
   const pinName = (id: string | null) => pins.find((p) => p.id === id)?.name
 
   return (
-    <Screen title="Log" back="/">
+    <Screen title="Property notes" back="/">
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       <Card className="mb-4">
         <form onSubmit={post} className="space-y-2">
-          <TextArea name="logBody" value={body} onChange={(e) => setBody(e.target.value)} placeholder="What happened? Fence down by the north gate, creek crossing washed out…" rows={2} maxLength={4000} />
+          <TextArea name="logBody" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Anything the family should know. Fence down by the north gate, creek crossing washed out, propane at 70%…" rows={2} maxLength={4000} />
           {showWhere ? <PinSelect value={where} onChange={setWhere} /> : null}
           <div className="flex items-center gap-2">
             <Button type="submit" busy={busy} disabled={!body.trim()}>Post</Button>
@@ -99,7 +99,7 @@ export function Log() {
       {!rows ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : rows.length === 0 ? (
-        <Note>Nothing in the log yet.</Note>
+        <Note>No notes yet. Post the first one above.</Note>
       ) : (
         <ul className="space-y-2">
           {rows.map((r) => (
@@ -117,7 +117,7 @@ export function Log() {
         </ul>
       )}
 
-      <Sheet open={open !== null} onClose={() => setOpen(null)} title="Log entry">
+      <Sheet open={open !== null} onClose={() => setOpen(null)} title="Note">
         {open && (
           <div className="space-y-3">
             <p className="whitespace-pre-wrap text-ink">{open.body}</p>

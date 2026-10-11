@@ -21,7 +21,7 @@ export function smsLink(text: string): string {
   return `sms:${ios ? '&' : '?'}body=${encodeURIComponent(text)}`
 }
 
-export function mapsLink(lat: string, lng: string, label = 'Back 40'): string {
+export function mapsLink(lat: string, lng: string, label = 'Smiley Ranch'): string {
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent)
   return ios
     ? `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label)}`

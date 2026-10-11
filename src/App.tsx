@@ -27,8 +27,6 @@ import { JoinScreen } from './screens/onboarding/JoinScreen'
 import { NotificationsScreen } from './screens/onboarding/NotificationsScreen'
 import { Stands } from './screens/Stands'
 import { Feeders } from './screens/Feeders'
-import { Sightings } from './screens/Sightings'
-import { SightingForm } from './screens/SightingForm'
 import { Harvests } from './screens/Harvests'
 import { HarvestForm } from './screens/HarvestForm'
 import { Log } from './screens/Log'
@@ -117,9 +115,6 @@ function Shell() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/stands" element={<Stands />} />
         <Route path="/feeders" element={<Feeders />} />
-        <Route path="/sightings" element={<Sightings />} />
-        <Route path="/sightings/new" element={<SightingForm />} />
-        <Route path="/sightings/:id/edit" element={<SightingForm />} />
         <Route path="/harvests" element={<Harvests />} />
         <Route path="/harvests/new" element={<HarvestForm />} />
         <Route path="/harvests/:id/edit" element={<HarvestForm />} />

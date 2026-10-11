@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router'
 
 const tabs = [
+  { to: '/checkout', label: 'Check out', icon: LeaveIcon },
   { to: '/', label: 'Home', icon: HomeIcon },
   { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
   { to: '/todos', label: 'Projects', icon: ProjectsIcon },
@@ -22,7 +23,7 @@ export function TabBar() {
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${
+                `flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${
                   isActive ? 'text-clay-900' : 'text-ink-muted'
                 }`
               }
@@ -54,6 +55,14 @@ const base = (active: boolean) => ({
   'aria-hidden': true,
 })
 
+function LeaveIcon({ active }: IconProps) {
+  return (
+    <svg {...base(false)}>
+      <path d="M10 4H5a1 1 0 00-1 1v14a1 1 0 001 1h5" />
+      <path d="M14 8l4 4-4 4M18 12H9" stroke={active ? 'currentColor' : 'currentColor'} strokeWidth={active ? 2.6 : 1.8} />
+    </svg>
+  )
+}
 function HomeIcon({ active }: IconProps) {
   return (
     <svg {...base(active)}>

@@ -11,7 +11,7 @@ import { Header } from '../components/Screen'
 import { Note } from '../components/Note'
 import { Sheet } from '../components/Sheet'
 import { TextArea, TextInput } from '../components/Input'
-import type { AreaRow, FeederFillRow, HarvestRow, PinRow, PinType, SightingRow, StandClaimRow, StandType } from '../lib/database.types'
+import type { AreaRow, FeederFillRow, HarvestRow, PinRow, PinType, StandClaimRow, StandType } from '../lib/database.types'
 import { feederStatus, recordFill, STATUS_STYLE } from '../lib/feeders'
 import { FillDetailsSheet } from './Feeders'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
@@ -119,7 +119,7 @@ export default function MapScreen() {
       },
       () => {
         setLocating(false)
-        setError("Couldn't get your location. Check Location Services for Back 40.")
+        setError("Couldn't get your location. Check Location Services for Smiley Ranch.")
       },
       { enableHighAccuracy: true, timeout: 15000 },
     )
@@ -137,7 +137,7 @@ export default function MapScreen() {
       },
       () => {
         setLocating(false)
-        setError("Couldn't get your location. Check Location Services for Back 40.")
+        setError("Couldn't get your location. Check Location Services for Smiley Ranch.")
       },
       { enableHighAccuracy: true, timeout: 15000 },
     )
@@ -153,6 +153,7 @@ export default function MapScreen() {
         notes: form.notes.trim() || null,
         stand_type: form.type === 'stand' ? form.stand_type : null,
         fill_interval_days: form.type === 'feeder' && form.fill_interval_days ? Number(form.fill_interval_days) : null,
+        days_per_bag: form.type === 'feeder' && form.days_per_bag ? Number(form.days_per_bag) : null,
       }
       if (existing) {
         const { error } = await supabase.from('pins').update(row).eq('id', existing.id)
@@ -162,6 +163,7 @@ export default function MapScreen() {
         if (error) throw error
       }
       setPinForm(null)
+      setMode({ kind: 'view' })
       await reload()
     } catch (err) {
       setError(friendlyError(err))
@@ -276,6 +278,7 @@ export default function MapScreen() {
     <div className="flex h-dvh flex-col bg-cream">
       <Header
         title="Map"
+        back="/"
         right={
           <button type="button" onClick={locateMe} aria-label="My location" className="tap flex items-center justify-center rounded-lg px-2 active:bg-clay-800">
             {locating ? <Spinner small /> : <LocateIcon />}
@@ -648,20 +651,19 @@ function PinSheet({
   const [confirm, setConfirm] = useState(false)
   const [claims, setClaims] = useState<StandClaimRow[] | null>(null)
   const [lastFill, setLastFill] = useState<FeederFillRow | null | undefined>(undefined)
-  const [activity, setActivity] = useState<{ sightings: SightingRow[]; harvests: HarvestRow[] } | null>(null)
+  const [activity, setActivity] = useState<{ harvests: HarvestRow[] } | null>(null)
   const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
   const [filling, setFilling] = useState(false)
 
   const loadExtras = useCallback(async (p: PinRow) => {
-    const [cl, fl, si, ha] = await Promise.all([
+    const [cl, fl, ha] = await Promise.all([
       p.type === 'stand' ? supabase.from('stand_claims').select('*').eq('stand_id', p.id).is('released_at', null).gte('date', todayISO()).order('date').order('sit').limit(4) : Promise.resolve({ data: null }),
       p.type === 'feeder' ? supabase.from('feeder_fills').select('*').eq('feeder_id', p.id).is('deleted_at', null).order('filled_at', { ascending: false }).limit(1) : Promise.resolve({ data: null }),
-      supabase.from('sightings').select('*').eq('pin_id', p.id).is('deleted_at', null).order('seen_at', { ascending: false }).limit(3),
       supabase.from('harvests').select('*').eq('pin_id', p.id).is('deleted_at', null).order('harvested_on', { ascending: false }).limit(3),
     ])
     setClaims(cl.data ?? [])
     setLastFill(fl.data ? (fl.data[0] ?? null) : undefined)
-    setActivity({ sightings: si.data ?? [], harvests: ha.data ?? [] })
+    setActivity({ harvests: ha.data ?? [] })
   }, [])
 
   useEffect(() => {
@@ -692,7 +694,7 @@ function PinSheet({
       <div className="mb-3 flex items-center gap-2">
         <span className="pin" style={{ background: t.color, width: 26, height: 26, fontSize: 12 }}>{t.glyph}</span>
         <span className="font-semibold text-clay-950">{t.label}{pin.stand_type ? ` · ${STAND_TYPES[pin.stand_type]}` : ''}</span>
-        {pin.type === 'feeder' && pin.fill_interval_days && <span className="text-sm text-ink-muted">· fill every {pin.fill_interval_days} days</span>}
+        {pin.type === 'feeder' && (pin.days_per_bag || pin.fill_interval_days) && <span className="text-sm text-ink-muted">· {pin.days_per_bag ? `a bag lasts ~${pin.days_per_bag} days` : `fill every ${pin.fill_interval_days} days`}</span>}
       </div>
       {pin.notes && <p className="mb-3 whitespace-pre-wrap text-ink">{pin.notes}</p>}
       <p className="mb-3 text-sm text-ink-muted">
@@ -719,12 +721,11 @@ function PinSheet({
         </div>
       )}
 
-      {activity && (activity.sightings.length > 0 || activity.harvests.length > 0) && (
+      {activity && activity.harvests.length > 0 && (
         <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
           <div className="mb-1 text-xs font-bold uppercase tracking-wide text-clay-800">Recent here</div>
           <ul className="text-sm text-ink">
-            {activity.harvests.map((h) => <li key={h.id}>🎯 {fmtDate(h.harvested_on)} · {nameOf(h.member_id)} took a {h.species}{h.description ? ` (${h.description})` : ''}</li>)}
-            {activity.sightings.map((x) => <li key={x.id}>👀 {fmtDateTime(x.seen_at)} · {x.count > 1 ? `${x.count} ` : ''}{x.species}{x.description ? ` (${x.description})` : ''} · {nameOf(x.created_by)}</li>)}
+            {activity.harvests.map((h) => <li key={h.id}>{fmtDate(h.harvested_on)} · {nameOf(h.member_id)} took a {h.species}{h.description ? ` (${h.description})` : ''}</li>)}
           </ul>
         </div>
       )}
@@ -767,7 +768,7 @@ function PinSheet({
   )
 }
 
-type PinFormValues = { name: string; type: PinType; notes: string; stand_type: StandType; fill_interval_days: string; lat: number; lng: number }
+type PinFormValues = { name: string; type: PinType; notes: string; stand_type: StandType; fill_interval_days: string; days_per_bag: string; lat: number; lng: number }
 
 function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: number; pin?: PinRow; isAdmin: boolean; busy: boolean; onSave: (v: PinFormValues) => void }) {
   const allowed = isAdmin ? PIN_TYPE_ORDER : PIN_TYPE_ORDER.filter((t) => !ADMIN_ONLY_TYPES.includes(t) && MEMBER_TYPES.includes(t))
@@ -777,6 +778,7 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
     notes: pin?.notes ?? '',
     stand_type: pin?.stand_type ?? 'ladder',
     fill_interval_days: pin?.fill_interval_days ? String(pin.fill_interval_days) : '14',
+    days_per_bag: pin?.days_per_bag ? String(pin.days_per_bag) : '',
     lat,
     lng,
   })
@@ -813,7 +815,10 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
         </div>
       )}
       {v.type === 'feeder' && (
-        <TextInput label="Fill every (days)" name="fillDays" inputMode="numeric" value={v.fill_interval_days} onChange={(e) => setV({ ...v, fill_interval_days: e.target.value.replace(/\D/g, '') })} hint="Turns yellow when due, red when overdue." />
+        <div className="grid grid-cols-2 gap-3">
+          <TextInput label="A bag lasts about (days)" name="daysPerBag" inputMode="decimal" value={v.days_per_bag} onChange={(e) => setV({ ...v, days_per_bag: e.target.value.replace(/[^\d.]/g, '') })} hint="Used to guess when it runs out." />
+          <TextInput label="Or fill every (days)" name="fillDays" inputMode="numeric" value={v.fill_interval_days} onChange={(e) => setV({ ...v, fill_interval_days: e.target.value.replace(/\D/g, '') })} hint="Fallback when bags aren't recorded." />
+        </div>
       )}
       <TextArea label="Notes" name="pinNotes" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} placeholder="Optional" rows={2} />
       <p className="text-xs text-ink-muted font-mono">{fmtCoords(lat, lng)}</p>

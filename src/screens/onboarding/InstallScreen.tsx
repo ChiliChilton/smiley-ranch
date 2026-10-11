@@ -13,7 +13,7 @@ export function InstallScreen({ onContinue }: { onContinue: () => void }) {
       <div className="mb-6 flex items-center gap-3">
         <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={56} height={56} className="rounded-xl" />
         <div>
-          <h1 className="text-2xl font-bold text-clay-950">Back 40</h1>
+          <h1 className="text-2xl font-bold text-clay-950">Smiley Ranch</h1>
           <p className="text-ink-muted">Put it on your home screen</p>
         </div>
       </div>
@@ -33,7 +33,7 @@ export function InstallScreen({ onContinue }: { onContinue: () => void }) {
               Scroll down the list a little if you don't see it.
             </Step>
             <Step n={3} title='Tap "Add"' icon={<CheckIcon />}>
-              Then open Back 40 from your home screen like any other app.
+              Then open Smiley Ranch from your home screen like any other app.
             </Step>
           </ol>
           <Note className="mt-6">
@@ -46,7 +46,7 @@ export function InstallScreen({ onContinue }: { onContinue: () => void }) {
             The three dots in the corner of Chrome.
           </Step>
           <Step n={2} title='Tap "Add to Home screen" or "Install app"' icon={<PlusSquareIcon />}>
-            Then open Back 40 from your home screen.
+            Then open Smiley Ranch from your home screen.
           </Step>
         </ol>
       ) : (

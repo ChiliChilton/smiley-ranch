@@ -19,8 +19,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Back 40',
-        short_name: 'Back 40',
+        name: 'Smiley Ranch',
+        short_name: 'Smiley',
         description:
           "Who's hunting where, what's happening on the place, what needs doing, and what we need to buy.",
         start_url: BASE,

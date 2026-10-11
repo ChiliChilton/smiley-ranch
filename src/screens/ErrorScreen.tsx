@@ -7,7 +7,7 @@ export function ErrorScreen({ message, onRetry }: { message: string; onRetry: ()
     <Centered>
       <div className="mb-6 flex items-center gap-3">
         <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={56} height={56} className="rounded-xl" />
-        <h1 className="text-2xl font-bold text-clay-950">Back 40</h1>
+        <h1 className="text-2xl font-bold text-clay-950">Smiley Ranch</h1>
       </div>
       <Note kind="error">{message}</Note>
       <div className="mt-auto pt-6">

@@ -1,8 +1,8 @@
-# Back 40
+# Smiley Ranch (Back 40)
 
 A shared app for one family hunting property. Who's hunting where, what's happening on the place, what needs doing, and what we need to buy. See `SPEC.md` for features and `CLAUDE.md` for how it's built.
 
-**Stack:** Vite + React + TypeScript + Tailwind, PWA (`vite-plugin-pwa`), Supabase (Postgres, Storage, Edge Functions, Realtime), Leaflet, Web Push, Vercel.
+**Stack:** Vite + React + TypeScript + Tailwind, PWA (`vite-plugin-pwa`), Supabase (Postgres, Edge Functions, Realtime), Leaflet, Web Push, static hosting (GitHub Pages or Vercel).
 
 ## Status
 
@@ -11,8 +11,8 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | 1 | Scaffold, PWA install, Supabase, identity/onboarding, members admin | **Done** |
 | 2 | Calendar (just us / come join), check-out list, emergency info, Home | **Done** |
 | 3 | Satellite map, pins, boundary and areas, stand sign-up | **Done** |
-| 4 | Feeders with due colors, sightings, harvests with TPWD tags, photos | **Done** |
-| 5 | Log + comments, to-dos, needs/supplies, who's-on-the-place check-in | **Done** |
+| 4 | Feeders with bag-based run-out reminders, harvests with TPWD tags | **Done** |
+| 5 | Property notes + comments, projects, needs with House/Trailer/Barn tags | **Done** |
 | 6 | Push notifications, offline outbox, JSON/CSV/KML export, update prompt | **Done** |
 
 The build order was reshuffled after Phase 1: the family calendar, the before-you-leave list, and a shareable emergency address came first.
@@ -39,23 +39,22 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 - **Boundary and areas** (admin): draw by tapping corners (Geoman), adjust corners later, or import a KML/GeoJSON file. The first imported shape becomes the boundary if there isn't one; point placemarks become pins with a type guessed from the name (gate, tank, creek, feeder…). Tap an area to rename it, make it the boundary, or remove it.
 - **Stand sign-up**: the Stands tab is a week grid, stands down the side, days and AM/PM across the top. Tap a cell to claim it with an optional note, or to release your own claim. The admin can release anyone's. Postgres enforces one live claim per stand per sit. Home shows this weekend's claims.
 
-## Feeders, sightings, harvests
+## Feeders and harvests
 
-- **Feeders**: each feeder pin carries "fill every N days". The Feeders screen, the Home card, and the feeder's map pin show green (fine), yellow (due), or red (overdue, 3 days past due). **Filled it** records the fill with one tap, then offers optional amount and feed type.
-- **Sightings**: species chips, "looked like", count, time, a pin or GPS spot, notes, photos. Filter by species, pin, or date range.
-- **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes, photos. Season totals (Sept–Aug) by person and species.
+- **Feeders**: each feeder pin carries "a bag lasts about N days" (and optionally a fixed interval as fallback). **Filled it** records the fill in one tap, then asks how many bags. The app guesses the run-out date: yellow within 2 days, red when probably empty. The morning digest uses the same estimate.
+- **Sightings** were dropped by decision.
+- **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes. Season totals (Sept–Aug) by person and species.
 - **Photos** were cut by decision: photo storage is the one part of the stack that needs looking after over time.
 
 ## Log, to-dos, supplies, who's here
 
-- **Log**: a running feed. Post text with an optional spot (pin or GPS). Comments on each entry. "Make a to-do" turns an entry into a to-do with the title and spot filled in.
-- **To-dos**: title, notes, assignee, due date, spot. Tap the circle to mark done (records who and when) or reopen. Filters: Mine, All open, Done. Comments too.
-- **Needs & supplies**: "We need" is the shopping list; "Got it" records who bought it. "On hand" tracks rough levels (full / some / low / out); low or out puts the item on the list automatically, and "Got it" sets it back to full.
-- **Who's on the place**: "I'm here" with an optional "back by" time and note; "I'm out" or finishing the before-you-leave list closes it. Past the "back by" time the entry turns red; Phase 6 adds the push.
+- **Property notes** (the log): a running feed. Post text with an optional spot (pin or GPS). Comments on each note. "Make it a job" turns a note into a project with the title and spot filled in.
+- **Projects**: title, notes, assignee, due date, spot. Tap the circle to mark done (records who and when) or reopen. Filters: Mine, All open, Done. Comments too.
+- **Needs**: "We need" is the shopping list, each item tagged House / Trailer / Barn with filters; "Got it" records who bought it. "On hand" tracks rough levels (full / some / low / out); low or out puts the item on the list automatically, and "Got it" sets it back to full.
 
 ## Offline, export, updates
 
-- **No signal**: new sightings, harvests, log entries, feeder fills, to-dos, supply items, check-ins, and check-outs go into a local outbox (IndexedDB) and send themselves when signal returns, on app open, or when you tap the yellow "waiting for signal" pill. Claims and calendar entries stay online-only because they can conflict.
+- **No signal**: new harvests, property notes, feeder fills, projects, needs, and check-outs go into a local outbox (IndexedDB) and send themselves when signal returns, on app open, or when you tap the yellow "waiting for signal" pill. Claims and calendar entries stay online-only because they can conflict.
 - **Export** (admin, More → Export data): everything as one JSON file, any table as CSV, and the map as KML. Files go to the share sheet on iPhone or download elsewhere. Nothing is locked in.
 - **Updates**: the app checks for a new build on launch and shows a "Reload" bar when one is ready.
 
@@ -72,7 +71,7 @@ The goal is near zero. What there is:
 
 ## The board (Home)
 
-Home is a work board, not a dashboard: property name and date, quick links to the hunting side (Stands, Map, Log, Feeders…), then **On the place**, **Needs**, **Projects**, **Calendar**, this weekend's stands, feeders due, the latest log entries, and the emergency address in one line. Needs and projects can be added and ticked off right there. Tabs: Home, Calendar, Projects, Needs, More.
+Home is a work board: property name and date, quick links to the hunting side (Stands, Map, Property notes, Feeders, Harvests), then the **current or next stay** with who's going, **Needs** and **Projects** with a + that opens the full form and inline Got it / Done, feeders running low, the latest property notes, and the emergency address in one line. Tabs: Check out, Home, Calendar, Projects, Needs, More.
 
 ## Calendar rules
 

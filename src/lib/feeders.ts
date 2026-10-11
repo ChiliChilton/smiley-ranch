@@ -1,30 +1,49 @@
 import type { FeederFillRow, PinRow } from './database.types'
+import { addDays, daysBetween, toISODate, todayISO } from './dates'
 import { supabase } from './supabase'
 import { createRow, patchRow } from './outbox'
 
 export type FeederStatus = 'fresh' | 'due' | 'overdue' | 'unknown'
 
-const GRACE_DAYS = 3
+const GRACE_DAYS = 3        // interval mode: red this many days after it was due
+const WARN_DAYS = 2         // bag mode: yellow this many days before it's expected to run out
 
 export function daysSince(ts: string): number {
   return Math.floor((Date.now() - new Date(ts).getTime()) / 86400000)
 }
 
-/** Green until the interval, yellow once it's due, red after a short grace. */
-export function feederStatus(feeder: PinRow, lastFill: FeederFillRow | undefined): { status: FeederStatus; days: number | null } {
-  if (!lastFill) return { status: 'unknown', days: null }
+export type FeederEstimate = {
+  status: FeederStatus
+  days: number | null          // days since the last fill
+  runsOut: string | null       // ISO date the corn is expected to run out (bag mode only)
+  daysLeft: number | null      // negative when already past
+  mode: 'bags' | 'interval' | 'none'
+}
+
+/**
+ * Bag mode: last fill had N bags and the feeder says a bag lasts D days -> runs out N*D days after the fill.
+ * Interval mode (fallback): fixed days between fills. Green until due, yellow when due / close, red when past.
+ */
+export function feederStatus(feeder: PinRow, lastFill: FeederFillRow | undefined): FeederEstimate {
+  if (!lastFill) return { status: 'unknown', days: null, runsOut: null, daysLeft: null, mode: 'none' }
   const days = daysSince(lastFill.filled_at)
+  if (lastFill.bags != null && feeder.days_per_bag) {
+    const lasts = Math.round(Number(lastFill.bags) * Number(feeder.days_per_bag))
+    const runsOut = addDays(toISODate(new Date(lastFill.filled_at)), lasts)
+    const daysLeft = daysBetween(todayISO(), runsOut)
+    const status: FeederStatus = daysLeft < 0 ? 'overdue' : daysLeft <= WARN_DAYS ? 'due' : 'fresh'
+    return { status, days, runsOut, daysLeft, mode: 'bags' }
+  }
   const n = feeder.fill_interval_days
-  if (!n) return { status: 'fresh', days }
-  if (days >= n + GRACE_DAYS) return { status: 'overdue', days }
-  if (days >= n) return { status: 'due', days }
-  return { status: 'fresh', days }
+  if (!n) return { status: 'fresh', days, runsOut: null, daysLeft: null, mode: 'none' }
+  const status: FeederStatus = days >= n + GRACE_DAYS ? 'overdue' : days >= n ? 'due' : 'fresh'
+  return { status, days, runsOut: null, daysLeft: n - days, mode: 'interval' }
 }
 
 export const STATUS_STYLE: Record<FeederStatus, { dot: string; label: string; chip: string }> = {
   fresh: { dot: 'bg-ok', label: 'Good', chip: 'bg-sage-100 text-sage-900' },
-  due: { dot: 'bg-warn', label: 'Due', chip: 'bg-warn/20 text-tan-700' },
-  overdue: { dot: 'bg-alert', label: 'Overdue', chip: 'bg-alert/10 text-alert' },
+  due: { dot: 'bg-warn', label: 'Running low', chip: 'bg-warn/20 text-tan-700' },
+  overdue: { dot: 'bg-alert', label: 'Empty', chip: 'bg-alert/10 text-alert' },
   unknown: { dot: 'bg-tan-500', label: 'Never filled', chip: 'bg-cream-dark text-ink-muted' },
 }
 
@@ -41,13 +60,13 @@ export async function loadFeeders(): Promise<{ feeders: PinRow[]; lastFill: Map<
   return { feeders: feeders ?? [], lastFill }
 }
 
-export async function recordFill(feederId: string, details?: { amount?: string | null; feed_type?: string | null }): Promise<FeederFillRow & { queued: boolean }> {
+export async function recordFill(feederId: string, details?: { bags?: number | null; amount?: string | null; feed_type?: string | null }): Promise<FeederFillRow & { queued: boolean }> {
   const now = new Date().toISOString()
-  const { row, queued } = await createRow('feeder_fills', { feeder_id: feederId, filled_at: now, amount: details?.amount ?? null, feed_type: details?.feed_type ?? null })
+  const { row, queued } = await createRow('feeder_fills', { feeder_id: feederId, filled_at: now, bags: details?.bags ?? null, amount: details?.amount ?? null, feed_type: details?.feed_type ?? null })
   return { ...row, created_by: null, created_at: now, deleted_at: null, queued }
 }
 
-export async function updateFill(fillId: string, patch: { amount: string | null; feed_type: string | null }) {
+export async function updateFill(fillId: string, patch: { bags: number | null; feed_type: string | null }) {
   await patchRow('feeder_fills', fillId, patch)
 }
 

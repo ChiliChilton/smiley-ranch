@@ -59,7 +59,7 @@ export function emergencyFrom(values: Record<string, string> | null): EmergencyI
 }
 
 export function emergencyText(info: EmergencyInfo): string {
-  const lines = ['Back 40 property']
+  const lines = ['Smiley Ranch property']
   if (info.address) lines.push(info.address)
   if (info.lat && info.lng) lines.push(`GPS: ${info.lat}, ${info.lng}`, `https://maps.google.com/?q=${info.lat},${info.lng}`)
   if (info.directions) lines.push(info.directions)

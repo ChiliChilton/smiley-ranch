@@ -10,7 +10,7 @@ export function InactiveScreen({ name }: { name: string | null }) {
     <Centered>
       <h1 className="text-2xl font-bold text-clay-950">Access turned off</h1>
       <p className="mt-2 text-ink-muted">
-        {name ? `${name}'s` : 'This'} access to Back 40 has been turned off by the admin. Your past posts are still there.
+        {name ? `${name}'s` : 'This'} access to Smiley Ranch has been turned off by the admin. Your past posts are still there.
       </p>
       <Note className="mt-6">If that's a mistake, ask the admin to turn you back on, then tap below.</Note>
       <div className="mt-auto pt-6">

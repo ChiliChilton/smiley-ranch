@@ -86,8 +86,8 @@ export function JoinScreen() {
       <div className="mb-8 flex items-center gap-3">
         <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={56} height={56} className="rounded-xl" />
         <div>
-          <h1 className="text-2xl font-bold text-clay-950">Back 40</h1>
-          <p className="text-ink-muted">The family hunting place</p>
+          <h1 className="text-2xl font-bold text-clay-950">Smiley Ranch</h1>
+          <p className="text-ink-muted">The family place near Smiley</p>
         </div>
       </div>
       <form onSubmit={submitCode} className="space-y-4">

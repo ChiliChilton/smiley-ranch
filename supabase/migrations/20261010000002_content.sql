@@ -36,6 +36,7 @@ create table public.pins (
   stand_type           public.stand_type,
   -- feeders only
   fill_interval_days   integer check (fill_interval_days is null or fill_interval_days between 1 and 365),
+  days_per_bag         numeric(5,1) check (days_per_bag is null or days_per_bag between 0.1 and 365),  -- how long one bag lasts in this feeder
   created_by           uuid references public.members(id),
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now(),
@@ -43,7 +44,9 @@ create table public.pins (
   constraint pins_stand_type_only_for_stands
     check (stand_type is null or type = 'stand'),
   constraint pins_fill_interval_only_for_feeders
-    check (fill_interval_days is null or type = 'feeder')
+    check (fill_interval_days is null or type = 'feeder'),
+  constraint pins_days_per_bag_only_for_feeders
+    check (days_per_bag is null or type = 'feeder')
 );
 
 create index pins_type_idx on public.pins(type) where deleted_at is null;
@@ -89,26 +92,8 @@ create unique index stand_claims_unique_live_idx
 create index stand_claims_date_idx on public.stand_claims(date) where released_at is null;
 
 -- ---------------------------------------------------------------------------
--- Sightings, harvests, feeder fills
+-- Harvests, feeder fills
 -- ---------------------------------------------------------------------------
-
-create table public.sightings (
-  id           uuid primary key default gen_random_uuid(),
-  species      text not null check (length(btrim(species)) between 1 and 40),
-  description  text,
-  count        integer not null default 1 check (count between 1 and 999),
-  seen_at      timestamptz not null default now(),
-  pin_id       uuid references public.pins(id),
-  lat          double precision,
-  lng          double precision,
-  notes        text,
-  created_by   uuid references public.members(id),  -- who saw it
-  created_at   timestamptz not null default now(),
-  updated_at   timestamptz not null default now(),
-  deleted_at   timestamptz
-);
-
-create index sightings_seen_at_idx on public.sightings(seen_at desc) where deleted_at is null;
 
 create table public.harvests (
   id            uuid primary key default gen_random_uuid(),
@@ -133,6 +118,7 @@ create table public.feeder_fills (
   id          uuid primary key default gen_random_uuid(),
   feeder_id   uuid not null references public.pins(id),
   filled_at   timestamptz not null default now(),
+  bags        numeric(5,1) check (bags is null or bags between 0 and 999),   -- how many bags went in
   amount      text,
   feed_type   text,
   created_by  uuid references public.members(id),  -- who filled it
@@ -162,7 +148,7 @@ create index log_entries_created_at_idx on public.log_entries(created_at desc) w
 
 create table public.comments (
   id           uuid primary key default gen_random_uuid(),
-  parent_type  text not null check (parent_type in ('log_entry', 'sighting', 'harvest', 'todo', 'event', 'pin')),
+  parent_type  text not null check (parent_type in ('log_entry', 'harvest', 'todo', 'event', 'pin')),
   parent_id    uuid not null,
   body         text not null check (length(btrim(body)) between 1 and 2000),
   created_by   uuid references public.members(id),
@@ -233,6 +219,7 @@ create table public.supply_items (
   name          text not null check (length(btrim(name)) between 1 and 120),
   notes         text,
   is_inventory  boolean not null default false,
+  place         text check (place in ('house', 'trailer', 'barn')),   -- where it lives / where it's needed
   level         public.supply_level,
   needed        boolean not null default true,
   got_by        uuid references public.members(id),
@@ -291,7 +278,7 @@ declare
   t text;
 begin
   foreach t in array array[
-    'pins', 'areas', 'stand_claims', 'sightings', 'harvests', 'feeder_fills',
+    'pins', 'areas', 'stand_claims', 'harvests', 'feeder_fills',
     'log_entries', 'comments', 'events', 'event_attendees', 'todos',
     'supply_items', 'push_subscriptions'
   ] loop
@@ -301,7 +288,7 @@ begin
   end loop;
 
   foreach t in array array[
-    'pins', 'areas', 'sightings', 'harvests', 'log_entries', 'comments',
+    'pins', 'areas', 'harvests', 'log_entries', 'comments',
     'events', 'todos', 'supply_items', 'push_subscriptions'
   ] loop
     execute format(
@@ -320,7 +307,7 @@ declare
   t text;
 begin
   foreach t in array array[
-    'pins', 'areas', 'stand_claims', 'sightings', 'harvests', 'feeder_fills',
+    'pins', 'areas', 'stand_claims', 'harvests', 'feeder_fills',
     'log_entries', 'comments', 'events', 'event_attendees', 'todos',
     'supply_items', 'push_subscriptions'
   ] loop
@@ -336,7 +323,7 @@ declare
   t text;
 begin
   foreach t in array array[
-    'sightings', 'harvests', 'feeder_fills', 'log_entries', 'comments',
+    'harvests', 'feeder_fills', 'log_entries', 'comments',
     'events', 'todos', 'supply_items'
   ] loop
     execute format($f$
@@ -427,4 +414,4 @@ create policy push_subscriptions_delete on public.push_subscriptions for delete 
 
 alter publication supabase_realtime add table
   public.stand_claims, public.log_entries, public.todos, public.feeder_fills,
-  public.sightings, public.harvests, public.supply_items, public.members;
+  public.harvests, public.supply_items, public.members;
