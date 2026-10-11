@@ -5,16 +5,18 @@ type Props = {
   title: string
   back?: boolean | string
   right?: ReactNode
+  /** Something to show before the title, like the brand mark. */
+  leading?: ReactNode
   children: ReactNode
   /** Leave room for the bottom tab bar. Default true. */
   tabs?: boolean
 }
 
 /** Page frame: sticky header that respects the notch, scrollable content, room for the tab bar. */
-export function Screen({ title, back, right, children, tabs = true }: Props) {
+export function Screen({ title, back, right, leading, children, tabs = true }: Props) {
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
-      <Header title={title} back={back} right={right} />
+      <Header title={title} back={back} right={right} leading={leading} />
       <main
         className="flex-1 px-4 pt-4"
         style={{
@@ -29,7 +31,7 @@ export function Screen({ title, back, right, children, tabs = true }: Props) {
   )
 }
 
-export function Header({ title, back, right }: Pick<Props, 'title' | 'back' | 'right'>) {
+export function Header({ title, back, right, leading }: Pick<Props, 'title' | 'back' | 'right' | 'leading'>) {
   const navigate = useNavigate()
   return (
       <header
@@ -52,6 +54,7 @@ export function Header({ title, back, right }: Pick<Props, 'title' | 'back' | 'r
           ) : (
             <span className="w-2" />
           )}
+          {leading && <span className="mr-1 flex shrink-0 items-center text-cream">{leading}</span>}
           <h1 className="min-w-0 flex-1 truncate px-1 text-lg font-bold">{title}</h1>
           {right}
         </div>

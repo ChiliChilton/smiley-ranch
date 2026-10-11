@@ -19,6 +19,7 @@ import { useMe, useSession } from '../lib/session'
 import { emergencyFrom, useSettings } from '../lib/settings'
 import { supabase } from '../lib/supabase'
 import { loadLastCheckout } from './Checkout'
+import { Brand } from '../components/Brand'
 import { FeederCard, FillDetailsSheet } from './Feeders'
 import { loadLog } from './Log'
 import { loadSupplies, PlacePicker, PlaceTag } from './Supplies'
@@ -100,7 +101,7 @@ export function Home() {
   }
 
   return (
-    <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`}>
+    <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={26} />}>
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
       <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
