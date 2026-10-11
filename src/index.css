@@ -58,6 +58,19 @@ body {
 
 /* No zoom-on-focus in iOS Safari: inputs must be 16px or larger. */
 input, select, textarea, button { font-size: 16px; font-family: inherit; }
+/* iOS Safari: native date/time pickers won't shrink below their intrinsic width and
+   render their own box. Make them behave like our text inputs. */
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; min-width: 0; max-width: 100%;
+  min-height: 46px; line-height: 1.5; text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value {
+  text-align: left; min-height: 1.5em; margin: 0;
+}
+select { min-width: 0; max-width: 100%; min-height: 46px; }
+/* Grid cells shrink to fit instead of pushing past the screen edge. */
+.grid > * { min-width: 0; }
 
 /* Stop iOS from showing a text cursor while tapping around. */
 button { user-select: none; -webkit-user-select: none; }

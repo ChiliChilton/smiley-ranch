@@ -42,7 +42,7 @@ export function Export() {
         </Card>
         <Card title="One table as a spreadsheet">
           <div className="mb-3 flex gap-2">
-            <select value={table} onChange={(e) => setTable(e.target.value as ExportTable)} className="tap min-w-0 flex-1 rounded-xl border border-tan-500 bg-white px-3 py-3">
+            <select value={table} onChange={(e) => setTable(e.target.value as ExportTable)} className="tap min-w-0 flex-1 rounded-md border border-tan-500 bg-white px-3 py-2.5">
               {EXPORT_TABLES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
             </select>
           </div>

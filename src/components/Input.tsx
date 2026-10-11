@@ -10,7 +10,7 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
 export function TextInput({ label, hint, error, right, id, className = '', ...rest }: Props) {
   const inputId = id ?? rest.name
   return (
-    <label htmlFor={inputId} className="block">
+    <label htmlFor={inputId} className="block min-w-0">
       {label && <span className="mb-1 block text-sm font-semibold text-clay-900">{label}</span>}
       <span className="relative block">
         <input

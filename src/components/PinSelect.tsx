@@ -38,7 +38,7 @@ export function PinSelect({ value, onChange, types }: { value: Where; onChange: 
             if (v === '__gps') return
             onChange({ pin_id: v || null, lat: null, lng: null })
           }}
-          className="tap min-w-0 flex-1 rounded-xl border border-tan-500 bg-white px-3 py-3 text-ink"
+          className="tap min-w-0 flex-1 rounded-md border border-tan-500 bg-white px-3 py-2.5 text-ink"
         >
           <option value="">Not sure / not on the map</option>
           {value.lat != null && <option value="__gps">My location ({fmtCoords(value.lat, value.lng!)})</option>}

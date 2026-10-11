@@ -198,7 +198,7 @@ export function TodoForm({ todo, initialTitle = '', initialPin = null, onDone }:
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="mb-1 block text-sm font-semibold text-clay-900">Who</span>
-          <select value={assignee} onChange={(e) => setAssignee(e.target.value)} className="tap w-full rounded-xl border border-tan-500 bg-white px-3 py-3 text-ink">
+          <select value={assignee} onChange={(e) => setAssignee(e.target.value)} className="tap w-full rounded-md border border-tan-500 bg-white px-3 py-2.5 text-ink">
             <option value="">Anyone</option>
             {active.map((m) => <option key={m.id} value={m.id}>{m.id === me.member_id ? `${m.name} (me)` : m.name}</option>)}
           </select>

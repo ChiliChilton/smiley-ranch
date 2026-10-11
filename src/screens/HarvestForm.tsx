@@ -97,9 +97,9 @@ export function HarvestForm() {
       {loaded && (
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <label className="block">
+            <label className="block min-w-0">
               <span className="mb-1 block text-sm font-semibold text-clay-900">Who</span>
-              <select value={memberId} onChange={(e) => setMemberId(e.target.value)} className="tap w-full rounded-xl border border-tan-500 bg-white px-3 py-3 text-ink">
+              <select value={memberId} onChange={(e) => setMemberId(e.target.value)} className="tap w-full rounded-md border border-tan-500 bg-white px-3 py-2.5 text-ink">
                 {active.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </label>
