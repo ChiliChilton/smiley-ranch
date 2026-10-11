@@ -5,7 +5,10 @@ import { Card } from '../components/Card'
 import { EventListRow } from '../components/EventListRow'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
-import type { EventRow } from '../lib/database.types'
+import type { EventRow, SeasonRow } from '../lib/database.types'
+import { SeasonChip, SeasonSummary } from '../components/SeasonChips'
+import { SPECIES, SPECIES_ORDER, loadSeasons, openOn } from '../lib/seasons'
+import { useMe } from '../lib/session'
 import { addDays, fmtDate, monthGrid, monthName, overlaps, todayISO, WEEKDAYS_SHORT } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { KIND, KIND_ORDER, loadEvents } from '../lib/events'
@@ -19,12 +22,17 @@ export function Calendar() {
     return { year: d.getFullYear(), month: d.getMonth() }
   })
   const [selected, setSelected] = useState<string | null>(null)
+  const grid = useMemo(() => monthGrid(cursor.year, cursor.month), [cursor])
   const [events, setEvents] = useState<EventRow[] | null>(null)
+  const [seasons, setSeasons] = useState<SeasonRow[]>([])
   const [error, setError] = useState<string | null>(null)
+  const me = useMe()
 
   const reload = useCallback(async () => {
     try {
-      setEvents(await loadEvents(addDays(today, -400)))
+      const [ev, sn] = await Promise.all([loadEvents(addDays(today, -400)), loadSeasons()])
+      setEvents(ev)
+      setSeasons(sn)
     } catch (err) {
       setError(friendlyError(err))
     }
@@ -33,9 +41,18 @@ export function Calendar() {
   useEffect(() => {
     void reload()
   }, [reload])
-  useRealtime(['events', 'event_attendees'], reload)
+  useRealtime(['events', 'event_attendees', 'seasons'], reload)
 
-  const grid = useMemo(() => monthGrid(cursor.year, cursor.month), [cursor])
+  const seasonSpecies = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const row of grid.flat()) {
+      const kinds = [...new Set(openOn(seasons, row).map((s) => s.species))]
+      if (kinds.length) map.set(row, kinds.slice(0, 4).map((k) => SPECIES[k].bar))
+    }
+    return map
+  }, [seasons, grid])
+  const usedSpecies = useMemo(() => SPECIES_ORDER.filter((k) => seasons.some((s) => s.species === k)), [seasons])
+
   const monthPrefix = `${cursor.year}-${String(cursor.month + 1).padStart(2, '0')}`
 
   const byDay = useMemo(() => {
@@ -80,6 +97,16 @@ export function Calendar() {
     >
       {error && <Note kind="error" className="mb-3">{error}</Note>}
 
+      {(seasons.length > 0 || me.is_admin) && (
+        <Card className="mb-3 !p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-xs font-extrabold uppercase tracking-[0.12em] text-clay-900">Hunting seasons</div>
+            {me.is_admin && <button type="button" onClick={() => navigate('/more/seasons')} className="tap -mb-1 px-1 text-xs font-bold text-clay-800">Edit</button>}
+          </div>
+          {seasons.length === 0 ? <p className="text-sm text-ink-muted">No seasons entered yet.</p> : <SeasonSummary seasons={seasons} />}
+        </Card>
+      )}
+
       <Card className="mb-4 !p-3">
         <div className="mb-2 flex items-center justify-between">
           <button type="button" onClick={() => move(-1)} aria-label="Previous month" className="tap flex items-center justify-center rounded-lg text-clay-900 active:bg-tan-100">
@@ -106,6 +133,7 @@ export function Calendar() {
           {grid.flat().map((iso) => {
             const inMonth = iso.startsWith(monthPrefix)
             const hits = byDay.get(iso) ?? []
+            const bands = seasonSpecies.get(iso) ?? []
             const isToday = iso === today
             const isSel = iso === selected
             return (
@@ -129,6 +157,11 @@ export function Calendar() {
                     <span key={e.id} className={`h-1.5 rounded-sm ${isSel ? 'bg-cream/80' : KIND[e.kind].bar}`} />
                   ))}
                 </span>
+                {bands.length > 0 && (
+                  <span className="mt-auto mb-1 flex w-9 gap-px" aria-hidden>
+                    {bands.map((cls, i) => <span key={i} className={`h-1 flex-1 ${isSel ? 'bg-cream/60' : cls} ${inMonth ? '' : 'opacity-40'}`} />)}
+                  </span>
+                )}
               </button>
             )
           })}
@@ -139,6 +172,12 @@ export function Calendar() {
             <span key={k} className="flex items-center gap-1.5">
               <span className={`inline-block h-2 w-5 rounded-sm ${KIND[k].bar}`} />
               {KIND[k].label}
+            </span>
+          ))}
+          {usedSpecies.map((k) => (
+            <span key={k} className="flex items-center gap-1.5">
+              <span className={`inline-block h-1 w-5 ${SPECIES[k].bar}`} />
+              {SPECIES[k].label} season
             </span>
           ))}
         </div>
@@ -154,6 +193,12 @@ export function Calendar() {
           </Button>
         )}
       </div>
+
+      {selected && openOn(seasons, selected).length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {openOn(seasons, selected).map((s) => <SeasonChip key={s.id} season={s} />)}
+        </div>
+      )}
 
       {!events ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>

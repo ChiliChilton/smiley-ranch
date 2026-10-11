@@ -53,3 +53,24 @@ on conflict (id) do nothing;
 
 -- No pins on purpose. The admin places stands, feeders, cameras, gates, and water in the app.
 -- Mapped water from the parcel KML (Mound Creek, Board Branch, stock tank) is in docs/parcel-8554.kml if wanted later.
+
+-- Hunting seasons, 2026-27, South Zone (Gonzales County). From the TPWD
+-- Outdoor Annual; the admin updates these each fall under More > Hunting seasons.
+insert into public.seasons (name, species, starts_on, ends_on, note, created_by)
+select name, species, starts_on::date, ends_on::date, note, (select id from public.members order by created_at limit 1)
+from (values
+  ('Archery',                 'deer',   '2026-10-03', '2026-11-06', 'Archery endorsement needed.'),
+  ('Youth-only weekend',      'deer',   '2026-10-30', '2026-11-01', 'Hunters 16 and under.'),
+  ('General season',          'deer',   '2026-11-07', '2027-01-17', 'South Zone.'),
+  ('Doe days',                'deer',   '2026-11-14', '2026-11-29', 'Antlerless by firearm, Gonzales County. Check the Outdoor Annual for the county rule.'),
+  ('Special late season',     'deer',   '2027-01-18', '2027-01-31', 'Antlerless and spike bucks only. Youth-only too.'),
+  ('Archery',                 'turkey', '2026-10-03', '2026-11-06', 'Rio Grande turkey.'),
+  ('Fall season',             'turkey', '2026-11-07', '2027-01-17', 'South Zone.'),
+  ('Spring youth weekend',    'turkey', '2027-03-13', '2027-03-14', null),
+  ('Spring season',           'turkey', '2027-03-20', '2027-05-02', 'South Zone.'),
+  ('Spring youth weekend',    'turkey', '2027-05-08', '2027-05-09', null),
+  ('First split',             'dove',   '2026-09-01', '2026-10-25', 'South Zone. 15 a day. No special white-wing days this year.'),
+  ('Second split',            'dove',   '2026-12-18', '2027-01-21', 'South Zone.'),
+  ('Quail',                   'quail',  '2026-11-01', '2027-02-28', 'Upland game bird endorsement.')
+) as s(name, species, starts_on, ends_on, note)
+where not exists (select 1 from public.seasons);

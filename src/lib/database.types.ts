@@ -43,6 +43,20 @@ export type EventAttendeeRow = {
   created_at: string
 }
 
+export type SeasonSpecies = 'deer' | 'turkey' | 'dove' | 'quail' | 'other'
+export type SeasonRow = {
+  id: string
+  name: string
+  species: SeasonSpecies
+  starts_on: string
+  ends_on: string
+  note: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
 export type ChecklistItemRow = {
   id: string
   title: string
@@ -274,6 +288,12 @@ export type Database = {
         Row: ChecklistItemRow
         Insert: { id?: string; title: string; sort_order?: number; created_by?: string | null }
         Update: { title?: string; sort_order?: number; deleted_at?: string | null }
+        Relationships: []
+      }
+      seasons: {
+        Row: SeasonRow
+        Insert: { id?: string; name: string; species?: SeasonSpecies; starts_on: string; ends_on: string; note?: string | null; created_by?: string | null }
+        Update: { name?: string; species?: SeasonSpecies; starts_on?: string; ends_on?: string; note?: string | null; deleted_at?: string | null }
         Relationships: []
       }
       pins: {

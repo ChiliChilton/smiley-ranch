@@ -16,6 +16,7 @@ import { Checkout } from './screens/Checkout'
 import { EventDetail } from './screens/EventDetail'
 import { EventForm } from './screens/EventForm'
 import { Checklist } from './screens/admin/Checklist'
+import { Seasons } from './screens/admin/Seasons'
 import { Emergency } from './screens/admin/Emergency'
 import { Members } from './screens/admin/Members'
 import { Security } from './screens/admin/Security'
@@ -130,6 +131,7 @@ function Shell() {
         <Route path="/more/members" element={<AdminOnly><Members /></AdminOnly>} />
         <Route path="/more/security" element={<AdminOnly><Security /></AdminOnly>} />
         <Route path="/more/checklist" element={<AdminOnly><Checklist /></AdminOnly>} />
+        <Route path="/more/seasons" element={<AdminOnly><Seasons /></AdminOnly>} />
         <Route path="/more/emergency" element={<AdminOnly><Emergency /></AdminOnly>} />
         <Route path="/more/export" element={<AdminOnly><Export /></AdminOnly>} />
         <Route path="*" element={<Navigate to="/" replace />} />

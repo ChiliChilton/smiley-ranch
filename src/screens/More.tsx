@@ -82,6 +82,8 @@ export function More() {
               <Divider />
               <Row onClick={() => navigate('/more/checklist')}>Check-out list</Row>
               <Divider />
+              <Row onClick={() => navigate('/more/seasons')}>Hunting seasons</Row>
+              <Divider />
               <Row onClick={() => navigate('/more/emergency')}>Emergency info</Row>
               <Divider />
               <Row onClick={() => navigate('/map')}>Stands, feeders, cameras &amp; map</Row>

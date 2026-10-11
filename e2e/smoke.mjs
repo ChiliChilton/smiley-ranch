@@ -36,6 +36,11 @@ const seedChecklist = () => [
   { id: 'c2', title: 'Lock the front gate', sort_order: 2, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let checklist = seedChecklist()
+const seasons = [
+  { id: 'sn1', name: 'Archery', species: 'deer', starts_on: plus(-8), ends_on: plus(26), note: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'sn2', name: 'First split', species: 'dove', starts_on: plus(-40), ends_on: plus(14), note: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'sn3', name: 'General season', species: 'deer', starts_on: plus(27), ends_on: plus(98), note: 'South Zone.', created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+]
 let checkouts = []
 const seedPins = () => [
   { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
@@ -68,7 +73,7 @@ function applyFilters(rows, sp) {
   return rows
 }
 function restTable(name) {
-  return { events, event_attendees: attendees, checklist_items: checklist, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
+  return { events, event_attendees: attendees, checklist_items: checklist, seasons, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
 }
 let secrets = { code: 'deer-camp', pin: '4321' }
 let device = { member_id: null, is_admin: false }
@@ -120,7 +125,7 @@ async function mock(route) {
     if (method === 'GET') return route.fulfill(json(Object.entries(settings).map(([key, value]) => ({ key, value, updated_at: 'x' }))))
     if (method === 'POST') { if (!device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy')); for (const r of (Array.isArray(body) ? body : [body])) settings[r.key] = r.value; return route.fulfill(json([], 201)) }
   }
-  const generic = ['events', 'event_attendees', 'checklist_items', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
+  const generic = ['events', 'event_attendees', 'checklist_items', 'seasons', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
   const tname = path.replace('/rest/v1/', '')
   if (generic.includes(tname)) {
     const rows = restTable(tname)

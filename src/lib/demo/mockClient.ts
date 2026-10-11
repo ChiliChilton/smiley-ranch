@@ -57,7 +57,7 @@ function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row, p
   const rls = (t: string) => ({ code: '42501', message: `new row violates row-level security policy for table "${t}"` })
   if (!isActive()) return rls(table)
   switch (table) {
-    case 'members': case 'areas': case 'checklist_items': case 'settings':
+    case 'members': case 'areas': case 'checklist_items': case 'settings': case 'seasons':
       return isAdmin() ? null : rls(table)
     case 'pins': {
       const adminOnly = ['stand', 'feeder', 'camera']
@@ -182,6 +182,7 @@ class Query implements PromiseLike<Result<unknown>> {
           feeder_fills: { filled_at: now, bags: null, amount: null, feed_type: null },
           harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false },
           checklist_items: { sort_order: 0 },
+          seasons: { species: 'other', note: null },
           pins: { notes: null, stand_type: null, fill_interval_days: null, days_per_bag: null },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null },

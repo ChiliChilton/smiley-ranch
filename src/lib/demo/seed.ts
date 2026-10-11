@@ -81,5 +81,21 @@ export function seedDb(): Record<string, Row[]> {
     { id: 'su5', name: 'Gate latch', notes: null, place: 'barn', is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(2), created_by: M(3) },
     { id: 'su6', name: 'Trash bags', notes: null, place: 'trailer', is_inventory: false, level: null, needed: false, got_by: M(2), got_at: ts(8), ...base(12), created_by: M(2) },
   ]
-  return { members, checklist_items: checklist, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, harvests, log_entries, comments, todos, supply_items }
+  const seasons = [
+    ['Archery', 'deer', '2026-10-03', '2026-11-06', 'Archery endorsement needed.'],
+    ['Youth-only weekend', 'deer', '2026-10-30', '2026-11-01', 'Hunters 16 and under.'],
+    ['General season', 'deer', '2026-11-07', '2027-01-17', 'South Zone.'],
+    ['Doe days', 'deer', '2026-11-14', '2026-11-29', 'Antlerless by firearm, Gonzales County. Check the Outdoor Annual for the county rule.'],
+    ['Special late season', 'deer', '2027-01-18', '2027-01-31', 'Antlerless and spike bucks only. Youth-only too.'],
+    ['Archery', 'turkey', '2026-10-03', '2026-11-06', 'Rio Grande turkey.'],
+    ['Fall season', 'turkey', '2026-11-07', '2027-01-17', 'South Zone.'],
+    ['Spring youth weekend', 'turkey', '2027-03-13', '2027-03-14', null],
+    ['Spring season', 'turkey', '2027-03-20', '2027-05-02', 'South Zone.'],
+    ['Spring youth weekend', 'turkey', '2027-05-08', '2027-05-09', null],
+    ['First split', 'dove', '2026-09-01', '2026-10-25', 'South Zone. 15 a day. No special white-wing days this year.'],
+    ['Second split', 'dove', '2026-12-18', '2027-01-21', 'South Zone.'],
+    ['Quail', 'quail', '2026-11-01', '2027-02-28', 'Upland game bird endorsement.'],
+  ].map(([name, species, starts_on, ends_on, note], i) => ({ id: `sn${i + 1}`, name, species, starts_on, ends_on, note, ...base(90) }))
+
+  return { members, checklist_items: checklist, seasons, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, harvests, log_entries, comments, todos, supply_items }
 }

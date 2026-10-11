@@ -146,6 +146,25 @@ try {
   await page.getByText('Cut fence on the east line').waitFor()
   await shot('demo-projects')
 
+  // Hunting seasons: on the calendar, and the admin can add one
+  await tab('Calendar')
+  await page.getByText('Hunting seasons').waitFor()
+  await page.getByText('Open now').waitFor()
+  await page.getByText(/Deer · Archery/).first().waitFor()
+  await page.getByText(/Next ·/).waitFor()
+  await shot('demo-calendar-seasons')
+  await page.getByRole('button', { name: 'Edit', exact: true }).click()
+  await page.getByRole('button', { name: 'Add a season' }).click()
+  await page.getByRole('button', { name: 'Other', exact: true }).click()
+  await page.getByLabel('Season', { exact: true }).fill('Hog hunt weekend')
+  await page.getByLabel('From').fill('2027-02-05')
+  await page.getByLabel('To').fill('2027-02-07')
+  await page.getByRole('button', { name: 'Add it', exact: true }).click()
+  await page.getByText('Other · Hog hunt weekend').waitFor()
+  await shot('demo-admin-seasons')
+  await tab('Home')
+  await page.getByText('In season:').waitFor()
+
   // Check out tab: closes the list
   await tab('Check out')
   await page.getByText('Empty the dishwasher').waitFor()

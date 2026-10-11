@@ -20,6 +20,9 @@ import { emergencyFrom, useSettings } from '../lib/settings'
 import { supabase } from '../lib/supabase'
 import { loadLastCheckout } from './Checkout'
 import { Brand } from '../components/Brand'
+import { SeasonSummary } from '../components/SeasonChips'
+import { loadSeasons } from '../lib/seasons'
+import type { SeasonRow } from '../lib/database.types'
 import { FeederCard, FillDetailsSheet } from './Feeders'
 import { loadLog } from './Log'
 import { loadSupplies, PlacePicker, PlaceTag } from './Supplies'
@@ -41,6 +44,7 @@ export function Home() {
   const [events, setEvents] = useState<EventRow[]>([])
   const [stayGoing, setStayGoing] = useState<EventAttendeeRow[]>([])
   const [last, setLast] = useState<CheckoutRow | null>(null)
+  const [seasons, setSeasons] = useState<SeasonRow[]>([])
   const [feeders, setFeeders] = useState<{ feeders: PinRow[]; lastFill: Map<string, FeederFillRow> } | null>(null)
   const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
   const [log, setLog] = useState<LogEntryRow[]>([])
@@ -56,14 +60,16 @@ export function Home() {
   const upcoming = events.filter((e) => e.id !== stay?.id).slice(0, 3)
 
   const reload = useCallback(async () => {
-    const [ev, co, fd, lg, td, sp] = await Promise.all([
+    const [ev, co, fd, lg, td, sp, sn] = await Promise.all([
       loadEvents(today).catch(() => null),
       loadLastCheckout(),
       loadFeeders().catch(() => null),
       loadLog(3).catch(() => []),
       supabase.from('todos').select('*').is('deleted_at', null).eq('status', 'open').order('due_on', { ascending: true }).order('created_at', { ascending: false }).limit(60).then((r) => r.data ?? []),
       loadSupplies().catch(() => []),
+      loadSeasons().catch(() => []),
     ])
+    setSeasons(sn)
     if (ev) {
       setEvents(ev.slice(0, 8))
       const s = ev.filter((e) => e.kind !== 'info')
@@ -149,6 +155,11 @@ export function Home() {
                 </li>
               ))}
             </ul>
+          )}
+          {seasons.length > 0 && (
+            <button type="button" onClick={() => navigate('/calendar')} className="tap mt-1 w-full border-t border-tan-200 pt-2 text-left">
+              <SeasonSummary seasons={seasons} compact />
+            </button>
           )}
         </Section>
 

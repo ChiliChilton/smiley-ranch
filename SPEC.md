@@ -38,6 +38,10 @@ A shared app for one family hunting property. It answers four questions for ever
 - A person can release their own claim. The admin can release anyone's.
 - Optional note on a claim, like "bringing my nephew."
 
+### 2b. Hunting seasons
+- Texas seasons for the place (South Zone, Gonzales County) show on the calendar: a strip under each day, an "Open now" and "Next" card at the top, and a one-line summary on Home.
+- The admin keeps the list under More > Hunting seasons: species, name, from, to, note. Each year's dates come from the TPWD Outdoor Annual; `supabase/property.sql` ships 2026-27.
+
 ### 3. Map
 - Satellite base map (Leaflet + Esri World Imagery or similar).
 - The admin can draw and edit the **property boundary** and optional **named areas** (pastures, food plots). GeoJSON or shapefile import is a nice-to-have.

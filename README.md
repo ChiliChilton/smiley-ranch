@@ -43,6 +43,7 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 
 - **Feeders**: each feeder pin carries "a bag lasts about N days" (and optionally a fixed interval as fallback). **Filled it** records the fill in one tap, then asks how many bags. The app guesses the run-out date: yellow within 2 days, red when probably empty. The morning digest uses the same estimate.
 - **Sightings** were dropped by decision.
+- **Hunting seasons** (South Zone, Gonzales County) sit on the calendar: a strip under each day, "open now" and "next" at the top, and one line on Home. Admin edits them under More > Hunting seasons; 2026-27 is seeded from the TPWD Outdoor Annual. Check the county page there before you hunt.
 - **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes. Season totals (Sept–Aug) by person and species.
 - **Photos** were cut by decision: photo storage is the one part of the stack that needs looking after over time.
 
