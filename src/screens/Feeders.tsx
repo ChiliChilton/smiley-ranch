@@ -1,74 +1,15 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+/** Feeder pieces shared by Blinds, Home, and the map pin sheet. */
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button, Spinner } from '../components/Button'
 import { Card } from '../components/Card'
-import { TextInput } from '../components/Input'
 import { Note } from '../components/Note'
-import { Screen } from '../components/Screen'
+import { TextInput } from '../components/Input'
 import { Sheet } from '../components/Sheet'
 import type { FeederFillRow, PinRow } from '../lib/database.types'
 import { fmtDate, fmtDateTime } from '../lib/dates'
-import { friendlyError } from '../lib/errors'
-import { feederStatus, lastFeedType, loadFeeders, recordFill, rememberFeedType, STATUS_STYLE, updateFill } from '../lib/feeders'
+import { feederStatus, lastFeedType, rememberFeedType, STATUS_STYLE, updateFill } from '../lib/feeders'
 import { useMembers } from '../lib/members'
-import { useRealtime } from '../lib/realtime'
-import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
-
-export function Feeders() {
-  const me = useMe()
-  const navigate = useNavigate()
-  const [data, setData] = useState<{ feeders: PinRow[]; lastFill: Map<string, FeederFillRow> } | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
-  const [history, setHistory] = useState<PinRow | null>(null)
-
-  const reload = useCallback(async () => {
-    try {
-      setData(await loadFeeders())
-    } catch (err) {
-      setError(friendlyError(err))
-    }
-  }, [])
-  useEffect(() => { void reload() }, [reload])
-  useRealtime(['feeder_fills', 'pins'], reload)
-
-  async function filled(feeder: PinRow) {
-    setError(null)
-    try {
-      const fill = await recordFill(feeder.id, { feed_type: lastFeedType() || null })
-      setJustFilled({ feeder, fill })
-      await reload()
-    } catch (err) {
-      setError(friendlyError(err))
-    }
-  }
-
-  return (
-    <Screen title="Feeders" back="/">
-      {error && <Note kind="error" className="mb-3">{error}</Note>}
-      {!data ? (
-        <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
-      ) : data.feeders.length === 0 ? (
-        <Note>
-          No feeders on the map yet. {me.is_admin ? <button type="button" className="font-semibold underline" onClick={() => navigate('/map')}>Add them on the map.</button> : 'Ask the admin to add them.'}
-        </Note>
-      ) : (
-        <ul className="space-y-3">
-          {data.feeders.map((f) => (
-            <li key={f.id}>
-              <FeederCard feeder={f} fill={data.lastFill.get(f.id)} onFilled={() => filled(f)} onHistory={() => setHistory(f)} />
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="mt-4 text-xs text-ink-muted">Record how many bags go in and the app guesses when it runs out. Yellow means within 2 days, red means it's probably empty. The admin sets how long a bag lasts on each feeder's pin.</p>
-
-      <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await reload() }} />
-      <HistorySheet feeder={history} onClose={() => setHistory(null)} />
-    </Screen>
-  )
-}
 
 export function FeederCard({ feeder, fill, onFilled, onHistory, compact }: { feeder: PinRow; fill: FeederFillRow | undefined; onFilled: () => void; onHistory?: () => void; compact?: boolean }) {
   const { nameOf } = useMembers()
@@ -145,7 +86,7 @@ export function FillDetailsSheet({ entry, onClose, onSaved }: { entry: { feeder:
   )
 }
 
-function HistorySheet({ feeder, onClose }: { feeder: PinRow | null; onClose: () => void }) {
+export function HistorySheet({ feeder, onClose }: { feeder: PinRow | null; onClose: () => void }) {
   const { nameOf } = useMembers()
   const [fills, setFills] = useState<FeederFillRow[] | null>(null)
   useEffect(() => {

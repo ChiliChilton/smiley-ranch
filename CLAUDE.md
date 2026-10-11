@@ -32,7 +32,7 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 
 ## Data
 - Write SQL migrations in `supabase/migrations/`.
-- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checklist_items`, `checkouts`, and `push_subscriptions`. (Photos, sightings, and the who's-here check-in board were dropped by decision to keep it bare-bones.)
+- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checklist_items`, `checkouts`, `seasons`, `assets`, `info_items`, and `push_subscriptions`. `pins.has_feeder` marks a blind with its own feeder; `supply_items.asset_id` and `todos.asset_id` tag a place or machine; `event_attendees.headcount` is how many are coming. (Photos, sightings, and the who's-here check-in board were dropped by decision to keep it bare-bones.)
 - Use soft delete (`deleted_at`) for user content.
 
 ## Build order

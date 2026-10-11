@@ -8,7 +8,9 @@ import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Section, SectionLink } from '../components/Section'
 import { Sheet } from '../components/Sheet'
-import type { CheckoutRow, EventAttendeeRow, EventRow, FeederFillRow, LogEntryRow, PinRow, SupplyItemRow, SupplyPlace, TodoRow } from '../lib/database.types'
+import type { AssetRow, CheckoutRow, EventAttendeeRow, EventRow, FeederFillRow, LogEntryRow, PinRow, SupplyItemRow, TodoRow } from '../lib/database.types'
+import { AssetPicker, AssetTag } from '../components/AssetPicker'
+import { assetName, loadAssets } from '../lib/assets'
 import { fmtDate, fmtDateTime, fmtRange, parseISODate, relativeDay, todayISO } from '../lib/dates'
 import { loadEvents } from '../lib/events'
 import { feederStatus, loadFeeders, recordFill } from '../lib/feeders'
@@ -25,7 +27,7 @@ import { loadSeasons } from '../lib/seasons'
 import type { SeasonRow } from '../lib/database.types'
 import { FeederCard, FillDetailsSheet } from './Feeders'
 import { loadLog } from './Log'
-import { loadSupplies, PlacePicker, PlaceTag } from './Supplies'
+import { loadSupplies } from './Supplies'
 import { TodoForm } from './Todos'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -50,6 +52,7 @@ export function Home() {
   const [log, setLog] = useState<LogEntryRow[]>([])
   const [todos, setTodos] = useState<TodoRow[]>([])
   const [needs, setNeeds] = useState<SupplyItemRow[]>([])
+  const [assets, setAssets] = useState<AssetRow[]>([])
   const [adding, setAdding] = useState<'need' | 'project' | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
 
@@ -60,7 +63,7 @@ export function Home() {
   const upcoming = events.filter((e) => e.id !== stay?.id).slice(0, 3)
 
   const reload = useCallback(async () => {
-    const [ev, co, fd, lg, td, sp, sn] = await Promise.all([
+    const [ev, co, fd, lg, td, sp, sn, as] = await Promise.all([
       loadEvents(today).catch(() => null),
       loadLastCheckout(),
       loadFeeders().catch(() => null),
@@ -68,8 +71,10 @@ export function Home() {
       supabase.from('todos').select('*').is('deleted_at', null).eq('status', 'open').order('due_on', { ascending: true }).order('created_at', { ascending: false }).limit(60).then((r) => r.data ?? []),
       loadSupplies().catch(() => []),
       loadSeasons().catch(() => []),
+      loadAssets().catch(() => [] as AssetRow[]),
     ])
     setSeasons(sn)
+    setAssets(as)
     if (ev) {
       setEvents(ev.slice(0, 8))
       const s = ev.filter((e) => e.kind !== 'info')
@@ -87,7 +92,9 @@ export function Home() {
   }, [today])
 
   useEffect(() => { void reload() }, [reload])
-  useRealtime(['events', 'event_attendees', 'checkouts', 'feeder_fills', 'log_entries', 'todos', 'supply_items'], reload)
+  useRealtime(['events', 'event_attendees', 'checkouts', 'feeder_fills', 'log_entries', 'todos', 'supply_items', 'assets'], reload)
+  const beds = Number(settings?.beds ?? 4)
+  const headcount = stayGoing.reduce((n, a) => n + (a.headcount ?? 1), 0)
 
   const feedersDue = (feeders?.feeders ?? []).filter((f) => ['due', 'overdue'].includes(feederStatus(f, feeders!.lastFill.get(f.id)).status))
   const mine = todos.filter((t) => t.assignee_id === me.member_id)
@@ -111,7 +118,7 @@ export function Home() {
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
       <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
-        {([['Stands', '/stands'], ['Map', '/map'], ['Property notes', '/log'], ['Feeders', '/feeders'], ['Harvests', '/harvests']] as const).map(([label, to]) => (
+        {([['Blinds', '/blinds'], ['Ranch info', '/info'], ['Map', '/map'], ['Property notes', '/log'], ['Equipment', '/equipment'], ['Harvests', '/harvests']] as const).map(([label, to]) => (
           <button key={to} type="button" onClick={() => navigate(to)} className="tap shrink-0 rounded-md border border-tan-500 bg-white px-3 py-2 text-sm font-semibold text-clay-950 active:bg-tan-100">
             {label}
           </button>
@@ -119,10 +126,10 @@ export function Home() {
       </div>
 
       <div className="space-y-6">
-        <Section title={stayIsNow ? 'Current stay' : 'Next stay'} action={<SectionLink onClick={() => navigate('/calendar')}>Calendar</SectionLink>}>
+        <Section title={stayIsNow ? 'At the ranch now' : 'Next trip'} action={<SectionLink onClick={() => navigate('/calendar')}>Calendar</SectionLink>}>
           {!stay ? (
             <p className="py-1 text-sm text-ink-muted">
-              Nothing planned. <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/calendar/new')}>Add a stay</button>
+              Nothing on the calendar. <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/calendar/new')}>Add a trip</button>
             </p>
           ) : (
             <button type="button" onClick={() => navigate(`/calendar/${stay.id}`)} className="tap flex w-full items-start gap-3 py-1 text-left">
@@ -137,7 +144,8 @@ export function Home() {
                 </span>
                 <span className="block text-sm text-ink">{fmtRange(stay.starts_on, stay.ends_on)} · {stayIsNow ? 'happening now' : relativeDay(stay.starts_on)}</span>
                 <span className="block text-sm text-ink-muted">
-                  {stayGoing.length === 0 ? `${nameOf(stay.created_by)} · nobody has said they're in yet` : `Going: ${stayGoing.map((a) => nameOf(a.member_id)).join(', ')}`}
+                  {stayGoing.length === 0 ? `${nameOf(stay.created_by)} · nobody has said they're in yet` : `Going: ${stayGoing.map((a) => `${nameOf(a.member_id)}${(a.headcount ?? 1) > 1 ? ` +${a.headcount - 1}` : ''}`).join(', ')}`}
+                  {stayGoing.length > 0 && stay.kind === 'inclusive' && <span className={headcount > beds ? ' font-semibold text-alert' : ''}> · {headcount} {headcount === 1 ? 'person' : 'people'}, {beds} beds</span>}
                 </span>
                 {stay.notes && <span className="mt-1 block text-sm text-ink">{stay.notes.length > 100 ? stay.notes.slice(0, 100) + '…' : stay.notes}</span>}
               </span>
@@ -172,7 +180,7 @@ export function Home() {
                 <li key={i.id} className="flex items-center gap-2 py-1.5">
                   <span className="min-w-0 flex-1 text-[15px] text-ink">
                     {i.name}
-                    <PlaceTag place={i.place} />
+                    <AssetTag name={assetName(assets, i.asset_id)} />
                     {i.is_inventory && i.level && <span className="ml-2 text-[10px] font-extrabold uppercase text-alert">{i.level}</span>}
                     {i.notes && <span className="block text-xs text-ink-muted">{i.notes}</span>}
                   </span>
@@ -200,6 +208,7 @@ export function Home() {
                       <span className="block truncate text-[15px] font-semibold text-clay-950">{t.title}</span>
                       <span className="block text-xs text-ink-muted">
                         {t.assignee_id ? (t.assignee_id === me.member_id ? 'You' : nameOf(t.assignee_id)) : 'Anyone'}
+                        {assetName(assets, t.asset_id) && ` · ${assetName(assets, t.asset_id)}`}
                         {t.due_on && <span className={overdue ? ' font-bold text-alert' : ''}> · {overdue ? 'was due' : 'due'} {fmtDate(t.due_on, { weekday: false })}</span>}
                         {t.notes && ` · ${t.notes.length > 50 ? t.notes.slice(0, 50) + '…' : t.notes}`}
                       </span>
@@ -213,7 +222,7 @@ export function Home() {
         </Section>
 
         {feedersDue.length > 0 && (
-          <Section title="Feeders running low" count={feedersDue.length} action={<SectionLink onClick={() => navigate('/feeders')}>All feeders</SectionLink>}>
+          <Section title="Feeders running low" count={feedersDue.length} action={<SectionLink onClick={() => navigate('/blinds')}>All blinds</SectionLink>}>
             <ul className="space-y-2">
               {feedersDue.map((f) => (
                 <li key={f.id}>
@@ -253,31 +262,28 @@ export function Home() {
         {adding === 'project' && <TodoForm todo={null} onDone={async () => { setAdding(null); await reload() }} />}
       </Sheet>
       <Sheet open={adding === 'need'} onClose={() => setAdding(null)} title="We need">
-        {adding === 'need' && <NeedForm onDone={async () => { setAdding(null); await reload() }} />}
+        {adding === 'need' && <NeedForm assets={assets} onDone={async () => { setAdding(null); await reload() }} />}
       </Sheet>
       <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await reload() }} />
     </Screen>
   )
 }
 
-function NeedForm({ onDone }: { onDone: () => Promise<void> }) {
+function NeedForm({ assets, onDone }: { assets: AssetRow[]; onDone: () => Promise<void> }) {
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
-  const [place, setPlace] = useState<SupplyPlace | null>(null)
+  const [asset, setAsset] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   async function save(e: FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     setBusy(true)
-    try { await createRow('supply_items', { name: name.trim(), notes: notes.trim() || null, place, needed: true }); await onDone() } finally { setBusy(false) }
+    try { await createRow('supply_items', { name: name.trim(), notes: notes.trim() || null, asset_id: asset, needed: true }); await onDone() } finally { setBusy(false) }
   }
   return (
     <form onSubmit={save} className="space-y-3">
       <TextInput label="What" name="needName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Corn, batteries, gate latch…" maxLength={120} autoFocus />
-      <div>
-        <span className="mb-1 block text-sm font-semibold text-clay-900">Where</span>
-        <PlacePicker value={place} onChange={(p) => setPlace(p === 'any' ? null : p)} />
-      </div>
+      <AssetPicker label="For" assets={assets} value={asset} onChange={(p) => setAsset(p === 'any' ? null : p)} />
       <TextArea label="Notes" name="needNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Brand, size, how many…" rows={2} />
       <Button type="submit" full busy={busy} disabled={!name.trim()}>Add it</Button>
     </form>

@@ -74,3 +74,29 @@ from (values
   ('Quail',                   'quail',  '2026-11-01', '2027-02-28', 'Upland game bird endorsement.')
 ) as s(name, species, starts_on, ends_on, note)
 where not exists (select 1 from public.seasons);
+
+
+-- Equipment and places. House, House trailer and Barn come from the migration.
+insert into public.assets (name, kind, sort_order, created_by)
+select name, kind, sort_order, (select id from public.members order by created_at limit 1)
+from (values
+  ('Truck', 'vehicle', 10), ('Tractor', 'tractor', 11),
+  ('ATV 1', 'atv', 12), ('ATV 2', 'atv', 13), ('ATV 3', 'atv', 14),
+  ('Haul trailer', 'trailer', 15)
+) as a(name, kind, sort_order)
+where not exists (select 1 from public.assets where kind <> 'building');
+
+-- Ranch info: the labels everyone asks about. The admin fills in the values in
+-- the app under Ranch info (they are never kept in code).
+insert into public.info_items (section, label, value, sort_order, created_by)
+select section, label, '', sort_order, (select id from public.members order by created_at limit 1)
+from (values
+  ('access', 'Gate code', 1), ('access', 'Wi-Fi network', 2), ('access', 'Wi-Fi password', 3),
+  ('access', 'Gun room', 4),
+  ('house', 'Breaker panel', 1), ('house', 'Water shutoff', 2), ('house', 'Trash day', 3),
+  ('house', 'Thermostats', 4),
+  ('utilities', 'Septic', 1), ('utilities', 'Well', 2), ('utilities', 'Propane', 3),
+  ('contacts', 'Propane company', 1), ('contacts', 'Feed store', 2),
+  ('contacts', 'Electric co-op outage line', 3), ('contacts', 'Neighbor', 4), ('contacts', 'Cleaning (Elvira)', 5)
+) as i(section, label, sort_order)
+where not exists (select 1 from public.info_items);

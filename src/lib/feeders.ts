@@ -47,17 +47,19 @@ export const STATUS_STYLE: Record<FeederStatus, { dot: string; label: string; ch
   unknown: { dot: 'bg-tan-500', label: 'Never filled', chip: 'bg-cream-dark text-ink-muted' },
 }
 
-/** All feeders plus the latest fill for each. */
+export const hasFeeder = (p: PinRow) => p.type === 'feeder' || p.has_feeder
+
+/** Everything with a feeder (standalone feeders and blinds that have one) plus the latest fill for each. */
 export async function loadFeeders(): Promise<{ feeders: PinRow[]; lastFill: Map<string, FeederFillRow> }> {
-  const [{ data: feeders, error: e1 }, { data: fills, error: e2 }] = await Promise.all([
-    supabase.from('pins').select('*').eq('type', 'feeder').is('deleted_at', null).order('name'),
+  const [{ data: allPins, error: e1 }, { data: fills, error: e2 }] = await Promise.all([
+    supabase.from('pins').select('*').is('deleted_at', null).order('name'),
     supabase.from('feeder_fills').select('*').is('deleted_at', null).order('filled_at', { ascending: false }).limit(500),
   ])
   if (e1) throw e1
   if (e2) throw e2
   const lastFill = new Map<string, FeederFillRow>()
   for (const f of fills ?? []) if (!lastFill.has(f.feeder_id)) lastFill.set(f.feeder_id, f)
-  return { feeders: feeders ?? [], lastFill }
+  return { feeders: (allPins ?? []).filter(hasFeeder), lastFill }
 }
 
 export async function recordFill(feederId: string, details?: { bags?: number | null; amount?: string | null; feed_type?: string | null }): Promise<FeederFillRow & { queued: boolean }> {

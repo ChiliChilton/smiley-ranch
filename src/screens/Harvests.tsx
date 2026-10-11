@@ -23,6 +23,7 @@ export function Harvests() {
   const [pins, setPins] = useState<PinRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [season, setSeason] = useState(seasonOf(todayISO()))
+  const [view, setView] = useState<'list' | 'blind'>('list')
   const [open, setOpen] = useState<HarvestRow | null>(null)
 
   const reload = useCallback(async () => {
@@ -61,6 +62,11 @@ export function Harvests() {
   }, [inSeason])
 
   const pinName = (id: string | null) => pins.find((p) => p.id === id)?.name
+  const byBlind = useMemo(() => {
+    const m = new Map<string, HarvestRow[]>()
+    for (const r of inSeason) { const k = r.pin_id ?? ''; m.set(k, [...(m.get(k) ?? []), r]) }
+    return Array.from(m.entries()).sort((a, b) => (a[0] === '' ? 1 : b[0] === '' ? -1 : b[1].length - a[1].length))
+  }, [inSeason])
   const sexLabel = (s: string | null) => SEXES.find((x) => x.value === s)?.label
 
   async function remove(row: HarvestRow) {
@@ -83,6 +89,11 @@ export function Harvests() {
     >
       {error && <Note kind="error" className="mb-3">{error}</Note>}
 
+      <div className="mb-2 flex gap-2">
+        {([['list', 'By date'], ['blind', 'By blind']] as const).map(([v, label]) => (
+          <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v} className={`tap rounded-md px-3 py-1.5 text-xs font-bold ring-1 ${view === v ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`}>{label}</button>
+        ))}
+      </div>
       <div className="mb-3 flex flex-wrap gap-2">
         {seasons.map((s) => (
           <button key={s} type="button" onClick={() => setSeason(s)} aria-pressed={season === s} className={`tap rounded-full px-4 py-1.5 text-sm font-bold ring-1 ${season === s ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`}>
@@ -123,6 +134,27 @@ export function Harvests() {
 
           {inSeason.length === 0 ? (
             <div><Button variant="secondary" onClick={() => navigate('/harvests/new')}>Post a harvest</Button></div>
+          ) : view === 'blind' ? (
+            <div className="space-y-4">
+              {byBlind.map(([pinId, list]) => (
+                <section key={pinId || 'none'}>
+                  <div className="flex items-end justify-between border-b-2 border-clay-900/80 pb-1">
+                    <h2 className="text-xs font-extrabold uppercase tracking-[0.12em] text-clay-900">{pinId ? pinName(pinId) ?? 'Removed pin' : 'No blind given'}</h2>
+                    <span className="text-xs font-bold text-clay-800">{list.length}</span>
+                  </div>
+                  <ul className="divide-y divide-tan-200">
+                    {list.map((r) => (
+                      <li key={r.id}>
+                        <button type="button" onClick={() => setOpen(r)} className="tap flex w-full items-center gap-2 py-2 text-left text-sm">
+                          <span className="w-14 shrink-0 text-xs font-bold text-clay-800">{fmtDate(r.harvested_on, { weekday: false })}</span>
+                          <span className="min-w-0 flex-1 truncate text-ink"><span className="font-semibold text-clay-950">{nameOf(r.member_id)}</span> · {[sexLabel(r.sex), r.species].filter(Boolean).join(' ')}{r.description ? ` · ${r.description}` : ''}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
           ) : (
             <ul className="space-y-2">
               {inSeason.map((r) => (

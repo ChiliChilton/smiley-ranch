@@ -16,6 +16,9 @@ import { Checkout } from './screens/Checkout'
 import { EventDetail } from './screens/EventDetail'
 import { EventForm } from './screens/EventForm'
 import { Checklist } from './screens/admin/Checklist'
+import { Blinds } from './screens/Blinds'
+import { Equipment } from './screens/Equipment'
+import { RanchInfo } from './screens/RanchInfo'
 import { Seasons } from './screens/admin/Seasons'
 import { Emergency } from './screens/admin/Emergency'
 import { Members } from './screens/admin/Members'
@@ -26,8 +29,6 @@ import { InactiveScreen } from './screens/onboarding/InactiveScreen'
 import { InstallScreen } from './screens/onboarding/InstallScreen'
 import { JoinScreen } from './screens/onboarding/JoinScreen'
 import { NotificationsScreen } from './screens/onboarding/NotificationsScreen'
-import { Stands } from './screens/Stands'
-import { Feeders } from './screens/Feeders'
 import { Harvests } from './screens/Harvests'
 import { HarvestForm } from './screens/HarvestForm'
 import { Log } from './screens/Log'
@@ -114,8 +115,11 @@ function Shell() {
         <Route path="/calendar/:id" element={<EventDetail />} />
         <Route path="/calendar/:id/edit" element={<EventForm />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/stands" element={<Stands />} />
-        <Route path="/feeders" element={<Feeders />} />
+        <Route path="/blinds" element={<Blinds />} />
+        <Route path="/stands" element={<Navigate to="/blinds" replace />} />
+        <Route path="/feeders" element={<Navigate to="/blinds" replace />} />
+        <Route path="/info" element={<RanchInfo />} />
+        <Route path="/equipment" element={<Equipment />} />
         <Route path="/harvests" element={<Harvests />} />
         <Route path="/harvests/new" element={<HarvestForm />} />
         <Route path="/harvests/:id/edit" element={<HarvestForm />} />

@@ -19,18 +19,18 @@ on conflict (id) do nothing;
 update public.members set is_active = false where id = '00000000-0000-4000-8000-000000000006';
 
 -- Stands (approximate coordinates just south of Smiley, TX, Gonzales County; replace with real pins)
-insert into public.pins (id, type, name, stand_type, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000101', 'stand', 'North Ladder',   'ladder',       29.2352, -97.6690, 'Faces the creek bottom', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000102', 'stand', 'Box Blind',      'box_blind',    29.2318, -97.6625, 'Overlooks the big food plot', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000103', 'stand', 'Tank Blind',     'ground_blind', 29.2290, -97.6560, 'Ground blind by the stock tank', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000104', 'stand', 'South Ladder',   'ladder',       29.2270, -97.6520, null, '00000000-0000-4000-8000-000000000001')
+insert into public.pins (id, type, name, stand_type, lat, lng, notes, created_by, has_feeder, days_per_bag) values
+  ('00000000-0000-4000-8000-000000000101', 'stand', 'North Ladder',   'ladder',       29.2352, -97.6690, 'Faces the creek bottom', '00000000-0000-4000-8000-000000000001', true, 6),
+  ('00000000-0000-4000-8000-000000000102', 'stand', 'Box Blind',      'box_blind',    29.2318, -97.6625, 'Overlooks the big food plot', '00000000-0000-4000-8000-000000000001', false, null),
+  ('00000000-0000-4000-8000-000000000103', 'stand', 'Tank Blind',     'ground_blind', 29.2290, -97.6560, 'Ground blind by the stock tank', '00000000-0000-4000-8000-000000000001', false, null),
+  ('00000000-0000-4000-8000-000000000104', 'stand', 'South Ladder',   'ladder',       29.2270, -97.6520, null, '00000000-0000-4000-8000-000000000001', false, null)
 on conflict (id) do nothing;
 
 -- Feeders
-insert into public.pins (id, type, name, fill_interval_days, days_per_bag, lat, lng, notes, created_by) values
-  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 4, 29.2322, -97.6615, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 10, 29.2345, -97.6675, 'Protein', '00000000-0000-4000-8000-000000000001'),
-  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 5, 29.2278, -97.6530, null, '00000000-0000-4000-8000-000000000001')
+insert into public.pins (id, type, name, fill_interval_days, days_per_bag, lat, lng, notes, created_by, has_feeder) values
+  ('00000000-0000-4000-8000-000000000201', 'feeder', 'Plot Feeder',   14, 4, 29.2322, -97.6615, 'Corn, 300 lb hopper', '00000000-0000-4000-8000-000000000001', true),
+  ('00000000-0000-4000-8000-000000000202', 'feeder', 'Creek Feeder',  21, 10, 29.2345, -97.6675, 'Protein', '00000000-0000-4000-8000-000000000001', true),
+  ('00000000-0000-4000-8000-000000000203', 'feeder', 'South Feeder',  14, 5, 29.2278, -97.6530, null, '00000000-0000-4000-8000-000000000001', true)
 on conflict (id) do nothing;
 
 -- Other sample pins
@@ -71,10 +71,10 @@ insert into public.todos (title, notes, assignee_id, due_on, status, created_by)
   ('Replace Plot Cam batteries', null, '00000000-0000-4000-8000-000000000001', current_date - 2, 'open', '00000000-0000-4000-8000-000000000004'),
   ('Grade the road to the tank', null, null, null, 'open', '00000000-0000-4000-8000-000000000001');
 
-insert into public.supply_items (name, notes, place, is_inventory, level, needed, created_by) values
-  ('Corn (50 lb bags)', '6 bags', 'barn', true, 'low', true, '00000000-0000-4000-8000-000000000001'),
-  ('Protein pellets', null, 'barn', true, 'some', false, '00000000-0000-4000-8000-000000000001'),
-  ('Propane', null, 'house', true, 'full', false, '00000000-0000-4000-8000-000000000001'),
+insert into public.supply_items (name, notes, asset_id, is_inventory, level, needed, created_by) values
+  ('Corn (50 lb bags)', '6 bags', '00000000-0000-4000-8000-000000000a03', true, 'low', true, '00000000-0000-4000-8000-000000000001'),
+  ('Protein pellets', null, '00000000-0000-4000-8000-000000000a03', true, 'some', false, '00000000-0000-4000-8000-000000000001'),
+  ('Propane', null, '00000000-0000-4000-8000-000000000a01', true, 'full', false, '00000000-0000-4000-8000-000000000001'),
   ('AA batteries', 'For the cameras', null, false, null, true, '00000000-0000-4000-8000-000000000004'),
-  ('Dish soap', null, 'trailer', false, null, true, '00000000-0000-4000-8000-000000000002');
+  ('Dish soap', null, '00000000-0000-4000-8000-000000000a02', false, null, true, '00000000-0000-4000-8000-000000000002');
 

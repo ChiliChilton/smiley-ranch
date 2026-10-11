@@ -42,25 +42,34 @@ const seasons = [
   { id: 'sn3', name: 'General season', species: 'deer', starts_on: plus(27), ends_on: plus(98), note: 'South Zone.', created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let checkouts = []
+const assets = [
+  { id: 'a1', name: 'House', kind: 'building', status: 'good', note: null, sort_order: 1, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'a2', name: 'Truck', kind: 'vehicle', status: 'good', note: null, sort_order: 2, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+]
+let infoItems = [
+  { id: 'i1', section: 'access', label: 'Gate code', value: '1234#', sort_order: 1, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+]
 const seedPins = () => [
-  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, fill_interval_days: 14, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let pins = seedPins()
 let areas = []
 let claims = []
 let fills = [], sightings = [], harvests = [], logs = [], comments = [], todos = [], supplies = [], checkins = []
 const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
-let settings = { emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2273', emergency_lng: '-97.6519', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
+let settings = { beds: '4', emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2273', emergency_lng: '-97.6519', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
 const overlap = (a, b) => a.starts_on <= b.ends_on && b.starts_on <= a.ends_on
 // minimal PostgREST filter support: col=eq.x, col=is.null, col=gte.x, col=lte.x, col=neq.x
 function applyFilters(rows, sp) {
   for (const [k, v] of sp.entries()) {
     if (['select','order','limit','on_conflict'].includes(k)) continue
-    const [op, ...rest] = v.split('.'); const val = rest.join('.')
-    rows = rows.filter((r) => {
+    let [op, ...rest] = v.split('.'); let negate = false
+    if (op === 'not') { negate = true; op = rest[0]; rest = rest.slice(1) }
+    const val = rest.join('.')
+    const test = (r) => {
       const x = r[k]
       if (op === 'eq') return String(x) === val
       if (op === 'neq') return String(x) !== val
@@ -68,12 +77,13 @@ function applyFilters(rows, sp) {
       if (op === 'gte') return x >= val
       if (op === 'lte') return x <= val
       return true
-    })
+    }
+    rows = rows.filter((r) => (negate ? !test(r) : test(r)))
   }
   return rows
 }
 function restTable(name) {
-  return { events, event_attendees: attendees, checklist_items: checklist, seasons, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
+  return { events, event_attendees: attendees, checklist_items: checklist, seasons, assets, info_items: infoItems, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
 }
 let secrets = { code: 'deer-camp', pin: '4321' }
 let device = { member_id: null, is_admin: false }
@@ -125,7 +135,7 @@ async function mock(route) {
     if (method === 'GET') return route.fulfill(json(Object.entries(settings).map(([key, value]) => ({ key, value, updated_at: 'x' }))))
     if (method === 'POST') { if (!device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy')); for (const r of (Array.isArray(body) ? body : [body])) settings[r.key] = r.value; return route.fulfill(json([], 201)) }
   }
-  const generic = ['events', 'event_attendees', 'checklist_items', 'seasons', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
+  const generic = ['events', 'event_attendees', 'checklist_items', 'seasons', 'assets', 'info_items', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
   const tname = path.replace('/rest/v1/', '')
   if (generic.includes(tname)) {
     const rows = restTable(tname)
@@ -239,7 +249,7 @@ async function run(width, standalone) {
   await page.getByRole('heading', { name: 'Notifications' }).waitFor()
   await shot(page, `${tag}-4-notif`)
   await page.getByRole('button', { name: /Not now|Continue/ }).click()
-  await page.getByText(/Current stay|Next stay/).waitFor()
+  await page.getByText(/At the ranch now|Next trip/).waitFor()
   await page.getByText('Needs').first().waitFor()
   await shot(page, `${tag}-5-home`)
   await page.getByText('1932 CR 211').waitFor()
@@ -263,14 +273,18 @@ async function run(width, standalone) {
   await shot(page, `${tag}-14-inclusive-warn`)
   await page.getByRole('button', { name: 'Add it anyway' }).click()
   await page.getByText("Who's going (1)").waitFor()
+  await page.getByText('1 person, 4 beds').waitFor()
   await shot(page, `${tag}-15-event`)
   await page.getByRole('button', { name: "I'm out" }).click()
   await page.getByText("Who's going (0)").waitFor()
   await page.getByRole('button', { name: "I'm in" }).click()
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.getByLabel('Note (optional)').fill('Bringing my nephew')
   await page.getByRole('button', { name: 'Count me in' }).click()
   await page.getByText('Bringing my nephew').waitFor()
-  assert(attendees.length === 1 && attendees[0].note === 'Bringing my nephew', 'attendee note saved')
+  await page.getByText('3 people, 4 beds').waitFor()
+  assert(attendees.length === 1 && attendees[0].note === 'Bringing my nephew' && attendees[0].headcount === 3, 'attendee note and headcount saved')
 
   // Check out (far-left tab)
   await page.getByRole('link', { name: 'Check out' }).click()
@@ -284,14 +298,16 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Back home' }).click()
   await page.getByText('Last checked out:').waitFor()
 
-  // Stands: pick a day, claim, release, back to Home
-  await page.getByRole('button', { name: 'Stands', exact: true }).click()
-  await page.getByRole('heading', { name: 'Stands' }).waitFor()
+  // Blinds: pick a day, claim, release, feeder line, back to Home
+  await page.getByRole('button', { name: 'Blinds', exact: true }).click()
+  await page.getByRole('heading', { name: 'Blinds' }).waitFor()
+  await page.getByText('Feeder', { exact: true }).first().waitFor()
+  await page.getByText('Nothing taken here yet.').first().waitFor()
   await shot(page, `${tag}-19-stands`)
   const openCell = page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first()
   await openCell.click()
   await page.getByLabel('Note (optional)').fill('Bringing my nephew')
-  await page.getByRole('button', { name: 'Claim stand' }).click()
+  await page.getByRole('button', { name: 'Claim it' }).click()
   await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).first().waitFor()
   assert(claims.length === 1 && claims[0].note === 'Bringing my nephew', 'claim saved')
   await shot(page, `${tag}-20-stands-claimed`)
@@ -301,7 +317,23 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first().waitFor()
   assert(claims[0].released_at, 'claim released')
   await page.getByRole('button', { name: 'Back' }).click()
-  await page.getByText(/Current stay|Next stay/).waitFor()
+  await page.getByText(/At the ranch now|Next trip/).waitFor()
+
+  // Ranch info and Equipment
+  await page.getByRole('button', { name: 'Ranch info', exact: true }).click()
+  await page.getByText('Gate code').waitFor()
+  await page.getByText('1234#').waitFor()
+  await page.getByText('1932 CR 211').waitFor()
+  await shot(page, `${tag}-24-info`)
+  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByRole('button', { name: 'Equipment', exact: true }).click()
+  await page.getByRole('button', { name: /^Truck/ }).click()
+  await page.getByRole('button', { name: 'Down', exact: true }).click()
+  await page.getByRole('button', { name: 'Down', exact: true }).and(page.locator('[aria-pressed="true"]')).waitFor()
+  assert(assets.find((a) => a.id === 'a2').status === 'down', 'truck marked down')
+  await shot(page, `${tag}-25-equipment`)
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Back' }).click()
 
   // Map as a member: pins render, pin sheet, only hazard/other offered
   await page.getByRole('button', { name: 'Map', exact: true }).click()
@@ -412,7 +444,7 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Switch person' }).click()
   await page.getByText('Admin mode will turn off').waitFor()
   await page.getByRole('button', { name: 'Uncle Mike' }).click()
-  await page.getByText(/Current stay|Next stay/).waitFor() // back on the board
+  await page.getByText(/At the ranch now|Next trip/).waitFor() // back on the board
   await page.getByRole('link', { name: 'More' }).click()
   await page.getByText('Uncle Mike', { exact: true }).waitFor() // now signed in as Mike
   await page.getByRole('button', { name: 'Unlock admin' }).waitFor() // admin dropped

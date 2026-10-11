@@ -32,7 +32,20 @@ export function seedDb(): Record<string, Row[]> {
     ['emergency_directions', 'Gate is where the east tip of the place meets CR 211. Green pipe gate.'],
     ['emergency_lat', '29.2273'], ['emergency_lng', '-97.6519'],
     ['emergency_extra', 'Nearest ER: Gonzales Memorial Hospital. Gonzales County Sheriff: (830) 672-6524'],
+    ['beds', '4'],
   ].map(([key, value]) => ({ key, value, updated_at: ts(60) }))
+  const A = (n: number) => `00000000-0000-4000-8000-000000000a${String(n).padStart(2, '0')}`
+  const assets = [
+    ['House', 'building', 'good', null, 1], ['House trailer', 'building', 'attention', 'Hot water heater breaker trips. Flip it back on in the bunk room.', 2], ['Barn', 'building', 'good', null, 3],
+    ['Truck', 'vehicle', 'good', 'Oil changed in March.', 10], ['Tractor', 'tractor', 'down', 'Won\'t start. Mike thinks it is the solenoid.', 11],
+    ['ATV 1', 'atv', 'good', null, 12], ['ATV 2', 'atv', 'attention', 'Slow leak, left rear.', 13], ['ATV 3', 'atv', 'good', null, 14], ['Haul trailer', 'trailer', 'good', null, 15],
+  ].map(([name, kind, status, note, sort_order], i) => ({ id: A(i + 1), name, kind, status, note, sort_order, ...base(60) }))
+  const info_items = [
+    ['access', 'Gate code', '4471#', 1], ['access', 'Wi-Fi network', 'SmileyRanch', 2], ['access', 'Wi-Fi password', 'ask Dad (demo)', 3], ['access', 'Gun room', 'Key is on the nail inside the pantry door. Pull the door hard to lock it.', 4],
+    ['house', 'Breaker panel', 'Utility room behind the washer. Hot water heater for the trailer is the top left breaker.', 1], ['house', 'Water shutoff', 'Blue valve on the well house wall, turn it clockwise to shut off.', 2], ['house', 'Trash day', 'No pickup. Take it home or to the Smiley dump (Tue, Thu, Sat mornings).', 3], ['house', 'Thermostats', 'Winter 67, summer 84. Trailer AC off when you leave.', 4],
+    ['utilities', 'Septic', 'Tank is under the green lid east of the house. Pumped 2024. No wipes.', 1], ['utilities', 'Well', 'Pump breaker is in the well house. If the pressure drops, check the breaker first.', 2], ['utilities', 'Propane', 'Two 250 gal tanks behind the house. Gauge should stay above 30%.', 3],
+    ['contacts', 'Propane company', 'Gonzales Propane (830) 555-0142', 1], ['contacts', 'Feed store', 'Smiley Feed & Supply (830) 555-0170', 2], ['contacts', 'Electric co-op outage line', 'GVEC (800) 223-4832', 3], ['contacts', 'Neighbor', 'Hank at the next gate, (830) 555-0199. Has a key.', 4], ['contacts', 'Cleaning (Elvira)', '(830) 555-0123. $110 on the counter or Cash App.', 5],
+  ].map(([section, label, value, sort_order], i) => ({ id: `in${i + 1}`, section, label, value, sort_order, ...base(60) }))
   const pins: Row[] = [] // markers come later: the admin places real ones in the app
   const areas = [{ id: 'a1', name: 'Property', is_boundary: true, geometry: (parcel as { features: { geometry: unknown }[] }).features[0].geometry, color: null, ...base(60) }]
   const dow = new Date().getDay()
@@ -44,9 +57,9 @@ export function seedDb(): Record<string, Row[]> {
     { id: 'e4', title: 'Season ends', kind: 'info', starts_on: addDays(today, 90), ends_on: addDays(today, 90), notes: null, ...base(5) },
   ]
   const event_attendees = [
-    { event_id: 'e1', member_id: M(1), note: null, created_by: M(1), created_at: ts(20) },
-    { event_id: 'e1', member_id: M(4), note: 'Bringing my dog', created_by: M(4), created_at: ts(18) },
-    { event_id: 'e3', member_id: M(3), note: 'Got the post driver', created_by: M(3), created_at: ts(4) },
+    { event_id: 'e1', member_id: M(1), note: null, headcount: 3, created_by: M(1), created_at: ts(20) },
+    { event_id: 'e1', member_id: M(4), note: 'Bringing my dog', headcount: 2, created_by: M(4), created_at: ts(18) },
+    { event_id: 'e3', member_id: M(3), note: 'Got the post driver', headcount: 1, created_by: M(3), created_at: ts(4) },
   ]
   const stand_claims: Row[] = []
   const checkouts = [
@@ -68,18 +81,18 @@ export function seedDb(): Record<string, Row[]> {
     { id: 'cm1', parent_type: 'log_entry', parent_id: 'l1', body: "I've got posts in the barn. Can fix it Saturday.", ...base(1), created_by: M(1) },
   ]
   const todos = [
-    { id: 't1', title: 'Fix the north fence', notes: 'Two T-posts and wire. Posts are in the barn.', assignee_id: M(3), due_on: addDays(today, 6), pin_id: null, status: 'open', completed_by: null, completed_at: null, ...base(1) },
-    { id: 't2', title: 'Replace Plot Cam batteries', notes: null, assignee_id: M(1), due_on: addDays(today, -2), pin_id: null, status: 'open', completed_by: null, completed_at: null, ...base(10), created_by: M(4) },
-    { id: 't3', title: 'Grade the road to the tank', notes: null, assignee_id: null, due_on: null, pin_id: null, status: 'open', completed_by: null, completed_at: null, ...base(12) },
-    { id: 't4', title: 'Mow around the cabin', notes: null, assignee_id: M(5), due_on: null, pin_id: null, status: 'done', completed_by: M(5), completed_at: ts(3), ...base(15) },
+    { id: 't1', title: 'Fix the north fence', notes: 'Two T-posts and wire. Posts are in the barn.', assignee_id: M(3), due_on: addDays(today, 6), pin_id: null, asset_id: null, status: 'open', completed_by: null, completed_at: null, ...base(1) },
+    { id: 't2', title: 'Replace Plot Cam batteries', notes: null, assignee_id: M(1), due_on: addDays(today, -2), pin_id: null, asset_id: null, status: 'open', completed_by: null, completed_at: null, ...base(10), created_by: M(4) },
+    { id: 't3', title: 'Grade the road to the tank', notes: null, assignee_id: null, due_on: null, pin_id: null, asset_id: A(5), status: 'open', completed_by: null, completed_at: null, ...base(12) },
+    { id: 't4', title: 'Mow around the cabin', notes: null, assignee_id: M(5), due_on: null, pin_id: null, asset_id: null, status: 'done', completed_by: M(5), completed_at: ts(3), ...base(15) },
   ]
   const supply_items = [
-    { id: 'su1', name: 'Corn (50 lb bags)', notes: '6 bags', place: 'barn', is_inventory: true, level: 'low', needed: true, got_by: null, got_at: null, ...base(20) },
-    { id: 'su2', name: 'Protein pellets', notes: null, place: 'barn', is_inventory: true, level: 'some', needed: false, got_by: null, got_at: null, ...base(20) },
-    { id: 'su3', name: 'Propane', notes: null, place: 'house', is_inventory: true, level: 'full', needed: false, got_by: null, got_at: null, ...base(20) },
-    { id: 'su4', name: 'AA batteries', notes: 'For the cameras', place: null, is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(3), created_by: M(4) },
-    { id: 'su5', name: 'Gate latch', notes: null, place: 'barn', is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(2), created_by: M(3) },
-    { id: 'su6', name: 'Trash bags', notes: null, place: 'trailer', is_inventory: false, level: null, needed: false, got_by: M(2), got_at: ts(8), ...base(12), created_by: M(2) },
+    { id: 'su1', name: 'Corn (50 lb bags)', notes: '6 bags', asset_id: A(3), is_inventory: true, level: 'low', needed: true, got_by: null, got_at: null, ...base(20) },
+    { id: 'su2', name: 'Protein pellets', notes: null, asset_id: A(3), is_inventory: true, level: 'some', needed: false, got_by: null, got_at: null, ...base(20) },
+    { id: 'su3', name: 'Propane', notes: null, asset_id: A(1), is_inventory: true, level: 'full', needed: false, got_by: null, got_at: null, ...base(20) },
+    { id: 'su4', name: 'AA batteries', notes: 'For the cameras', asset_id: null, is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(3), created_by: M(4) },
+    { id: 'su5', name: 'Gate latch', notes: null, asset_id: A(3), is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(2), created_by: M(3) },
+    { id: 'su6', name: 'Trash bags', notes: null, asset_id: A(2), is_inventory: false, level: null, needed: false, got_by: M(2), got_at: ts(8), ...base(12), created_by: M(2) },
   ]
   const seasons = [
     ['Archery', 'deer', '2026-10-03', '2026-11-06', 'Archery endorsement needed.'],
@@ -97,5 +110,5 @@ export function seedDb(): Record<string, Row[]> {
     ['Quail', 'quail', '2026-11-01', '2027-02-28', 'Upland game bird endorsement.'],
   ].map(([name, species, starts_on, ends_on, note], i) => ({ id: `sn${i + 1}`, name, species, starts_on, ends_on, note, ...base(90) }))
 
-  return { members, checklist_items: checklist, seasons, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, harvests, log_entries, comments, todos, supply_items }
+  return { members, checklist_items: checklist, seasons, assets, info_items, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, harvests, log_entries, comments, todos, supply_items }
 }

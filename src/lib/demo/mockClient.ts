@@ -6,7 +6,7 @@ import { seedDb } from './seed'
 
 type Row = Record<string, unknown>
 type Result<T> = { data: T; error: null } | { data: null; error: { code: string; message: string } }
-type Filter = { col: string; op: 'eq' | 'neq' | 'is' | 'gte' | 'lte' | 'gt' | 'lt' | 'in'; val: unknown }
+type Filter = { col: string; op: 'eq' | 'neq' | 'is' | 'not_is' | 'gte' | 'lte' | 'gt' | 'lt' | 'in'; val: unknown }
 
 const KEY = 'back40.demo.v1'
 
@@ -57,7 +57,10 @@ function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row, p
   const rls = (t: string) => ({ code: '42501', message: `new row violates row-level security policy for table "${t}"` })
   if (!isActive()) return rls(table)
   switch (table) {
-    case 'members': case 'areas': case 'checklist_items': case 'settings': case 'seasons':
+    case 'members': case 'areas': case 'checklist_items': case 'settings': case 'seasons': case 'info_items':
+      return isAdmin() ? null : rls(table)
+    case 'assets':
+      if (op === 'update') return null
       return isAdmin() ? null : rls(table)
     case 'pins': {
       const adminOnly = ['stand', 'feeder', 'camera']
@@ -114,6 +117,7 @@ class Query implements PromiseLike<Result<unknown>> {
   gt(col: string, val: unknown) { this.filters.push({ col, op: 'gt', val }); return this }
   lt(col: string, val: unknown) { this.filters.push({ col, op: 'lt', val }); return this }
   in(col: string, val: unknown[]) { this.filters.push({ col, op: 'in', val }); return this }
+  not(col: string, op: string, val: unknown) { this.filters.push({ col, op: `not_${op}` as Filter['op'], val }); return this }
   match(obj: Record<string, unknown>) { for (const [k, v] of Object.entries(obj)) this.filters.push({ col: k, op: 'eq', val: v }); return this }
   range(from: number, to: number) { this.rangeFrom = from; this.lim = to - from + 1; return this }
   order(col: string, opts?: { ascending?: boolean }) { this.orders.push({ col, asc: opts?.ascending ?? true }); return this }
@@ -132,6 +136,7 @@ class Query implements PromiseLike<Result<unknown>> {
         case 'eq': return x === val
         case 'neq': return x !== val
         case 'is': return val === null ? x == null : x === val
+        case 'not_is': return val === null ? x != null : x !== val
         case 'gte': return (x as string) >= (val as string)
         case 'lte': return (x as string) <= (val as string)
         case 'gt': return (x as string) > (val as string)
@@ -183,13 +188,15 @@ class Query implements PromiseLike<Result<unknown>> {
           harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false },
           checklist_items: { sort_order: 0 },
           seasons: { species: 'other', note: null },
-          pins: { notes: null, stand_type: null, fill_interval_days: null, days_per_bag: null },
+          assets: { kind: 'other', status: 'good', note: null, sort_order: 0 },
+          info_items: { value: '', sort_order: 0 },
+          pins: { notes: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null },
           events: { notes: null, kind: 'inclusive' },
-          event_attendees: { note: null },
+          event_attendees: { note: null, headcount: 1 },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
           log_entries: { pin_id: null, lat: null, lng: null },
-          todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, status: 'open', completed_by: null, completed_at: null },
-          supply_items: { notes: null, is_inventory: false, place: null, level: null, needed: true, got_by: null, got_at: null },
+          todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, asset_id: null, status: 'open', completed_by: null, completed_at: null },
+          supply_items: { notes: null, is_inventory: false, asset_id: null, level: null, needed: true, got_by: null, got_at: null },
           areas: { is_boundary: false, color: null },
           members: { is_active: true },
         }

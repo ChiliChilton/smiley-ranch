@@ -12,12 +12,13 @@ import { Note } from '../components/Note'
 import { Sheet } from '../components/Sheet'
 import { TextArea, TextInput } from '../components/Input'
 import type { AreaRow, FeederFillRow, HarvestRow, PinRow, PinType, StandClaimRow, StandType } from '../lib/database.types'
-import { feederStatus, recordFill, STATUS_STYLE } from '../lib/feeders'
+import { feederStatus, recordFill, STATUS_STYLE, hasFeeder } from '../lib/feeders'
 import { FillDetailsSheet } from './Feeders'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { acres, geometryBounds, isAreaGeometry, parseShapes, type AreaGeometry, type Imported } from '../lib/geo'
 import { useMembers } from '../lib/members'
+import { seasonOf } from '../lib/species'
 import { ADMIN_ONLY_TYPES, canEditPin, fmtCoords, guessPinType, loadPins, MEMBER_TYPES, PIN_TYPE_ORDER, PIN_TYPES, STAND_TYPES } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
@@ -146,14 +147,16 @@ export default function MapScreen() {
   async function savePin(form: PinFormValues, existing?: PinRow) {
     setBusy(true)
     setError(null)
+    const feederish = form.type === 'feeder' || (form.type === 'stand' && form.has_feeder)
     try {
       const row = {
         name: form.name.trim(),
         type: form.type,
         notes: form.notes.trim() || null,
         stand_type: form.type === 'stand' ? form.stand_type : null,
-        fill_interval_days: form.type === 'feeder' && form.fill_interval_days ? Number(form.fill_interval_days) : null,
-        days_per_bag: form.type === 'feeder' && form.days_per_bag ? Number(form.days_per_bag) : null,
+        has_feeder: form.type === 'feeder' || (form.type === 'stand' && form.has_feeder),
+        fill_interval_days: feederish && form.fill_interval_days ? Number(form.fill_interval_days) : null,
+        days_per_bag: feederish && form.days_per_bag ? Number(form.days_per_bag) : null,
       }
       if (existing) {
         const { error } = await supabase.from('pins').update(row).eq('id', existing.id)
@@ -658,8 +661,8 @@ function PinSheet({
   const loadExtras = useCallback(async (p: PinRow) => {
     const [cl, fl, ha] = await Promise.all([
       p.type === 'stand' ? supabase.from('stand_claims').select('*').eq('stand_id', p.id).is('released_at', null).gte('date', todayISO()).order('date').order('sit').limit(4) : Promise.resolve({ data: null }),
-      p.type === 'feeder' ? supabase.from('feeder_fills').select('*').eq('feeder_id', p.id).is('deleted_at', null).order('filled_at', { ascending: false }).limit(1) : Promise.resolve({ data: null }),
-      supabase.from('harvests').select('*').eq('pin_id', p.id).is('deleted_at', null).order('harvested_on', { ascending: false }).limit(3),
+      hasFeeder(p) ? supabase.from('feeder_fills').select('*').eq('feeder_id', p.id).is('deleted_at', null).order('filled_at', { ascending: false }).limit(1) : Promise.resolve({ data: null }),
+      supabase.from('harvests').select('*').eq('pin_id', p.id).is('deleted_at', null).order('harvested_on', { ascending: false }).limit(100),
     ])
     setClaims(cl.data ?? [])
     setLastFill(fl.data ? (fl.data[0] ?? null) : undefined)
@@ -694,14 +697,14 @@ function PinSheet({
       <div className="mb-3 flex items-center gap-2">
         <span className="pin" style={{ background: t.color, width: 26, height: 26, fontSize: 12 }}>{t.glyph}</span>
         <span className="font-semibold text-clay-950">{t.label}{pin.stand_type ? ` · ${STAND_TYPES[pin.stand_type]}` : ''}</span>
-        {pin.type === 'feeder' && (pin.days_per_bag || pin.fill_interval_days) && <span className="text-sm text-ink-muted">· {pin.days_per_bag ? `a bag lasts ~${pin.days_per_bag} days` : `fill every ${pin.fill_interval_days} days`}</span>}
+        {hasFeeder(pin) && <span className="text-sm text-ink-muted">· feeder{pin.days_per_bag ? `, a bag lasts ~${pin.days_per_bag} days` : pin.fill_interval_days ? `, fill every ${pin.fill_interval_days} days` : ''}</span>}
       </div>
       {pin.notes && <p className="mb-3 whitespace-pre-wrap text-ink">{pin.notes}</p>}
       <p className="mb-3 text-sm text-ink-muted">
         <span className="font-mono">{fmtCoords(pin.lat, pin.lng)}</span> · added by {nameOf(pin.created_by)}
       </p>
 
-      {pin.type === 'feeder' && (
+      {hasFeeder(pin) && (
         <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
           {lastFill === undefined ? (
             <span className="text-sm text-ink-muted">Loading…</span>
@@ -723,9 +726,11 @@ function PinSheet({
 
       {activity && activity.harvests.length > 0 && (
         <div className="mb-3 rounded-xl bg-white p-3 ring-1 ring-tan-200">
-          <div className="mb-1 text-xs font-bold uppercase tracking-wide text-clay-800">Recent here</div>
+          <div className="mb-1 text-xs font-bold uppercase tracking-wide text-clay-800">
+            Killed here · {activity.harvests.filter((h) => seasonOf(h.harvested_on) === seasonOf(todayISO())).length} this season, {activity.harvests.length} all time
+          </div>
           <ul className="text-sm text-ink">
-            {activity.harvests.map((h) => <li key={h.id}>{fmtDate(h.harvested_on)} · {nameOf(h.member_id)} took a {h.species}{h.description ? ` (${h.description})` : ''}</li>)}
+            {activity.harvests.slice(0, 5).map((h) => <li key={h.id}>{fmtDate(h.harvested_on, { weekday: false })} · {nameOf(h.member_id)} took a {h.species.toLowerCase()}{h.description ? ` (${h.description})` : ''}</li>)}
           </ul>
         </div>
       )}
@@ -768,7 +773,7 @@ function PinSheet({
   )
 }
 
-type PinFormValues = { name: string; type: PinType; notes: string; stand_type: StandType; fill_interval_days: string; days_per_bag: string; lat: number; lng: number }
+type PinFormValues = { name: string; type: PinType; notes: string; stand_type: StandType; has_feeder: boolean; fill_interval_days: string; days_per_bag: string; lat: number; lng: number }
 
 function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: number; pin?: PinRow; isAdmin: boolean; busy: boolean; onSave: (v: PinFormValues) => void }) {
   const allowed = isAdmin ? PIN_TYPE_ORDER : PIN_TYPE_ORDER.filter((t) => !ADMIN_ONLY_TYPES.includes(t) && MEMBER_TYPES.includes(t))
@@ -777,6 +782,7 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
     type: pin?.type ?? (isAdmin ? 'stand' : 'hazard'),
     notes: pin?.notes ?? '',
     stand_type: pin?.stand_type ?? 'ladder',
+    has_feeder: pin?.has_feeder ?? false,
     fill_interval_days: pin?.fill_interval_days ? String(pin.fill_interval_days) : '14',
     days_per_bag: pin?.days_per_bag ? String(pin.days_per_bag) : '',
     lat,
@@ -814,7 +820,13 @@ function PinForm({ lat, lng, pin, isAdmin, busy, onSave }: { lat: number; lng: n
           </div>
         </div>
       )}
-      {v.type === 'feeder' && (
+      {v.type === 'stand' && (
+        <label className="tap flex items-center gap-3">
+          <input type="checkbox" checked={v.has_feeder} onChange={(e) => setV({ ...v, has_feeder: e.target.checked })} className="h-5 w-5 accent-clay-900" />
+          <span className="text-sm font-semibold text-clay-900">This blind has its own feeder</span>
+        </label>
+      )}
+      {(v.type === 'feeder' || (v.type === 'stand' && v.has_feeder)) && (
         <div className="grid grid-cols-2 gap-3">
           <TextInput label="A bag lasts about (days)" name="daysPerBag" inputMode="decimal" value={v.days_per_bag} onChange={(e) => setV({ ...v, days_per_bag: e.target.value.replace(/[^\d.]/g, '') })} hint="Used to guess when it runs out." />
           <TextInput label="Or fill every (days)" name="fillDays" inputMode="numeric" value={v.fill_interval_days} onChange={(e) => setV({ ...v, fill_interval_days: e.target.value.replace(/\D/g, '') })} hint="Fallback when bags aren't recorded." />

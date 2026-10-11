@@ -5,7 +5,10 @@ import { TextInput } from '../components/Input'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import type { SupplyItemRow, SupplyLevel, SupplyPlace } from '../lib/database.types'
+import { useSearchParams } from 'react-router'
+import { AssetPicker, AssetTag } from '../components/AssetPicker'
+import { assetName, loadAssets } from '../lib/assets'
+import type { AssetRow, SupplyItemRow, SupplyLevel } from '../lib/database.types'
 import { fmtDate } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
@@ -21,33 +24,6 @@ const LEVELS: { value: SupplyLevel; label: string; cls: string }[] = [
   { value: 'out', label: 'Out', cls: 'bg-alert/10 text-alert ring-alert' },
 ]
 
-export const PLACES: { value: SupplyPlace; label: string }[] = [
-  { value: 'house', label: 'House' },
-  { value: 'trailer', label: 'Trailer' },
-  { value: 'barn', label: 'Barn' },
-]
-export const placeLabel = (p: SupplyPlace | null) => PLACES.find((x) => x.value === p)?.label ?? null
-
-/** House / Trailer / Barn chips. `allowAny` adds an "Anywhere" option for filters. */
-export function PlacePicker({ value, onChange, allowAny, small }: { value: SupplyPlace | null | 'any'; onChange: (p: SupplyPlace | null | 'any') => void; allowAny?: boolean; small?: boolean }) {
-  const opts: { value: SupplyPlace | null | 'any'; label: string }[] = allowAny ? [{ value: 'any', label: 'All' }, ...PLACES] : [...PLACES, { value: null, label: 'Other' }]
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {opts.map((o) => (
-        <button key={String(o.value)} type="button" onClick={() => onChange(o.value)} aria-pressed={value === o.value} className={`tap rounded-md font-bold ring-1 ${small ? '!min-h-0 px-3 py-1.5 text-xs' : 'px-3 py-2 text-sm'} ${value === o.value ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`}>
-          {o.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-export function PlaceTag({ place }: { place: SupplyPlace | null }) {
-  const label = placeLabel(place)
-  if (!label) return null
-  return <span className="ml-2 rounded bg-tan-200 px-1.5 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-tan-700">{label}</span>
-}
-
 export async function loadSupplies(): Promise<SupplyItemRow[]> {
   const { data, error } = await supabase.from('supply_items').select('*').is('deleted_at', null).order('name')
   if (error) throw error
@@ -61,21 +37,26 @@ export function Supplies() {
   const [items, setItems] = useState<SupplyItemRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [newNeed, setNewNeed] = useState('')
-  const [newNeedPlace, setNewNeedPlace] = useState<SupplyPlace | null>(null)
+  const [params] = useSearchParams()
+  const [assets, setAssets] = useState<AssetRow[]>([])
+  const [newNeedAsset, setNewNeedAsset] = useState<string | null>(params.get('asset'))
   const [newInv, setNewInv] = useState('')
-  const [newInvPlace, setNewInvPlace] = useState<SupplyPlace | null>(null)
-  const [filter, setFilter] = useState<SupplyPlace | null | 'any'>('any')
+  const [newInvAsset, setNewInvAsset] = useState<string | null>(null)
+  const [filter, setFilter] = useState<string | null | 'any'>(params.get('asset') ?? 'any')
   const [busy, setBusy] = useState(false)
   const [showGot, setShowGot] = useState(false)
   const [editing, setEditing] = useState<SupplyItemRow | null>(null)
 
   const reload = useCallback(async () => {
-    try { setItems(await loadSupplies()) } catch (err) { setError(friendlyError(err)) }
+    try {
+      const [it, as] = await Promise.all([loadSupplies(), loadAssets().catch(() => [] as AssetRow[])])
+      setItems(it); setAssets(as)
+    } catch (err) { setError(friendlyError(err)) }
   }, [])
   useEffect(() => { void reload() }, [reload])
-  useRealtime(['supply_items'], reload)
+  useRealtime(['supply_items', 'assets'], reload)
 
-  const byPlace = (i: SupplyItemRow) => filter === 'any' || i.place === filter
+  const byPlace = (i: SupplyItemRow) => filter === 'any' || i.asset_id === filter
   const needed = useMemo(() => (items ?? []).filter((i) => i.needed && byPlace(i)), [items, filter]) // eslint-disable-line react-hooks/exhaustive-deps
   const inventory = useMemo(() => (items ?? []).filter((i) => i.is_inventory && byPlace(i)), [items, filter]) // eslint-disable-line react-hooks/exhaustive-deps
   const got = useMemo(() => (items ?? []).filter((i) => !i.needed && !i.is_inventory && i.got_at).sort((a, b) => (b.got_at ?? '').localeCompare(a.got_at ?? '')).slice(0, 15), [items])
@@ -88,8 +69,8 @@ export function Supplies() {
     await reload()
   }
 
-  const addNeed = (e: FormEvent) => { e.preventDefault(); const name = newNeed.trim(); if (!name) return; setNewNeed(''); void run(() => createRow('supply_items', { name, needed: true, place: newNeedPlace }).then(() => ({ error: null }))) }
-  const addInv = (e: FormEvent) => { e.preventDefault(); const name = newInv.trim(); if (!name) return; setNewInv(''); void run(() => createRow('supply_items', { name, is_inventory: true, level: 'some', needed: false, place: newInvPlace }).then(() => ({ error: null }))) }
+  const addNeed = (e: FormEvent) => { e.preventDefault(); const name = newNeed.trim(); if (!name) return; setNewNeed(''); void run(() => createRow('supply_items', { name, needed: true, asset_id: newNeedAsset }).then(() => ({ error: null }))) }
+  const addInv = (e: FormEvent) => { e.preventDefault(); const name = newInv.trim(); if (!name) return; setNewInv(''); void run(() => createRow('supply_items', { name, is_inventory: true, level: 'some', needed: false, asset_id: newInvAsset }).then(() => ({ error: null }))) }
   const gotIt = (i: SupplyItemRow) => run(() => supabase.from('supply_items').update({ needed: false, got_by: me.member_id, got_at: new Date().toISOString(), ...(i.is_inventory ? { level: 'full' as SupplyLevel } : {}) }).eq('id', i.id))
   const needAgain = (i: SupplyItemRow) => run(() => supabase.from('supply_items').update({ needed: true, got_by: null, got_at: null }).eq('id', i.id))
   const setLevel = (i: SupplyItemRow, level: SupplyLevel) => run(() => supabase.from('supply_items').update({ level, ...(level === 'full' || level === 'some' ? { needed: false } : {}) }).eq('id', i.id))
@@ -101,14 +82,14 @@ export function Supplies() {
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : (
         <div className="space-y-4">
-          <PlacePicker value={filter} onChange={setFilter} allowAny small />
+          {assets.length > 0 && <AssetPicker assets={assets} value={filter} onChange={setFilter} allowAny small />}
           <Card title={`We need (${needed.length})`}>
             <form onSubmit={addNeed} className="mb-2 space-y-2">
               <div className="flex gap-2">
                 <div className="flex-1"><TextInput name="newNeed" value={newNeed} onChange={(e) => setNewNeed(e.target.value)} placeholder="Corn, batteries, gate latch…" maxLength={120} autoComplete="off" enterKeyHint="done" /></div>
                 <Button type="submit" busy={busy} disabled={!newNeed.trim()}>Add</Button>
               </div>
-              {newNeed.trim() && <PlacePicker value={newNeedPlace} onChange={(p) => setNewNeedPlace(p === 'any' ? null : p)} small />}
+              {newNeed.trim() && <AssetPicker assets={assets} value={newNeedAsset} onChange={(p) => setNewNeedAsset(p === 'any' ? null : p)} small />}
             </form>
             {needed.length === 0 ? <p className="text-sm text-ink-muted">Nothing on the list.</p> : needed.map((i, idx) => (
               <div key={i.id}>
@@ -116,7 +97,7 @@ export function Supplies() {
                 <div className="flex items-center gap-2 py-2">
                   <button type="button" onClick={() => setEditing(i)} className="tap min-w-0 flex-1 text-left">
                     <span className="font-semibold text-clay-950">{i.name}</span>
-                    <PlaceTag place={i.place} />
+                    <AssetTag name={assetName(assets, i.asset_id)} />
                     {i.is_inventory && i.level && <span className="ml-2 text-xs font-bold uppercase text-alert">{i.level}</span>}
                     {i.notes && <span className="block text-sm text-ink-muted">{i.notes}</span>}
                     <span className="block text-xs text-ink-muted">added by {nameOf(i.created_by)}</span>
@@ -133,13 +114,13 @@ export function Supplies() {
                 <div className="flex-1"><TextInput name="newInv" value={newInv} onChange={(e) => setNewInv(e.target.value)} placeholder="Track something: corn, propane, trash bags…" maxLength={120} autoComplete="off" enterKeyHint="done" /></div>
                 <Button type="submit" busy={busy} disabled={!newInv.trim()}>Add</Button>
               </div>
-              {newInv.trim() && <PlacePicker value={newInvPlace} onChange={(p) => setNewInvPlace(p === 'any' ? null : p)} small />}
+              {newInv.trim() && <AssetPicker assets={assets} value={newInvAsset} onChange={(p) => setNewInvAsset(p === 'any' ? null : p)} small />}
             </form>
             {inventory.length === 0 ? <p className="text-sm text-ink-muted">Nothing tracked yet. Low or out puts it on the list above.</p> : inventory.map((i, idx) => (
               <div key={i.id}>
                 {idx > 0 && <Divider />}
                 <div className="py-2">
-                  <button type="button" onClick={() => setEditing(i)} className="tap block w-full text-left font-semibold text-clay-950">{i.name}<PlaceTag place={i.place} /></button>
+                  <button type="button" onClick={() => setEditing(i)} className="tap block w-full text-left font-semibold text-clay-950">{i.name}<AssetTag name={assetName(assets, i.asset_id)} /></button>
                   <div className="mt-1 grid grid-cols-4 gap-1.5">
                     {LEVELS.map((l) => (
                       <button key={l.value} type="button" onClick={() => setLevel(i, l.value)} aria-pressed={i.level === l.value} className={`tap rounded-lg py-2 text-xs font-bold ring-1 ${i.level === l.value ? l.cls : 'bg-white text-ink-muted ring-tan-300'}`}>
@@ -170,16 +151,16 @@ export function Supplies() {
       )}
 
       <Sheet open={editing !== null} onClose={() => setEditing(null)} title={editing?.name}>
-        {editing && <EditItem key={editing.id} item={editing} canRemove={editing.created_by === me.member_id || me.is_admin} onDone={async () => { setEditing(null); await reload() }} />}
+        {editing && <EditItem key={editing.id} item={editing} assets={assets} canRemove={editing.created_by === me.member_id || me.is_admin} onDone={async () => { setEditing(null); await reload() }} />}
       </Sheet>
     </Screen>
   )
 }
 
-function EditItem({ item, canRemove, onDone }: { item: SupplyItemRow; canRemove: boolean; onDone: () => Promise<void> }) {
+function EditItem({ item, assets, canRemove, onDone }: { item: SupplyItemRow; assets: AssetRow[]; canRemove: boolean; onDone: () => Promise<void> }) {
   const [name, setName] = useState(item.name)
   const [notes, setNotes] = useState(item.notes ?? '')
-  const [place, setPlace] = useState<SupplyPlace | null>(item.place)
+  const [asset, setAsset] = useState<string | null>(item.asset_id)
   const [busy, setBusy] = useState(false)
   async function save(patch: Partial<Omit<SupplyItemRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>) {
     setBusy(true)
@@ -188,12 +169,9 @@ function EditItem({ item, canRemove, onDone }: { item: SupplyItemRow; canRemove:
     await onDone()
   }
   return (
-    <form onSubmit={(e) => { e.preventDefault(); void save({ name: name.trim(), notes: notes.trim() || null, place }) }} className="space-y-3">
+    <form onSubmit={(e) => { e.preventDefault(); void save({ name: name.trim(), notes: notes.trim() || null, asset_id: asset }) }} className="space-y-3">
       <TextInput label="Name" name="itemName" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
-      <div>
-        <span className="mb-1 block text-sm font-semibold text-clay-900">Where</span>
-        <PlacePicker value={place} onChange={(p) => setPlace(p === 'any' ? null : p)} />
-      </div>
+      <AssetPicker label="For" assets={assets} value={asset} onChange={(p) => setAsset(p === 'any' ? null : p)} />
       <TextInput label="Notes" name="itemNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Brand, size, where it goes…" />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" busy={busy} disabled={!name.trim()}>Save</Button>

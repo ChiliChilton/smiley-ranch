@@ -39,6 +39,7 @@ export type EventAttendeeRow = {
   event_id: string
   member_id: string
   note: string | null
+  headcount: number
   created_by: string | null
   created_at: string
 }
@@ -116,6 +117,7 @@ export type TodoRow = {
   assignee_id: string | null
   due_on: string | null
   pin_id: string | null
+  asset_id: string | null
   status: 'open' | 'done'
   completed_by: string | null
   completed_at: string | null
@@ -126,14 +128,41 @@ export type TodoRow = {
 }
 
 export type SupplyLevel = 'full' | 'some' | 'low' | 'out'
-export type SupplyPlace = 'house' | 'trailer' | 'barn'
+
+export type AssetKind = 'building' | 'vehicle' | 'atv' | 'tractor' | 'trailer' | 'other'
+export type AssetStatus = 'good' | 'attention' | 'down'
+export type AssetRow = {
+  id: string
+  name: string
+  kind: AssetKind
+  status: AssetStatus
+  note: string | null
+  sort_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type InfoSection = 'access' | 'house' | 'utilities' | 'contacts'
+export type InfoItemRow = {
+  id: string
+  section: InfoSection
+  label: string
+  value: string
+  sort_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
 
 export type SupplyItemRow = {
   id: string
   name: string
   notes: string | null
   is_inventory: boolean
-  place: SupplyPlace | null
+  asset_id: string | null
   level: SupplyLevel | null
   needed: boolean
   got_by: string | null
@@ -209,6 +238,7 @@ export type PinRow = {
   lat: number
   lng: number
   stand_type: StandType | null
+  has_feeder: boolean
   fill_interval_days: number | null
   days_per_bag: number | null
   created_by: string | null
@@ -280,14 +310,26 @@ export type Database = {
       }
       event_attendees: {
         Row: EventAttendeeRow
-        Insert: { event_id: string; member_id: string; note?: string | null; created_by?: string | null }
-        Update: { note?: string | null }
+        Insert: { event_id: string; member_id: string; note?: string | null; headcount?: number; created_by?: string | null }
+        Update: { note?: string | null; headcount?: number }
         Relationships: []
       }
       checklist_items: {
         Row: ChecklistItemRow
         Insert: { id?: string; title: string; sort_order?: number; created_by?: string | null }
         Update: { title?: string; sort_order?: number; deleted_at?: string | null }
+        Relationships: []
+      }
+      assets: {
+        Row: AssetRow
+        Insert: { id?: string; name: string; kind?: AssetKind; status?: AssetStatus; note?: string | null; sort_order?: number; created_by?: string | null }
+        Update: { name?: string; kind?: AssetKind; status?: AssetStatus; note?: string | null; sort_order?: number; deleted_at?: string | null }
+        Relationships: []
+      }
+      info_items: {
+        Row: InfoItemRow
+        Insert: { id?: string; section: InfoSection; label: string; value?: string; sort_order?: number; created_by?: string | null }
+        Update: { section?: InfoSection; label?: string; value?: string; sort_order?: number; deleted_at?: string | null }
         Relationships: []
       }
       seasons: {
@@ -306,6 +348,7 @@ export type Database = {
           lat: number
           lng: number
           stand_type?: StandType | null
+          has_feeder?: boolean
           fill_interval_days?: number | null
           days_per_bag?: number | null
           created_by?: string | null
@@ -317,6 +360,7 @@ export type Database = {
           lat?: number
           lng?: number
           stand_type?: StandType | null
+          has_feeder?: boolean
           fill_interval_days?: number | null
           days_per_bag?: number | null
           deleted_at?: string | null
@@ -382,6 +426,7 @@ export type Database = {
           assignee_id?: string | null
           due_on?: string | null
           pin_id?: string | null
+          asset_id?: string | null
           status?: 'open' | 'done'
           created_by?: string | null
         }
@@ -390,7 +435,7 @@ export type Database = {
       }
       supply_items: {
         Row: SupplyItemRow
-        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; place?: SupplyPlace | null; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
+        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; asset_id?: string | null; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
         Update: Partial<Omit<SupplyItemRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
         Relationships: []
       }

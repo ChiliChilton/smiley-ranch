@@ -31,12 +31,22 @@ A shared app for one family hunting property. It answers four questions for ever
 - The current or next stay with who's going, then Needs and Projects with "+ Add" and inline Got it / Done, feeders running low, the latest property notes, and the emergency address.
 - Quick links across the top to Stands, Map, Property notes, Feeders, Harvests. Tabs: Check out, Home, Calendar, Projects, Needs, More.
 
-### 2. Stand / Blind Sign-Up (highest priority)
-- A list of stands. Each one has a name, a type (ladder, box blind, ground blind), and a map pin.
-- Claim a stand for a **date + AM/PM sit**. Two people can't claim the same stand for the same sit.
-- A week view grid shows stands down the side and days/sits across the top.
-- A person can release their own claim. The admin can release anyone's.
-- Optional note on a claim, like "bringing my nephew."
+### 2. Blinds (highest priority)
+- One Blinds screen replaces separate Stands and Feeders screens. Pick a day, see each blind with AM and PM sits, tap to claim or let go. One person per sit. You can release your own; the admin can release anyone.
+- A blind can have its own feeder (a flag on the pin). Its card shows the last fill, bags, and the run-out guess with a Filled it button. Feeders with no blind get a feeder-only card.
+- Each blind card shows what's been killed there: this season, all time, and the last one. Harvests have a "By blind" view and the map pin sheet shows "Killed here".
+
+### 2a. Ranch info
+- One page everyone can read behind the family code: gate code, Wi-Fi, where the breaker and water shutoff are, trash day, septic and well notes, propane and feed store numbers, the co-op outage line, the neighbor. Phone numbers get a Call button. Emergency info (address, GPS, Share) is the first section.
+- Admin edits lines in place under Ranch info. Values live only in the database, never in code.
+
+### 2c. Equipment
+- The house, house trailer, barn, truck, tractor, ATVs and haul trailer each have a status (Good / Needs attention / Down) and a note. Anyone can set them. Admin adds and removes entries.
+- Needs and projects tag a place or machine from this list (replaces the House / Trailer / Barn tags), so the equipment card shows what's open on it.
+
+### 2d. Trips
+- Home shows "At the ranch now" when a trip is happening, otherwise "Next trip".
+- When you say you're in, you give a headcount. The trip shows "6 people, 4 beds" (beds is a setting) and turns red when there are more people than beds.
 
 ### 2b. Hunting seasons
 - Texas seasons for the place (South Zone, Gonzales County) show on the calendar: a strip under each day, an "Open now" and "Next" card at the top, and a one-line summary on Home.

@@ -6,7 +6,9 @@ import { Note } from '../components/Note'
 import { PinSelect, type Where } from '../components/PinSelect'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import type { PinRow, TodoRow } from '../lib/database.types'
+import { AssetPicker, AssetTag } from '../components/AssetPicker'
+import { assetName, loadAssets } from '../lib/assets'
+import type { AssetRow, PinRow, TodoRow } from '../lib/database.types'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
@@ -31,6 +33,7 @@ export function Todos() {
   const [params, setParams] = useSearchParams()
   const [rows, setRows] = useState<TodoRow[] | null>(null)
   const [pins, setPins] = useState<PinRow[]>([])
+  const [assets, setAssets] = useState<AssetRow[]>([])
   const [filter, setFilter] = useState<Filter>('open')
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<TodoRow | 'new' | null>(params.get('new') ? 'new' : null)
@@ -38,13 +41,15 @@ export function Todos() {
 
   const reload = useCallback(async () => {
     try {
-      const [{ data, error }, allPins] = await Promise.all([
+      const [{ data, error }, allPins, as] = await Promise.all([
         supabase.from('todos').select('*').is('deleted_at', null).order('status').order('due_on', { ascending: true }).order('created_at', { ascending: false }).limit(300),
         loadPins(),
+        loadAssets().catch(() => [] as AssetRow[]),
       ])
       if (error) throw error
       setRows(data ?? [])
       setPins(allPins)
+      setAssets(as)
       setOpen((cur) => (cur ? ((data ?? []).find((t) => t.id === cur.id) ?? null) : null))
     } catch (err) {
       setError(friendlyError(err))
@@ -111,7 +116,7 @@ export function Todos() {
                   </span>
                 </button>
                 <button type="button" onClick={() => setOpen(t)} className="tap min-w-0 flex-1 py-3 pr-3 text-left">
-                  <div className={`font-semibold ${t.status === 'done' ? 'text-ink-muted line-through' : 'text-clay-950'}`}>{t.title}</div>
+                  <div className={`font-semibold ${t.status === 'done' ? 'text-ink-muted line-through' : 'text-clay-950'}`}>{t.title}<AssetTag name={assetName(assets, t.asset_id)} /></div>
                   <div className="text-sm text-ink-muted">
                     {t.assignee_id ? nameOf(t.assignee_id) : 'Anyone'}
                     {t.due_on && <span className={overdue ? ' font-semibold text-alert' : ''}> · {overdue ? 'was due' : 'due'} {fmtDate(t.due_on)}</span>}
@@ -130,6 +135,7 @@ export function Todos() {
           <div className="space-y-3">
             <p className="text-sm text-ink">
               {open.assignee_id ? `Assigned to ${nameOf(open.assignee_id)}` : 'Not assigned to anyone'}
+              {assetName(assets, open.asset_id) && ` · ${assetName(assets, open.asset_id)}`}
               {open.due_on && ` · due ${fmtDate(open.due_on)}`}
               {pinName(open.pin_id) && ` · ${pinName(open.pin_id)}`}
               <br />Added by {nameOf(open.created_by)} {fmtDateTime(open.created_at)}
@@ -161,7 +167,7 @@ export function Todos() {
   )
 }
 
-export function TodoForm({ todo, initialTitle = '', initialPin = null, onDone }: { todo: TodoRow | null; initialTitle?: string; initialPin?: string | null; onDone: () => Promise<void> }) {
+export function TodoForm({ todo, initialTitle = '', initialPin = null, initialAsset = null, onDone }: { todo: TodoRow | null; initialTitle?: string; initialPin?: string | null; initialAsset?: string | null; onDone: () => Promise<void> }) {
   const me = useMe()
   const { active } = useMembers()
   const [title, setTitle] = useState(todo?.title ?? initialTitle)
@@ -169,13 +175,14 @@ export function TodoForm({ todo, initialTitle = '', initialPin = null, onDone }:
   const [assignee, setAssignee] = useState(todo ? (todo.assignee_id ?? '') : (me.member_id ?? ''))
   const [due, setDue] = useState(todo?.due_on ?? '')
   const [where, setWhere] = useState<Where>({ pin_id: todo?.pin_id ?? initialPin ?? null, lat: null, lng: null })
+  const [asset, setAsset] = useState<string | null>(todo?.asset_id ?? initialAsset)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function save(e: FormEvent) {
     e.preventDefault()
     setBusy(true); setError(null)
-    const row = { title: title.trim(), notes: notes.trim() || null, assignee_id: assignee || null, due_on: due || null, pin_id: where.pin_id }
+    const row = { title: title.trim(), notes: notes.trim() || null, assignee_id: assignee || null, due_on: due || null, pin_id: where.pin_id, asset_id: asset }
     try {
       if (todo) {
         const { error } = await supabase.from('todos').update(row).eq('id', todo.id)
@@ -205,6 +212,7 @@ export function TodoForm({ todo, initialTitle = '', initialPin = null, onDone }:
         </label>
         <TextInput label="Due (optional)" name="todoDue" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
       </div>
+      <AssetPicker label="For (optional)" value={asset} onChange={(p) => setAsset(p === 'any' ? null : p)} />
       <PinSelect value={where} onChange={setWhere} />
       <TextArea label="Notes" name="todoNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" rows={2} />
       <Button type="submit" full busy={busy} disabled={!title.trim()}>{todo ? 'Save' : 'Add it'}</Button>

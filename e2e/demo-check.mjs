@@ -19,7 +19,7 @@ try {
   await page.getByRole('button', { name: /Not now|Continue/ }).click()
 
   // Board
-  await page.getByText(/Current stay|Next stay/).waitFor()
+  await page.getByText(/At the ranch now|Next trip/).waitFor()
   await page.getByText('Opening weekend').first().waitFor()
   await page.getByText('Going:').waitFor()
   await page.getByText('Needs').first().waitFor()
@@ -28,7 +28,7 @@ try {
   // + Add need with a place tag, + Add project with notes and due date
   await page.getByRole('button', { name: '+ Add' }).first().click()
   await page.getByLabel('What').fill('Diesel for the tractor')
-  await page.getByRole('button', { name: 'Barn', exact: true }).click()
+  await page.getByRole('button', { name: 'Tractor', exact: true }).click()
   await page.getByLabel('Notes').fill('Two cans')
   await page.getByRole('button', { name: 'Add it', exact: true }).click()
   await page.getByText('Diesel for the tractor').waitFor()
@@ -60,15 +60,35 @@ try {
   await page.getByRole('button', { name: 'Add it anyway', exact: true }).click()
   await page.getByText("Who's going (1)").waitFor()
 
-  // Stands: empty until the admin places pins; back goes Home
+  // Blinds: empty until the admin places pins; back goes Home
   await tab('Home')
-  await quick('Stands')
-  await page.getByText('No stands on the map yet').waitFor()
-  await shot('demo-stands-empty')
+  await quick('Blinds')
+  await page.getByText('No blinds on the map yet').waitFor()
+  await shot('demo-blinds-empty')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
-  await page.getByText(/Current stay|Next stay/).waitFor()
+  await page.getByText(/At the ranch now|Next trip/).waitFor()
 
-  // Admin: add a feeder on the map with days-per-bag, then a stand
+  // Ranch info: gate code, contacts with Call, emergency section
+  await quick('Ranch info')
+  await page.getByText('Gate code').waitFor()
+  await page.getByText('4471#').waitFor()
+  await page.getByText('1932 CR 211').first().waitFor()
+  await page.getByRole('link', { name: 'Call' }).first().waitFor()
+  await shot('demo-info')
+  await page.getByRole('button', { name: 'Back', exact: true }).click()
+
+  // Equipment: tractor is down, mark ATV 2 good again
+  await quick('Equipment')
+  await page.getByText('Down', { exact: true }).first().waitFor()
+  await page.getByRole('button', { name: /^ATV 2/ }).click()
+  await page.getByRole('button', { name: 'Good', exact: true }).click()
+  await page.waitForTimeout(300)
+  await shot('demo-equipment')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await page.getByRole('button', { name: 'Back', exact: true }).click()
+
+  // Admin: add a standalone feeder and a blind with its own feeder on the map
   await tab('More')
   await page.getByRole('button', { name: 'Unlock admin' }).click()
   await page.getByLabel('Admin PIN').fill('4321')
@@ -92,40 +112,37 @@ try {
   await page.getByRole('button', { name: 'Put pin here', exact: true }).click()
   await page.getByLabel('Name').fill('Box Blind')
   await page.getByRole('button', { name: 'Box blind', exact: true }).click()
+  await page.getByLabel('This blind has its own feeder').check()
+  await page.getByLabel('A bag lasts about (days)').fill('5')
   await page.getByRole('button', { name: 'Add pin', exact: true }).click()
   await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
   await page.getByRole('button', { name: 'Back', exact: true }).click()
 
-  // Feeders: fill with bags -> run-out estimate
-  await quick('Feeders')
-  await page.getByText('Never filled').waitFor()
-  await page.getByRole('button', { name: 'Filled it', exact: true }).click()
+  // Blinds: fill the blind's feeder with bags -> run-out estimate; claim and release a sit
+  await quick('Blinds')
+  await page.getByText('never filled').first().waitFor()
+  await page.getByText('Nothing taken here yet.').first().waitFor()
+  await page.getByRole('button', { name: 'Filled it', exact: true }).first().click()
   await page.getByLabel('How many bags').fill('3')
-  await page.getByText('Should last about 12 days').waitFor()
+  await page.getByText('Should last about 15 days').waitFor()
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await page.getByText(/Runs out about/).waitFor()
-  await page.getByText('3 bags').waitFor()
-  await shot('demo-feeders')
-  await page.getByRole('button', { name: 'Back', exact: true }).click()
-
-  // Stands: day picker, claim and release
-  await quick('Stands')
+  await page.getByText(/runs out about/).waitFor()
+  await page.getByText(/3 bags/).first().waitFor()
   await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).click()
   await page.getByLabel('Note (optional)').fill('Bringing my nephew')
-  await page.getByRole('button', { name: 'Claim stand', exact: true }).click()
+  await page.getByRole('button', { name: 'Claim it', exact: true }).click()
   await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).waitFor()
-  await shot('demo-stands')
+  await shot('demo-blinds')
   await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).click()
   await page.getByRole('button', { name: 'Release my claim', exact: true }).click()
   await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).waitFor()
   await page.getByRole('button', { name: 'Back', exact: true }).click()
 
-  // Needs tab: place filter
+  // Needs tab: place / machine filter
   await tab('Needs')
   await page.getByText(/We need \(\d\)/).waitFor()
-  await page.getByRole('button', { name: 'Trailer', exact: true }).first().click()
-  await page.getByText('Dish soap').waitFor().catch(() => {})
-  if (await page.getByText('Gate latch').count()) throw new Error('place filter did not hide barn items')
+  await page.getByRole('button', { name: 'House trailer', exact: true }).first().click()
+  if (await page.getByText('Gate latch').count()) throw new Error('asset filter did not hide barn items')
   await page.getByRole('button', { name: 'All', exact: true }).click()
   await shot('demo-needs')
 
