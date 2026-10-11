@@ -83,7 +83,7 @@ export function Log() {
   const pinName = (id: string | null) => pins.find((p) => p.id === id)?.name
 
   return (
-    <Screen title="Log" back="/more">
+    <Screen title="Log" back="/">
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       <Card className="mb-4">
         <form onSubmit={post} className="space-y-2">
@@ -126,7 +126,7 @@ export function Log() {
               {pinName(open.pin_id) ? ` · ${pinName(open.pin_id)}` : open.lat != null ? ` · ${fmtCoords(open.lat, open.lng!)}` : ''}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={() => navigate(`/todos/new?title=${encodeURIComponent(open.body.slice(0, 80))}${open.pin_id ? `&pin=${open.pin_id}` : ''}`)}>Make a to-do</Button>
+              <Button variant="secondary" onClick={() => navigate(`/todos/new?title=${encodeURIComponent(open.body.slice(0, 80))}${open.pin_id ? `&pin=${open.pin_id}` : ''}`)}>Make it a job</Button>
               {(open.created_by === me.member_id || me.is_admin) && <Button variant="ghost" onClick={() => remove(open)}>Remove</Button>}
             </div>
             <Comments parentType="log_entry" parentId={open.id} />

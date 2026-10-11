@@ -236,10 +236,6 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: /Not now|Continue/ }).click()
   await page.getByText("This weekend's stands").waitFor()
   await shot(page, `${tag}-5-home`)
-  await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByText('Saw something').waitFor()
-  await shot(page, `${tag}-5b-add`)
-  await page.getByText('Close', { exact: true }).click()
   await page.getByText('1932 CR 211').waitFor()
 
   // Calendar: exclusive overlap blocked, inclusive warns, I'm in with a note
@@ -272,7 +268,7 @@ async function run(width, standalone) {
 
   // Check out
   await page.getByRole('link', { name: 'Home' }).click()
-  await page.getByRole('button', { name: /Heading out/ }).click()
+  await page.getByRole('button', { name: 'Before you leave' }).click()
   await page.getByText('Turn off the water').waitFor()
   await page.getByRole('button', { name: 'Turn off the water' }).click()
   await shot(page, `${tag}-16-checkout`)
@@ -284,7 +280,7 @@ async function run(width, standalone) {
   await page.getByText('Last out:').waitFor()
 
   // Stands: claim, see it on Home, release
-  await page.getByRole('link', { name: 'Stands' }).click()
+  await page.getByRole('button', { name: 'Stands', exact: true }).click()
   await page.getByText('Swipe sideways').waitFor()
   await shot(page, `${tag}-19-stands`)
   const openCell = page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first()
@@ -301,7 +297,8 @@ async function run(width, standalone) {
   assert(claims[0].released_at, 'claim released')
 
   // Map as a member: pins render, pin sheet, only hazard/other offered
-  await page.getByRole('link', { name: 'Map' }).click()
+  await page.getByRole('link', { name: 'Home' }).click()
+  await page.getByRole('button', { name: 'Map', exact: true }).click()
   await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
   await page.waitForTimeout(500)
   await shot(page, `${tag}-21-map`)
@@ -380,7 +377,8 @@ async function run(width, standalone) {
   await shot(page, `${tag}-18-admin-emergency`)
 
   // Map as admin: import a GeoJSON boundary, drop a stand at my location
-  await page.getByRole('link', { name: 'Map' }).click()
+  await page.getByRole('link', { name: 'Home' }).click()
+  await page.getByRole('button', { name: 'Map', exact: true }).click()
   await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
   await page.getByRole('button', { name: 'Add to the map' }).click()
   await page.getByText('Import a KML or GeoJSON file').click()
@@ -408,8 +406,9 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Switch person' }).click()
   await page.getByText('Admin mode will turn off').waitFor()
   await page.getByRole('button', { name: 'Uncle Mike' }).click()
-  await page.getByText(/, Uncle/).waitFor()
+  await page.getByText('On the place').waitFor() // back on the board
   await page.getByRole('link', { name: 'More' }).click()
+  await page.getByText('Uncle Mike', { exact: true }).waitFor() // now signed in as Mike
   await page.getByRole('button', { name: 'Unlock admin' }).waitFor() // admin dropped
   await shot(page, `${tag}-10-switched`)
 

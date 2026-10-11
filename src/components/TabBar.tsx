@@ -3,8 +3,8 @@ import { NavLink } from 'react-router'
 const tabs = [
   { to: '/', label: 'Home', icon: HomeIcon },
   { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
-  { to: '/stands', label: 'Stands', icon: StandIcon },
-  { to: '/map', label: 'Map', icon: MapIcon },
+  { to: '/todos', label: 'Projects', icon: ProjectsIcon },
+  { to: '/supplies', label: 'Needs', icon: NeedsIcon },
   { to: '/more', label: 'More', icon: MoreIcon },
 ]
 
@@ -61,19 +61,20 @@ function HomeIcon({ active }: IconProps) {
     </svg>
   )
 }
-function StandIcon({ active }: IconProps) {
+function ProjectsIcon({ active }: IconProps) {
   return (
     <svg {...base(false)}>
-      <path d="M6 21V7l6-4 6 4v14" />
-      <path d="M6 12h12M9 21v-6h6v6" fill={active ? 'currentColor' : 'none'} />
+      <rect x="4" y="4" width="16" height="16" rx="2" fill={active ? 'currentColor' : 'none'} />
+      <path d="M8 12l3 3 5-6" stroke={active ? '#f8f2e8' : 'currentColor'} strokeWidth="2.2" />
     </svg>
   )
 }
-function MapIcon({ active }: IconProps) {
+function NeedsIcon({ active }: IconProps) {
   return (
-    <svg {...base(active)}>
-      <path d="M9 4l6 2 6-2v14l-6 2-6-2-6 2V6z" />
-      <path d="M9 4v14M15 6v14" stroke={active ? '#f8f2e8' : 'currentColor'} />
+    <svg {...base(false)}>
+      <path d="M3 5h2l2.5 11h11L21 8H7" fill={active ? 'currentColor' : 'none'} />
+      <circle cx="10" cy="20" r="1.3" fill="currentColor" />
+      <circle cx="17" cy="20" r="1.3" fill="currentColor" />
     </svg>
   )
 }

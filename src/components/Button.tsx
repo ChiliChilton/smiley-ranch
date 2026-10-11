@@ -22,7 +22,7 @@ export function Button({ variant = 'primary', busy, full, className = '', childr
       type="button"
       {...rest}
       disabled={disabled || busy}
-      className={`tap inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-base font-semibold transition-colors ${styles[variant]} ${full ? 'w-full' : ''} ${className}`}
+      className={`tap inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-[15px] font-semibold transition-colors ${styles[variant]} ${full ? 'w-full' : ''} ${className}`}
     >
       {busy && <Spinner small />}
       {children}

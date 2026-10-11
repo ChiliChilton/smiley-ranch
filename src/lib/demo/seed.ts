@@ -49,7 +49,7 @@ export function seedDb(): Record<string, Row[]> {
   ]
   const areas = [{ id: 'a1', name: 'Property', is_boundary: true, geometry: (parcel as { features: { geometry: unknown }[] }).features[0].geometry, color: null, ...base(60) }]
   const dow = new Date().getDay()
-  const sat = dow === 6 ? today : addDays(today, (6 - dow + 7) % 7)
+  const sat = dow === 6 ? today : dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow)
   const events = [
     { id: 'e1', title: 'Opening weekend', kind: 'inclusive', starts_on: sat, ends_on: addDays(sat, 1), notes: 'Everybody welcome. Potluck Saturday night.', ...base(20) },
     { id: 'e2', title: 'Mike + friends', kind: 'exclusive', starts_on: addDays(today, 12), ends_on: addDays(today, 14), notes: 'Have the place to ourselves this weekend.', ...base(10), created_by: M(3) },

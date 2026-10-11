@@ -7,11 +7,12 @@ import { emergencyFrom, emergencyText, useSettings } from '../lib/settings'
 import { mapsLink, shareText, smsLink } from '../lib/share'
 
 /** Home: the property address with Share, Maps, and 911 one tap away. */
-export function EmergencyCard() {
+export function EmergencyCard({ compact = false }: { compact?: boolean }) {
   const { values, loading } = useSettings()
   const me = useMe()
   const navigate = useNavigate()
   const [flash, setFlash] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
   const info = emergencyFrom(values)
   const hasGps = Boolean(info.lat && info.lng)
   const empty = !loading && !info.address && !hasGps
@@ -24,8 +25,22 @@ export function EmergencyCard() {
     }
   }
 
+  if (compact && !expanded) {
+    return (
+      <div className="flex items-center gap-2 py-1">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-bold text-clay-950">{info.address || 'No address set'}</span>
+          <span className="block text-xs text-ink-muted">{hasGps ? `${info.lat}, ${info.lng} · ` : ''}911 address point</span>
+        </span>
+        <Button className="!min-h-0 !px-3 !py-1.5 text-sm" onClick={share}>Share</Button>
+        <Button variant="secondary" className="!min-h-0 !px-3 !py-1.5 text-sm" onClick={() => setExpanded(true)}>More</Button>
+        {flash && <span className="sr-only">{flash}</span>}
+      </div>
+    )
+  }
+
   return (
-    <Card title="In an emergency">
+    <Card title={compact ? undefined : 'In an emergency'}>
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : empty ? (

@@ -45,7 +45,7 @@ export function Feeders() {
   }
 
   return (
-    <Screen title="Feeders" back="/more">
+    <Screen title="Feeders" back="/">
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!data ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>

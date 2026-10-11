@@ -70,6 +70,10 @@ The goal is near zero. What there is:
 - **Vercel** redeploys on push and needs nothing between deploys.
 - **Anonymous auth users** accumulate one per phone (and again if someone clears Safari data). Harmless; they can be pruned from the dashboard if it ever matters.
 
+## The board (Home)
+
+Home is a work board, not a dashboard: property name and date, quick links to the hunting side (Stands, Map, Log, Feeders…), then **On the place**, **Needs**, **Projects**, **Calendar**, this weekend's stands, feeders due, the latest log entries, and the emergency address in one line. Needs and projects can be added and ticked off right there. Tabs: Home, Calendar, Projects, Needs, More.
+
 ## Calendar rules
 
 - Every entry is **Come join** (anyone can tap "I'm in" and leave a note), **Just us** (that person has the place to themselves), or a **Note** (season dates, reminders).

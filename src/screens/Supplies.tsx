@@ -64,7 +64,7 @@ export function Supplies() {
   const setLevel = (i: SupplyItemRow, level: SupplyLevel) => run(() => supabase.from('supply_items').update({ level, ...(level === 'full' || level === 'some' ? { needed: false } : {}) }).eq('id', i.id))
 
   return (
-    <Screen title="Needs & supplies" back="/more">
+    <Screen title="Needs">
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!items ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>

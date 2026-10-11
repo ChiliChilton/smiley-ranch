@@ -11,11 +11,13 @@ try {
   await page.getByRole('button', { name: 'Dad' }).click()
   await page.getByRole('button', { name: /Not now|Continue/ }).click()
   await page.getByText("This weekend's stands").waitFor()
-  await page.getByText('Box Blind · Dad').waitFor()
+  await page.getByText('Tank Blind · Cousin Sam').waitFor()
+await page.getByText('Needs').first().waitFor()
   await page.screenshot({ path: 'e2e/shots/demo-home.png' })
   await page.getByRole('link', { name: 'Calendar' }).click()
   await page.getByText('Mike + friends').first().waitFor()
-  await page.getByRole('link', { name: 'Map', exact: true }).click()
+  await page.getByRole('link', { name: 'Home' }).click()
+await page.getByRole('button', { name: 'Map', exact: true }).click()
   await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
   await page.waitForTimeout(400)
   await page.screenshot({ path: 'e2e/shots/demo-map.png' })
@@ -38,13 +40,12 @@ try {
   if (await page.getByText('Feeders due').count()) throw new Error('Creek Feeder still due after fill')
   await page.screenshot({ path: 'e2e/shots/demo-home-filled.png' })
 
-  await page.getByRole('link', { name: 'More' }).click()
   await page.getByRole('button', { name: 'Feeders', exact: true }).click()
   await page.getByText('Filled it').first().waitFor()
   await page.screenshot({ path: 'e2e/shots/demo-feeders.png' })
 
   await page.getByRole('button', { name: 'Back' }).click()
-  await page.getByRole('button', { name: 'Sightings' }).click()
+  await page.getByRole('button', { name: 'Sightings', exact: true }).click()
   await page.getByText('Big 8, heavy').waitFor()
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await page.getByRole('button', { name: 'Hog', exact: true }).click()
@@ -63,7 +64,7 @@ try {
   if (await page.getByText('Big 8, heavy').count()) throw new Error('species filter did not hide deer')
 
   await page.getByRole('button', { name: 'Back' }).click()
-  await page.getByRole('button', { name: 'Harvests' }).click()
+  await page.getByRole('button', { name: 'Harvests', exact: true }).click()
   await page.getByText('10 point').waitFor()
   await page.screenshot({ path: 'e2e/shots/demo-harvests.png' })
   await page.getByRole('button', { name: 'Add', exact: true }).click()
@@ -88,10 +89,10 @@ try {
   await page.getByPlaceholder('Add a comment').fill('I can patch it Sunday')
   await page.getByRole('button', { name: 'Send' }).click()
   await page.getByText('I can patch it Sunday').waitFor()
-  await page.getByRole('button', { name: 'Make a to-do' }).click()
-  await page.getByText('New to-do').waitFor()
+  await page.getByRole('button', { name: 'Make it a job' }).click()
+  await page.getByText('New project or job').waitFor()
   await page.getByLabel('Who').selectOption({ label: 'Uncle Mike' })
-  await page.getByRole('button', { name: 'Add to-do' }).click()
+  await page.getByRole('button', { name: 'Add it' }).click()
   await page.getByText('Cut fence on the east line').waitFor()
   await page.getByText('Uncle Mike · ').first().waitFor()
   await page.screenshot({ path: 'e2e/shots/demo-todos.png' })
@@ -99,10 +100,9 @@ try {
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await page.getByText('Replace Plot Cam batteries').waitFor()
   await page.getByRole('button', { name: 'Mine', exact: true }).click()
-  await page.getByText('Nothing assigned to you').waitFor()
+  await page.getByText('Nothing on your plate').waitFor()
 
-  await page.getByRole('button', { name: 'Back' }).click()
-  await page.getByRole('button', { name: /Needs/ }).click()
+  await page.getByRole('link', { name: 'Needs' }).click()
   await page.getByText('We need (3)').waitFor()
   await page.getByPlaceholder(/Corn, batteries/).fill('Fence stretcher')
   await page.getByRole('button', { name: 'Add' }).first().click()
@@ -114,7 +114,7 @@ try {
   await page.screenshot({ path: 'e2e/shots/demo-supplies.png' })
 
   await page.getByRole('link', { name: 'Home' }).click()
-  await page.getByText("Who's on the place").waitFor()
+  await page.getByText('On the place').waitFor()
   await page.getByText('Uncle Mike').first().waitFor()
   await page.getByRole('button', { name: "I'm here" }).click()
   await page.getByLabel('Note (optional)').fill('Checking the east fence')
@@ -122,15 +122,25 @@ try {
   await page.getByRole('button', { name: "I'm out" }).waitFor()
   await page.getByText('Checking the east fence').waitFor()
   await page.screenshot({ path: 'e2e/shots/demo-home-phase5.png' })
-  await page.getByRole('button', { name: /Heading out/ }).click()
+  await page.getByRole('button', { name: 'Before you leave' }).click()
   await page.getByRole('button', { name: /I'm heading out/ }).click()
   await page.getByText("You're checked out.").waitFor()
   await page.getByRole('button', { name: 'Back home' }).click()
   await page.getByRole('button', { name: "I'm here" }).waitFor() // check-out closed the check-in
 
+  // Board inline actions: add a need and a job from Home
+  await page.getByPlaceholder('We need…').fill('Diesel for the tractor')
+  await page.getByRole('button', { name: 'Add' }).first().click()
+  await page.getByText('Diesel for the tractor').waitFor()
+  await page.getByPlaceholder('Something that needs doing…').fill('Spray the fence line')
+  await page.getByRole('button', { name: 'Add' }).nth(1).click()
+  await page.getByText('Spray the fence line').waitFor()
+  await page.screenshot({ path: 'e2e/shots/demo-home.png' })
+
   // Phase 6: offline outbox via the demo's no-signal switch
   await page.getByRole('link', { name: 'More' }).click()
   await page.getByText("Pretend there's no signal").click()
+  await page.getByRole('link', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Log', exact: true }).click()
   await page.getByPlaceholder(/What happened/).fill('Posted with no signal')
   await page.getByRole('button', { name: 'Post', exact: true }).click()
@@ -141,11 +151,12 @@ try {
   await page.getByText("Pretend there's no signal").click() // back online -> flush
   await page.waitForTimeout(800)
   if (await page.getByText('waiting for signal').count()) throw new Error('outbox did not flush')
+  await page.getByRole('link', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Log', exact: true }).click()
   await page.getByText('Posted with no signal').waitFor() // now from the "server"
 
   // Notification settings and export pages render
-  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByRole('link', { name: 'More' }).click()
   await page.getByRole('button', { name: 'Notification settings' }).click().catch(() => {})
   await page.waitForTimeout(300)
   await page.screenshot({ path: 'e2e/shots/demo-notifications.png' })
@@ -160,7 +171,8 @@ try {
   await page.screenshot({ path: 'e2e/shots/demo-export.png' })
 
   // Map: feeder pin sheet shows status + recent activity
-  await page.getByRole('link', { name: 'Map', exact: true }).click()
+  await page.getByRole('link', { name: 'Home' }).click()
+await page.getByRole('button', { name: 'Map', exact: true }).click()
   await page.locator('.pin-label', { hasText: 'Plot Feeder' }).waitFor()
   await page.getByRole('button', { name: 'Zoom in' }).click()
   await page.waitForTimeout(400)

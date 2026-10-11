@@ -78,9 +78,8 @@ export function Todos() {
 
   return (
     <Screen
-      title="To-dos"
-      back="/more"
-      right={
+      title="Projects"
+            right={
         <button type="button" onClick={() => setEditing('new')} className="tap flex items-center gap-1 rounded-lg px-3 font-semibold active:bg-clay-800">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>
           Add
@@ -99,7 +98,7 @@ export function Todos() {
       {!rows ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : shown.length === 0 ? (
-        <Note>{filter === 'mine' ? 'Nothing assigned to you. Nice.' : filter === 'done' ? 'Nothing finished yet.' : 'Nothing open.'}</Note>
+        <Note>{filter === 'mine' ? 'Nothing on your plate.' : filter === 'done' ? 'Nothing finished yet.' : 'Nothing open. Add a job.'}</Note>
       ) : (
         <ul className="space-y-2">
           {shown.map((t) => {
@@ -147,7 +146,7 @@ export function Todos() {
         )}
       </Sheet>
 
-      <Sheet open={editing !== null} onClose={() => { setEditing(null); if (params.get('new')) setParams({}, { replace: true }) }} title={editing === 'new' ? 'New to-do' : 'Edit to-do'}>
+      <Sheet open={editing !== null} onClose={() => { setEditing(null); if (params.get('new')) setParams({}, { replace: true }) }} title={editing === 'new' ? 'New project or job' : 'Edit'}>
         {editing && (
           <TodoForm
             key={editing === 'new' ? 'new' : editing.id}
@@ -195,7 +194,7 @@ function TodoForm({ todo, initialTitle, initialPin, onDone }: { todo: TodoRow | 
   return (
     <form onSubmit={save} className="space-y-3">
       {error && <Note kind="error">{error}</Note>}
-      <TextInput label="What needs doing" name="todoTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Fix the north fence" maxLength={200} autoFocus={!todo} />
+      <TextInput label="What needs doing" name="todoTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Fix the north fence, grade the tank road…" maxLength={200} autoFocus={!todo} />
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="mb-1 block text-sm font-semibold text-clay-900">Who</span>
@@ -208,7 +207,7 @@ function TodoForm({ todo, initialTitle, initialPin, onDone }: { todo: TodoRow | 
       </div>
       <PinSelect value={where} onChange={setWhere} />
       <TextArea label="Notes" name="todoNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" rows={2} />
-      <Button type="submit" full busy={busy} disabled={!title.trim()}>{todo ? 'Save' : 'Add to-do'}</Button>
+      <Button type="submit" full busy={busy} disabled={!title.trim()}>{todo ? 'Save' : 'Add it'}</Button>
     </form>
   )
 }

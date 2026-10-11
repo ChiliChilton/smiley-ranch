@@ -7,7 +7,7 @@ import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { Button } from './Button'
-import { Card } from './Card'
+import { Section } from './Section'
 import { TextInput } from './Input'
 import { Note } from './Note'
 import { Sheet } from './Sheet'
@@ -58,12 +58,12 @@ export function CheckinCard() {
   }
 
   return (
-    <Card title="Who's on the place">
+    <Section title="On the place" count={open?.length ?? undefined} action={mine ? <Button variant="secondary" className="!min-h-0 !px-3 !py-1.5 text-sm" busy={busy} onClick={() => out(me.member_id!)}>I'm out</Button> : <Button className="!min-h-0 !px-3 !py-1.5 text-sm" onClick={openSheet}>I'm here</Button>}>
       {error && <Note kind="error" className="mb-2">{error}</Note>}
       {!open ? (
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : open.length === 0 ? (
-        <p className="text-sm text-ink-muted">Nobody right now.</p>
+        <p className="py-1 text-sm text-ink-muted">Nobody right now.</p>
       ) : (
         <ul className="space-y-1.5">
           {open.map((c) => {
@@ -85,14 +85,6 @@ export function CheckinCard() {
           })}
         </ul>
       )}
-      <div className="mt-3 flex gap-2">
-        {mine ? (
-          <Button variant="secondary" busy={busy} onClick={() => out(me.member_id!)}>I'm out</Button>
-        ) : (
-          <Button onClick={openSheet}>I'm here</Button>
-        )}
-      </div>
-
       <Sheet open={sheet} onClose={() => setSheet(false)} title="I'm here">
         <form onSubmit={here} className="space-y-3">
           <TextInput label="Back by (optional)" name="backBy" type="datetime-local" value={backBy} onChange={(e) => setBackBy(e.target.value)} hint="If you're not out by then, the family gets a heads-up." />
@@ -103,6 +95,6 @@ export function CheckinCard() {
           </div>
         </form>
       </Sheet>
-    </Card>
+    </Section>
   )
 }

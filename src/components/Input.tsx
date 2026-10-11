@@ -16,7 +16,7 @@ export function TextInput({ label, hint, error, right, id, className = '', ...re
         <input
           id={inputId}
           {...rest}
-          className={`tap w-full rounded-xl border bg-white px-4 py-3 text-ink outline-none placeholder:text-ink-muted/60 focus:border-clay-700 focus:ring-2 focus:ring-clay-700/30 ${
+          className={`tap w-full rounded-md border bg-white px-3 py-2.5 text-ink outline-none placeholder:text-ink-muted/60 focus:border-clay-700 focus:ring-2 focus:ring-clay-700/30 ${
             error ? 'border-alert' : 'border-tan-500'
           } ${right ? 'pr-12' : ''} ${className}`}
         />
@@ -42,7 +42,7 @@ export function TextArea({ label, hint, id, className = '', ...rest }: AreaProps
         id={inputId}
         rows={3}
         {...rest}
-        className={`w-full rounded-xl border border-tan-500 bg-white px-4 py-3 text-ink outline-none placeholder:text-ink-muted/60 focus:border-clay-700 focus:ring-2 focus:ring-clay-700/30 ${className}`}
+        className={`w-full rounded-md border border-tan-500 bg-white px-3 py-2.5 text-ink outline-none placeholder:text-ink-muted/60 focus:border-clay-700 focus:ring-2 focus:ring-clay-700/30 ${className}`}
       />
       {hint && <span className="mt-1 block text-sm text-ink-muted">{hint}</span>}
     </label>
