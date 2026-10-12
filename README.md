@@ -2,7 +2,7 @@
 
 A shared app for one family hunting property. Who's hunting where, what's happening on the place, what needs doing, and what we need to buy. See `SPEC.md` for features and `CLAUDE.md` for how it's built.
 
-**Stack:** Vite + React + TypeScript + Tailwind, PWA (`vite-plugin-pwa`), Supabase (Postgres, Edge Functions, Realtime), Leaflet, Web Push, static hosting (GitHub Pages or Vercel).
+**Stack:** Vite + React + TypeScript + Tailwind, PWA (`vite-plugin-pwa`), Supabase (Postgres, Edge Functions, Realtime), Web Push, static hosting (GitHub Pages or Vercel). No map library.
 
 ## Status
 
@@ -13,7 +13,7 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | 3 | Satellite map, pins, boundary and areas, stand sign-up | **Done** |
 | 4 | Feeders with bag-based run-out reminders, harvests with TPWD tags | **Done** |
 | 5 | Property notes + comments, projects, needs with House/Trailer/Barn tags | **Done** |
-| 6 | Push notifications, offline outbox, JSON/CSV/KML export, update prompt | **Done** |
+| 6 | Push notifications, offline outbox, JSON/CSV export, update prompt | **Done** |
 
 The build order was reshuffled after Phase 1: the family calendar, the before-you-leave list, and a shareable emergency address came first.
 
@@ -29,14 +29,12 @@ This is not real security (the spec says so). It keeps strangers out and makes a
 
 ## The property
 
-Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP, 1932 CR 211. The 911 address point is 29.2273, -97.6519. The parcel polygon is in `docs/parcel-8554.kml` (and as GeoJSON). The seed loads it as the property boundary; the admin can also import it from the Map tab.
+Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abstract 380 (George W. Petty survey), 418.5 acres, owner Kiatta Properties LP, 1932 CR 211. The 911 address point is 29.2273, -97.6519. The parcel polygon is kept in `docs/parcel-8554.kml` for reference; the app no longer shows a map.
 
 ## Map and stands
 
-- **Satellite map** from Esri World Imagery through Leaflet. No API key. Tiles you've viewed are cached by the service worker for weak signal.
-- **Pins**: stand, feeder, camera, water, gate, food plot, hazard, other. Each has a colored icon and a name label. Tap one for details, coordinates, Directions, and (for stands) the next claimed sits. Members add hazard and other pins; the admin adds everything else, and can edit, move, and remove.
+- **Blinds and feeders** are a list the admin keeps under Blinds (Add, or tap a name): name, blind kind, whether it has its own feeder, how long a bag lasts, notes, and an optional GPS spot captured with "Use my location" that gives everyone a Directions link.
 - **Adding pins**: "Drop a pin at my location" uses the phone's GPS. "Put a pin somewhere on the map" shows a crosshair you line up by panning.
-- **Boundary and areas** (admin): draw by tapping corners (Geoman), adjust corners later, or import a KML/GeoJSON file. The first imported shape becomes the boundary if there isn't one; point placemarks become pins with a type guessed from the name (gate, tank, creek, feeder…). Tap an area to rename it, make it the boundary, or remove it.
 - **Stand sign-up**: the Stands tab is a week grid, stands down the side, days and AM/PM across the top. Tap a cell to claim it with an optional note, or to release your own claim. The admin can release anyone's. Postgres enforces one live claim per stand per sit. Home shows this weekend's claims.
 
 ## Feeders and harvests
@@ -45,7 +43,7 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 - **Sightings** were dropped by decision.
 - **Ranch info**: gate code, Wi-Fi, shutoffs, trash day, septic and well notes, who to call (tap to call). Admin edits in place; everyone reads it behind the family code. Emergency info is its first section.
 - **Equipment**: house, trailer, barn, truck, tractor, ATVs, haul trailer with Good / Needs attention / Down, a note, and the projects and needs tagged to each. Needs and projects pick a place or machine from this list.
-- **Blinds** (replaces Stands and Feeders): AM/PM sign-up per day, the blind's feeder with bag-based run-out, and what's been killed there. Harvests also group by blind.
+- **Blinds** (replaces Stands and Feeders): AM/PM sign-up per day, the blind's feeder with bag-based run-out, and what's been killed there. Harvests also group by blind. The admin adds and edits blinds here (name, kind, feeder, notes, optional GPS spot).
 - **Trips**: "At the ranch now" or "Next trip" on Home. Headcount when you say you're in, shown against the number of beds.
 - **Hunting seasons** (South Zone, Gonzales County) sit on the calendar: a strip under each day, "open now" and "next" at the top, and one line on Home. Admin edits them under More > Hunting seasons; 2026-27 is seeded from the TPWD Outdoor Annual. Check the county page there before you hunt.
 - **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes. Season totals (Sept–Aug) by person and species.
@@ -60,14 +58,14 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 ## Offline, export, updates
 
 - **No signal**: new harvests, property notes, feeder fills, projects, needs, and check-outs go into a local outbox (IndexedDB) and send themselves when signal returns, on app open, or when you tap the yellow "waiting for signal" pill. Claims and calendar entries stay online-only because they can conflict.
-- **Export** (admin, More → Export data): everything as one JSON file, any table as CSV, and the map as KML. Files go to the share sheet on iPhone or download elsewhere. Nothing is locked in.
+- **Export** (admin, More → Export data): everything as one JSON file, or any table as CSV. Files go to the share sheet on iPhone or download elsewhere. Nothing is locked in.
 - **Updates**: the app checks for a new build on launch and shows a "Reload" bar when one is ready.
 
 ## Upkeep
 
 The goal is near zero. What there is:
 
-- **Nothing to pay for.** GitHub, GitHub Pages, Supabase free tier, Esri imagery, and Web Push are all free. No App Store, no custom domain, no SMS or email service.
+- **Nothing to pay for.** GitHub, GitHub Pages, Supabase free tier, and Web Push are all free. No App Store, no custom domain, no SMS or email service.
 
 - **Supabase free tier pauses after ~7 days without traffic.** `.github/workflows/keep-alive.yml` pings the API twice a week once the repo is on GitHub with two secrets set (`SUPABASE_URL`, `SUPABASE_ANON_KEY`). If a project does get paused, the admin restores it with one click in the Supabase dashboard; no data is lost.
 - **Free-tier limits** are generous for 20 people and text-only data: 500 MB database, 50,000 monthly active users. No Storage is used.

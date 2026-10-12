@@ -118,7 +118,7 @@ export function Home() {
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
       <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
-        {([['Blinds', '/blinds'], ['Ranch info', '/info'], ['Map', '/map'], ['Property notes', '/log'], ['Equipment', '/equipment'], ['Harvests', '/harvests']] as const).map(([label, to]) => (
+        {([['Blinds', '/blinds'], ['Ranch info', '/info'], ['Property notes', '/log'], ['Equipment', '/equipment'], ['Harvests', '/harvests']] as const).map(([label, to]) => (
           <button key={to} type="button" onClick={() => navigate(to)} className="tap shrink-0 rounded-md border border-tan-500 bg-white px-3 py-2 text-sm font-semibold text-clay-950 active:bg-tan-100">
             {label}
           </button>

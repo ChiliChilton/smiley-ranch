@@ -235,8 +235,8 @@ export type PinRow = {
   type: PinType
   name: string
   notes: string | null
-  lat: number
-  lng: number
+  lat: number | null
+  lng: number | null
   stand_type: StandType | null
   has_feeder: boolean
   fill_interval_days: number | null
@@ -345,8 +345,8 @@ export type Database = {
           type: PinType
           name: string
           notes?: string | null
-          lat: number
-          lng: number
+          lat?: number | null
+          lng?: number | null
           stand_type?: StandType | null
           has_feeder?: boolean
           fill_interval_days?: number | null
@@ -357,8 +357,8 @@ export type Database = {
           type?: PinType
           name?: string
           notes?: string | null
-          lat?: number
-          lng?: number
+          lat?: number | null
+          lng?: number | null
           stand_type?: StandType | null
           has_feeder?: boolean
           fill_interval_days?: number | null

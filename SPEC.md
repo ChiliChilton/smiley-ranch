@@ -53,12 +53,7 @@ A shared app for one family hunting property. It answers four questions for ever
 - The admin keeps the list under More > Hunting seasons: species, name, from, to, note. Each year's dates come from the TPWD Outdoor Annual; `supabase/property.sql` ships 2026-27.
 
 ### 3. Map
-- Satellite base map (Leaflet + Esri World Imagery or similar).
-- The admin can draw and edit the **property boundary** and optional **named areas** (pastures, food plots). GeoJSON or shapefile import is a nice-to-have.
-- Pin types each get their own icon: stand, feeder, camera, water/tank, gate, food plot, hazard, other.
-- Tap a pin to see its details, recent activity (harvests, fills, notes).
-- "Drop pin at my location" uses phone GPS.
-- Members can add hazard and other pins. Only the admin can add, edit, or move stands, feeders, and cameras.
+Dropped by decision (Oct 2026): the satellite map, boundary drawing, and KML import/export were the biggest piece of the app and the only outside service it pulled from at runtime. Blinds and feeders are set up from a list under Blinds (admin taps Add). A blind can carry an optional GPS spot, captured once with "Use my location", which gives everyone a Directions link that opens their maps app. The pins and areas tables stay, so the map could come back as a frontend-only change.
 
 ### 4. Sightings Log
 Dropped by decision (Oct 2026).

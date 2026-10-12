@@ -6,7 +6,7 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 - **Frontend:** Vite + React + TypeScript, Tailwind CSS
 - **PWA:** `vite-plugin-pwa` with a manifest, icons (including a 180×180 apple-touch-icon), and a service worker
 - **Backend:** Supabase. Use Postgres, Edge Functions, and Realtime. No Storage (photos were cut to keep upkeep near zero).
-- **Map:** Leaflet (`react-leaflet`) with Esri World Imagery satellite tiles. Use `leaflet-draw` or Geoman for the boundary and areas.
+- **Map:** none. Dropped by decision (Oct 2026). Blinds and feeders are a list; a pin may carry an optional lat/lng for a Directions link only.
 - **Push:** Web Push with VAPID keys, sent from a Supabase Edge Function
 - **Hosting:** static. GitHub Pages workflow included; Vercel works too. Nothing paid.
 
@@ -28,7 +28,6 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 ## Offline / weak signal
 - Cache the app shell with the service worker.
 - New entries go into a local outbox (IndexedDB) and sync when back online. Show a small "pending sync" indicator.
-- Cache recently viewed map tiles where practical.
 
 ## Data
 - Write SQL migrations in `supabase/migrations/`.

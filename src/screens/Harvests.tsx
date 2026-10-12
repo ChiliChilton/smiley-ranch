@@ -9,7 +9,7 @@ import type { HarvestRow, PinRow } from '../lib/database.types'
 import { fmtDate, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
-import { fmtCoords, loadPins } from '../lib/pins'
+import { loadPins } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { seasonLabel, seasonOf, SEXES } from '../lib/species'
@@ -183,7 +183,7 @@ export function Harvests() {
             {open.description && <p className="text-lg font-bold text-clay-950">{open.description}</p>}
             <p className="text-sm text-ink">
               {fmtDate(open.harvested_on)}<br />
-              {pinName(open.pin_id) ?? (open.lat != null ? fmtCoords(open.lat, open.lng!) : 'Location not given')}<br />
+              {pinName(open.pin_id) ?? (open.lat != null ? 'GPS spot' : 'Location not given')}<br />
               {open.tag_number ? `Tag ${open.tag_number} · ` : ''}{open.logged_on_license ? 'Logged on license' : 'Not logged on license yet'}
             </p>
             {open.notes && <p className="whitespace-pre-wrap text-ink">{open.notes}</p>}

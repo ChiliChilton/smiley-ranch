@@ -5,7 +5,7 @@ import { Note } from '../../components/Note'
 import { Screen } from '../../components/Screen'
 import { DEMO } from '../../lib/demo'
 import { friendlyError } from '../../lib/errors'
-import { deliverFile, EXPORT_TABLES, fetchAll, fetchTable, stamp, toCSV, toKML, type ExportTable } from '../../lib/export'
+import { deliverFile, EXPORT_TABLES, fetchAll, fetchTable, stamp, toCSV, type ExportTable } from '../../lib/export'
 
 /** Admin: get everything out, in formats other tools read. Nothing is locked in. */
 export function Export() {
@@ -28,7 +28,6 @@ export function Export() {
 
   const json = () => run('json', async () => deliverFile(`back40-${stamp()}.json`, JSON.stringify({ exported_at: new Date().toISOString(), ...(await fetchAll()) }, null, 2), 'application/json'))
   const csv = () => run('csv', async () => deliverFile(`back40-${table}-${stamp()}.csv`, toCSV(await fetchTable(table)), 'text/csv'))
-  const kml = () => run('kml', async () => { const [pins, areas] = await Promise.all([fetchTable('pins'), fetchTable('areas')]); return deliverFile(`back40-map-${stamp()}.kml`, toKML(pins, areas), 'application/vnd.google-earth.kml+xml') })
 
   return (
     <Screen title="Export" back="/more">
@@ -47,10 +46,6 @@ export function Export() {
             </select>
           </div>
           <Button busy={busy === 'csv'} onClick={csv}>Export CSV</Button>
-        </Card>
-        <Card title="The map">
-          <p className="mb-3 text-sm text-ink-muted">Boundary, areas, and every pin as a KML file. Opens in Google Earth, onX, Gaia, and most GPS apps.</p>
-          <Button busy={busy === 'kml'} onClick={kml}>Export map (KML)</Button>
         </Card>
       </div>
     </Screen>

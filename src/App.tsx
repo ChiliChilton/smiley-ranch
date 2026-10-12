@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { startOutbox } from './lib/outbox'
 import { SyncBadge } from './components/SyncBadge'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -37,7 +37,6 @@ import { Supplies } from './screens/Supplies'
 import { NotificationSettings } from './screens/NotificationSettings'
 
 // Leaflet and the drawing tools only load when the map is opened.
-const MapScreen = lazy(() => import('./screens/MapScreen'))
 import { SwitchPerson } from './screens/SwitchPerson'
 
 const NOTIF_KEY = 'back40.notifPrompted'
@@ -123,7 +122,7 @@ function Shell() {
         <Route path="/harvests" element={<Harvests />} />
         <Route path="/harvests/new" element={<HarvestForm />} />
         <Route path="/harvests/:id/edit" element={<HarvestForm />} />
-        <Route path="/map" element={<Suspense fallback={<LoadingScreen />}><MapScreen /></Suspense>} />
+        <Route path="/map" element={<Navigate to="/blinds" replace />} />
         <Route path="/log" element={<Log />} />
         <Route path="/todos" element={<Todos />} />
         <Route path="/todos/new" element={<TodoNewRedirect />} />

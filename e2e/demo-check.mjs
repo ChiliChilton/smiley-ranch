@@ -1,6 +1,5 @@
 // Drives the demo build (fake backend) through every screen. Run: npm run build:demo && npm run preview & && npm run e2e:demo
 import { chromium, devices } from 'playwright'
-import fs from 'node:fs/promises'
 
 const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {})
 const ctx = await browser.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 } })
@@ -63,7 +62,7 @@ try {
   // Blinds: empty until the admin places pins; back goes Home
   await tab('Home')
   await quick('Blinds')
-  await page.getByText('No blinds on the map yet').waitFor()
+  await page.getByText('No blinds yet').waitFor()
   await shot('demo-blinds-empty')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
   await page.getByText(/At the ranch now|Next trip/).waitFor()
@@ -88,38 +87,30 @@ try {
   await page.waitForTimeout(300)
   await page.getByRole('button', { name: 'Back', exact: true }).click()
 
-  // Admin: add a standalone feeder and a blind with its own feeder on the map
+  // Admin: set up a standalone feeder and a blind with its own feeder from the Blinds list
   await tab('More')
   await page.getByRole('button', { name: 'Unlock admin' }).click()
   await page.getByLabel('Admin PIN').fill('4321')
   await page.getByRole('button', { name: 'Unlock', exact: true }).click()
   await page.getByText('Admin mode is on').waitFor()
   await tab('Home')
-  await quick('Map')
-  await page.waitForTimeout(600)
-  if (await page.locator('.pin-icon').count()) throw new Error('map should start with no markers')
-  await shot('demo-map-clean')
-  await page.getByRole('button', { name: 'Add to the map' }).click()
-  await page.getByText('Put a pin somewhere on the map').click()
-  await page.getByRole('button', { name: 'Put pin here', exact: true }).click()
+  await quick('Blinds')
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
   await page.getByLabel('Name').fill('Plot Feeder')
-  await page.getByRole('button', { name: /Feeder$/ }).click()
+  await page.getByRole('button', { name: 'Feeder only', exact: true }).click()
   await page.getByLabel('A bag lasts about (days)').fill('4')
-  await page.getByRole('button', { name: 'Add pin', exact: true }).click()
-  await page.locator('.pin-label', { hasText: 'Plot Feeder' }).waitFor()
-  await page.getByRole('button', { name: 'Add to the map' }).click()
-  await page.getByText('Put a pin somewhere on the map').click()
-  await page.getByRole('button', { name: 'Put pin here', exact: true }).click()
+  await page.getByRole('button', { name: 'Add it', exact: true }).click()
+  await page.getByText('Plot Feeder').waitFor()
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
   await page.getByLabel('Name').fill('Box Blind')
   await page.getByRole('button', { name: 'Box blind', exact: true }).click()
   await page.getByLabel('This blind has its own feeder').check()
   await page.getByLabel('A bag lasts about (days)').fill('5')
-  await page.getByRole('button', { name: 'Add pin', exact: true }).click()
-  await page.locator('.pin-label', { hasText: 'Box Blind' }).waitFor()
-  await page.getByRole('button', { name: 'Back', exact: true }).click()
+  await page.getByRole('button', { name: 'Add it', exact: true }).click()
+  await page.getByText('Box Blind').waitFor()
+  await shot('demo-blinds-admin')
 
   // Blinds: fill the blind's feeder with bags -> run-out estimate; claim and release a sit
-  await quick('Blinds')
   await page.getByText('never filled').first().waitFor()
   await page.getByText('Nothing taken here yet.').first().waitFor()
   await page.getByRole('button', { name: 'Filled it', exact: true }).first().click()
@@ -203,12 +194,9 @@ try {
   await page.waitForTimeout(800)
   if (await page.getByText('waiting for signal').count()) throw new Error('outbox did not flush')
 
-  // Export (KML has the boundary and the pins we added)
+  // Export: JSON backup builds (the demo page can't save it)
   await page.getByRole('button', { name: 'Export data' }).click()
-  const dl = page.waitForEvent('download', { timeout: 5000 }).catch(() => null)
-  await page.getByRole('button', { name: 'Export map (KML)' }).click()
-  const got = await dl
-  if (got) { const txt = await fs.readFile(await got.path(), 'utf8'); if (!/Property boundary/.test(txt) || !/Plot Feeder/.test(txt)) throw new Error('KML missing content') }
+  await page.getByRole('button', { name: 'Export everything (JSON)' }).click()
   await page.getByText(/Downloaded|Sent to the share sheet/).waitFor()
 
   console.log('DEMO OK')

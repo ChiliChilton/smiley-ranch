@@ -1,4 +1,3 @@
-import parcel from './parcel-8554.json'
 import { todayISO, addDays } from '../dates'
 
 type Row = Record<string, unknown>
@@ -46,8 +45,8 @@ export function seedDb(): Record<string, Row[]> {
     ['utilities', 'Septic', 'Tank is under the green lid east of the house. Pumped 2024. No wipes.', 1], ['utilities', 'Well', 'Pump breaker is in the well house. If the pressure drops, check the breaker first.', 2], ['utilities', 'Propane', 'Two 250 gal tanks behind the house. Gauge should stay above 30%.', 3],
     ['contacts', 'Propane company', 'Gonzales Propane (830) 555-0142', 1], ['contacts', 'Feed store', 'Smiley Feed & Supply (830) 555-0170', 2], ['contacts', 'Electric co-op outage line', 'GVEC (800) 223-4832', 3], ['contacts', 'Neighbor', 'Hank at the next gate, (830) 555-0199. Has a key.', 4], ['contacts', 'Cleaning (Elvira)', '(830) 555-0123. $110 on the counter or Cash App.', 5],
   ].map(([section, label, value, sort_order], i) => ({ id: `in${i + 1}`, section, label, value, sort_order, ...base(60) }))
-  const pins: Row[] = [] // markers come later: the admin places real ones in the app
-  const areas = [{ id: 'a1', name: 'Property', is_boundary: true, geometry: (parcel as { features: { geometry: unknown }[] }).features[0].geometry, color: null, ...base(60) }]
+  const pins: Row[] = [] // the admin sets up blinds and feeders in the app
+  const areas: Row[] = []
   const dow = new Date().getDay()
   const sat = dow === 6 ? today : dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow)
   const events = [

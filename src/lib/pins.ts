@@ -14,7 +14,7 @@ export const PIN_TYPES: Record<PinType, { label: string; plural: string; color: 
 
 export const PIN_TYPE_ORDER: PinType[] = ['stand', 'feeder', 'camera', 'water', 'gate', 'food_plot', 'hazard', 'other']
 
-/** Only the admin adds, edits, or moves stands, feeders, and cameras. */
+/** Only the admin adds or edits blinds and feeders. */
 export const ADMIN_ONLY_TYPES: PinType[] = ['stand', 'feeder', 'camera']
 export const MEMBER_TYPES: PinType[] = ['hazard', 'other']
 
@@ -33,21 +33,4 @@ export async function loadPins(): Promise<PinRow[]> {
   const { data, error } = await supabase.from('pins').select('*').is('deleted_at', null).order('name')
   if (error) throw error
   return data ?? []
-}
-
-export function fmtCoords(lat: number, lng: number): string {
-  return `${lat.toFixed(5)}, ${lng.toFixed(5)}`
-}
-
-/** Best-guess pin type for an imported point, from its name. */
-export function guessPinType(name: string): PinType {
-  const n = name.toLowerCase()
-  if (/gate|entrance/.test(n)) return 'gate'
-  if (/feeder/.test(n)) return 'feeder'
-  if (/cam/.test(n)) return 'camera'
-  if (/stand|blind/.test(n)) return 'stand'
-  if (/tank|pond|creek|branch|stream|lake|water|well|spring/.test(n)) return 'water'
-  if (/plot|field/.test(n)) return 'food_plot'
-  if (/hazard|danger|wash|down/.test(n)) return 'hazard'
-  return 'other'
 }

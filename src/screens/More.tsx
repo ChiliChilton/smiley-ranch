@@ -69,8 +69,6 @@ export function More() {
           <Divider />
           <Row onClick={() => navigate('/log')}>Property notes</Row>
           <Divider />
-          <Row onClick={() => navigate('/map')}>Map</Row>
-          <Divider />
           <Row onClick={() => navigate('/checkout')}>Before you leave</Row>
         </Card>
 
@@ -88,7 +86,7 @@ export function More() {
               <Divider />
               <Row onClick={() => navigate('/more/emergency')}>Emergency info</Row>
               <Divider />
-              <Row onClick={() => navigate('/map')}>Blinds, feeders, cameras &amp; map</Row>
+              <Row onClick={() => navigate('/blinds')}>Blinds &amp; feeders</Row>
               <Divider />
               <Row onClick={() => navigate('/more/export')}>Export data</Row>
               <div className="mt-3">

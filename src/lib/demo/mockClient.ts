@@ -190,7 +190,7 @@ class Query implements PromiseLike<Result<unknown>> {
           seasons: { species: 'other', note: null },
           assets: { kind: 'other', status: 'good', note: null, sort_order: 0 },
           info_items: { value: '', sort_order: 0 },
-          pins: { notes: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null },
+          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null, headcount: 1 },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },

@@ -11,7 +11,7 @@ import type { CommentRow, LogEntryRow, PinRow } from '../lib/database.types'
 import { fmtDateTime } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
-import { fmtCoords, loadPins } from '../lib/pins'
+import { loadPins } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -123,7 +123,7 @@ export function Log() {
             <p className="whitespace-pre-wrap text-ink">{open.body}</p>
             <p className="text-sm text-ink-muted">
               {nameOf(open.created_by)} · {fmtDateTime(open.created_at)}
-              {pinName(open.pin_id) ? ` · ${pinName(open.pin_id)}` : open.lat != null ? ` · ${fmtCoords(open.lat, open.lng!)}` : ''}
+              {pinName(open.pin_id) ? ` · ${pinName(open.pin_id)}` : open.lat != null ? ' · GPS spot' : ''}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={() => navigate(`/todos/new?title=${encodeURIComponent(open.body.slice(0, 80))}${open.pin_id ? `&pin=${open.pin_id}` : ''}`)}>Make it a job</Button>
