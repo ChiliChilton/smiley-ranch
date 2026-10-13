@@ -1,4 +1,4 @@
-import type { PinRow, PinType, StandType } from './database.types'
+import type { CameraStatus, LockStatus, MotorStatus, PinRow, PinType, StandType } from './database.types'
 import { supabase } from './supabase'
 
 export const PIN_TYPES: Record<PinType, { label: string; plural: string; color: string; glyph: string }> = {
@@ -14,9 +14,6 @@ export const PIN_TYPES: Record<PinType, { label: string; plural: string; color: 
 
 export const PIN_TYPE_ORDER: PinType[] = ['stand', 'feeder', 'camera', 'water', 'gate', 'food_plot', 'hazard', 'other']
 
-/** Only the admin adds or edits blinds and feeders. */
-export const ADMIN_ONLY_TYPES: PinType[] = ['stand', 'feeder', 'camera']
-export const MEMBER_TYPES: PinType[] = ['hazard', 'other']
 
 export const STAND_TYPES: Record<StandType, string> = {
   ladder: 'Ladder',
@@ -24,9 +21,18 @@ export const STAND_TYPES: Record<StandType, string> = {
   ground_blind: 'Ground blind',
 }
 
-export function canEditPin(pin: PinRow, memberId: string | null, isAdmin: boolean): boolean {
-  if (isAdmin) return true
-  return pin.created_by === memberId && MEMBER_TYPES.includes(pin.type)
+export const MOTOR: Record<MotorStatus, string> = { working: 'Motor working', down: 'Motor down' }
+export const LOCK: Record<LockStatus, string> = { none: 'No lock', locked: 'Locked', unlocked: 'Unlocked' }
+export const CAMERA: Record<CameraStatus, string> = { working: 'Cam working', batteries: 'Cam needs batteries or card', down: 'Cam down' }
+
+/** What's wrong with a spot right now, in plain words. Empty means all good. */
+export function pinIssues(p: PinRow): string[] {
+  const out: string[] = []
+  if ((p.type === 'feeder' || p.has_feeder) && p.motor_status === 'down') out.push('feeder motor down')
+  if (p.has_camera && p.camera_status === 'batteries') out.push('cam needs batteries or card')
+  if (p.has_camera && p.camera_status === 'down') out.push('cam down')
+  if (p.condition?.trim()) out.push(p.condition.trim())
+  return out
 }
 
 export async function loadPins(): Promise<PinRow[]> {

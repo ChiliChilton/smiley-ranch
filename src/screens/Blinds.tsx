@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { Button, Spinner } from '../components/Button'
 import { TextArea, TextInput } from '../components/Input'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import { claimStand, loadClaims, releaseClaim, SIT_LABEL, SITS } from '../lib/claims'
-import type { FeederFillRow, HarvestRow, PinRow, Sit, StandClaimRow, StandType } from '../lib/database.types'
-import { addDays, fmtDate, fmtDateTime, parseISODate, todayISO } from '../lib/dates'
+import type { CameraStatus, FeederFillRow, HarvestRow, LockStatus, MotorStatus, PinRow, StandType } from '../lib/database.types'
+import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { feederStatus, hasFeeder, lastFeedType, recordFill, STATUS_STYLE } from '../lib/feeders'
 import { useMembers } from '../lib/members'
-import { STAND_TYPES } from '../lib/pins'
+import { CAMERA, LOCK, MOTOR, pinIssues, STAND_TYPES } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { mapsLink } from '../lib/share'
@@ -19,65 +18,51 @@ import { seasonLabel, seasonOf } from '../lib/species'
 import { supabase } from '../lib/supabase'
 import { FillDetailsSheet, HistorySheet } from './Feeders'
 
-const DAYS = 7
-const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-type Cell = { stand: PinRow; date: string; sit: Sit }
-
 /**
- * One card per blind: who has it AM and PM on the day you pick, its feeder, and what's been
- * killed there. Standalone feeders (no blind) get a feeder-only card at the bottom.
+ * Hunting spots that need upkeep. One card per blind (and per feeder with no blind):
+ * feeder and run-out guess, motor, lock, chairs, trail cam, a condition line, and what's
+ * been killed there. Anyone can add a spot or update its status.
  */
 export function Blinds() {
   const me = useMe()
   const navigate = useNavigate()
   const { nameOf } = useMembers()
   const today = todayISO()
-  const [weekStart, setWeekStart] = useState(today)
-  const [day, setDay] = useState(today)
   const [pins, setPins] = useState<PinRow[] | null>(null)
-  const [claims, setClaims] = useState<StandClaimRow[]>([])
   const [fills, setFills] = useState<Map<string, FeederFillRow>>(new Map())
   const [harvests, setHarvests] = useState<HarvestRow[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [cell, setCell] = useState<Cell | null>(null)
   const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
   const [history, setHistory] = useState<PinRow | null>(null)
   const [kills, setKills] = useState<PinRow | null>(null)
+  const [status, setStatus] = useState<PinRow | null>(null)
   const [editing, setEditing] = useState<PinRow | 'new' | null>(null)
-
-  const days = useMemo(() => Array.from({ length: DAYS }, (_, i) => addDays(weekStart, i)), [weekStart])
-  const weekEnd = days[days.length - 1]
 
   const reload = useCallback(async () => {
     try {
-      const [{ data: p, error: e1 }, c, { data: f, error: e2 }, { data: h, error: e3 }] = await Promise.all([
+      const [{ data: p, error: e1 }, { data: f, error: e2 }, { data: h, error: e3 }] = await Promise.all([
         supabase.from('pins').select('*').is('deleted_at', null).order('name'),
-        loadClaims(weekStart, weekEnd),
         supabase.from('feeder_fills').select('*').is('deleted_at', null).order('filled_at', { ascending: false }).limit(500),
         supabase.from('harvests').select('*').is('deleted_at', null).not('pin_id', 'is', null).order('harvested_on', { ascending: false }).limit(500),
       ])
       if (e1) throw e1
       if (e2) throw e2
       if (e3) throw e3
-      setPins((p ?? []).filter((x) => x.type === 'stand' || x.type === 'feeder'))
-      setClaims(c)
+      const spots = (p ?? []).filter((x) => x.type === 'stand' || x.type === 'feeder')
+      setPins(spots)
       const last = new Map<string, FeederFillRow>()
       for (const row of f ?? []) if (!last.has(row.feeder_id)) last.set(row.feeder_id, row)
       setFills(last)
       setHarvests(h ?? [])
+      setStatus((cur) => (cur ? (spots.find((x) => x.id === cur.id) ?? null) : null))
     } catch (err) {
       setError(friendlyError(err))
     }
-  }, [weekStart, weekEnd])
+  }, [])
 
   useEffect(() => { void reload() }, [reload])
-  useRealtime(['stand_claims', 'pins', 'feeder_fills', 'harvests'], reload)
+  useRealtime(['pins', 'feeder_fills', 'harvests'], reload)
 
-  const blinds = (pins ?? []).filter((p) => p.type === 'stand')
-  const looseFeeders = (pins ?? []).filter((p) => p.type === 'feeder')
-  const dayClaims = claims.filter((c) => c.date === day)
-  const claimAt = (standId: string, date: string, sit: Sit) => claims.find((c) => c.stand_id === standId && c.date === date && c.sit === sit)
   const thisSeason = seasonOf(today)
   const killsAt = (id: string) => harvests.filter((h) => h.pin_id === id)
 
@@ -94,8 +79,8 @@ export function Blinds() {
 
   function FeederLine({ p }: { p: PinRow }) {
     const fill = fills.get(p.id)
-    const { status, runsOut, daysLeft, mode, days: since } = feederStatus(p, fill)
-    const st = STATUS_STYLE[status]
+    const { status: st0, runsOut, daysLeft, mode, days: since } = feederStatus(p, fill)
+    const st = STATUS_STYLE[st0]
     const estimate =
       mode === 'bags' && runsOut
         ? daysLeft! < 0 ? `ran out about ${fmtDate(runsOut, { weekday: false })}` : daysLeft === 0 ? 'runs out today' : `runs out about ${fmtDate(runsOut, { weekday: false })}`
@@ -116,6 +101,27 @@ export function Blinds() {
     )
   }
 
+  function StatusLine({ p }: { p: PinRow }) {
+    const parts: { text: string; bad: boolean }[] = []
+    if (hasFeeder(p)) parts.push({ text: MOTOR[p.motor_status], bad: p.motor_status === 'down' })
+    parts.push({ text: LOCK[p.lock_status], bad: false })
+    if (p.type === 'stand') parts.push({ text: `${p.chairs} chair${p.chairs === 1 ? '' : 's'}`, bad: p.chairs === 0 })
+    parts.push(p.has_camera ? { text: CAMERA[p.camera_status], bad: p.camera_status !== 'working' } : { text: 'No trail cam', bad: false })
+    return (
+      <button type="button" onClick={() => setStatus(p)} aria-label={`${p.name} status`} className="tap mt-2 block w-full border-t border-tan-200 pt-2 text-left">
+        <span className="flex flex-wrap gap-x-2 gap-y-0.5 text-sm">
+          {parts.map((x, i) => (
+            <span key={i} className={x.bad ? 'font-semibold text-alert' : 'text-ink'}>{x.text}{i < parts.length - 1 ? ' ·' : ''}</span>
+          ))}
+        </span>
+        {p.condition && <span className="block text-sm font-semibold text-alert">{p.condition}</span>}
+        <span className="block text-xs text-ink-muted">
+          {p.status_at ? `${nameOf(p.status_by)}, ${fmtDateTime(p.status_at)}` : 'Nobody has checked it yet'} · tap to update
+        </span>
+      </button>
+    )
+  }
+
   function KillsLine({ p }: { p: PinRow }) {
     const all = killsAt(p.id)
     if (all.length === 0) return <p className="mt-1 text-xs text-ink-muted">Nothing taken here yet.</p>
@@ -128,96 +134,52 @@ export function Blinds() {
     )
   }
 
+  function Links({ p }: { p: PinRow }) {
+    const issue = pinIssues(p)[0]
+    return (
+      <div className="mt-1 flex flex-wrap gap-x-4 text-xs font-semibold text-clay-800">
+        {p.lat != null && p.lng != null && <a href={mapsLink(String(p.lat), String(p.lng), p.name)} target="_blank" rel="noreferrer" className="underline">Directions</a>}
+        <button type="button" className="underline" onClick={() => navigate(`/todos/new?title=${encodeURIComponent(`${p.name}: ${issue ?? ''}`.trim().replace(/:$/, ''))}&pin=${p.id}`)}>+ Project</button>
+      </div>
+    )
+  }
+
   return (
-    <Screen title="Blinds" back="/" right={me.is_admin ? <button type="button" onClick={() => setEditing('new')} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Add</button> : <button type="button" onClick={() => navigate('/harvests')} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Harvests</button>}>
+    <Screen title="Blinds" back="/" right={<button type="button" onClick={() => setEditing('new')} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Add</button>}>
       {error && <Note kind="error" className="mb-3">{error}</Note>}
-
-      <div className="mb-1 flex items-center justify-between">
-        <Button variant="secondary" className="!px-3" aria-label="Earlier week" onClick={() => { const w = addDays(weekStart, -DAYS); setWeekStart(w); setDay(w) }} disabled={weekStart <= addDays(today, -DAYS * 4)}>‹</Button>
-        <button type="button" onClick={() => { setWeekStart(today); setDay(today) }} className="tap px-2 text-sm font-bold text-clay-950">
-          {fmtDate(weekStart, { weekday: false })} – {fmtDate(weekEnd, { weekday: false })}
-        </button>
-        <Button variant="secondary" className="!px-3" aria-label="Later week" onClick={() => { const w = addDays(weekStart, DAYS); setWeekStart(w); setDay(w) }}>›</Button>
-      </div>
-      <div className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
-        {days.map((d) => {
-          const dt = parseISODate(d)
-          const weekend = dt.getDay() === 0 || dt.getDay() === 6
-          const n = claims.filter((c) => c.date === d).length
-          return (
-            <button key={d} type="button" onClick={() => setDay(d)} aria-pressed={day === d} aria-label={fmtDate(d)} className={`tap flex w-[52px] shrink-0 flex-col items-center rounded-md py-1.5 ring-1 ${day === d ? 'bg-clay-900 text-cream ring-clay-900' : weekend ? 'bg-tan-200 text-clay-950 ring-tan-300' : 'bg-white text-clay-950 ring-tan-300'}`}>
-              <span className="text-[10px] font-bold uppercase">{DOW[dt.getDay()]}</span>
-              <span className="text-lg font-extrabold leading-tight">{dt.getDate()}</span>
-              <span className={`text-[10px] ${day === d ? 'text-cream/80' : 'text-ink-muted'}`}>{n ? `${n} taken` : d === today ? 'today' : ' '}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      <h2 className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-clay-900">{fmtDate(day)}</h2>
       {!pins ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
-      ) : blinds.length === 0 && looseFeeders.length === 0 ? (
-        <Note>
-          No blinds yet. {me.is_admin ? <button type="button" className="font-semibold underline" onClick={() => setEditing('new')}>Add the first one.</button> : 'Ask the admin to set them up.'}
-        </Note>
+      ) : pins.length === 0 ? (
+        <Note>No blinds yet. <button type="button" className="font-semibold underline" onClick={() => setEditing('new')}>Add the first one.</button></Note>
       ) : (
         <ul className="space-y-3">
-          {blinds.map((stand) => (
-            <li key={stand.id} className="rounded-2xl bg-white p-3 ring-1 ring-tan-200">
-              <div className="flex items-center gap-3">
-                <button type="button" onClick={() => (me.is_admin ? setEditing(stand) : setKills(stand))} className="tap min-w-0 flex-1 py-1 text-left">
-                  <span className="block truncate font-bold text-clay-950">{stand.name}</span>
-                  <span className="block text-xs text-ink-muted">{stand.stand_type ? STAND_TYPES[stand.stand_type] : 'Blind'}{stand.notes ? ` · ${stand.notes}` : ''}</span>
-                </button>
-                {SITS.map((s) => {
-                  const c = dayClaims.find((x) => x.stand_id === stand.id && x.sit === s)
-                  const mine = c?.member_id === me.member_id
-                  const past = day < today
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setCell({ stand, date: day, sit: s })}
-                      aria-label={`${stand.name}, ${fmtDate(day)} ${SIT_LABEL[s]}${c ? `, ${nameOf(c.member_id)}` : ', open'}`}
-                      className={`tap flex h-12 w-[84px] shrink-0 flex-col items-center justify-center rounded-md text-xs font-bold leading-tight ring-1 ${
-                        c ? (mine ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-tan-300 text-clay-950 ring-tan-500') : past ? 'bg-cream-dark text-ink-muted ring-tan-200' : 'bg-white text-clay-950 ring-tan-400'
-                      }`}
-                    >
-                      <span className={`text-[10px] ${c && mine ? 'text-cream/80' : 'text-ink-muted'}`}>{SIT_LABEL[s]}</span>
-                      <span className="max-w-full truncate px-1">{c ? nameOf(c.member_id).split(' ')[0] : past ? '—' : 'Open'}</span>
-                    </button>
-                  )
-                })}
-              </div>
-              {hasFeeder(stand) && <FeederLine p={stand} />}
-              <KillsLine p={stand} />
-              <Directions p={stand} />
-            </li>
-          ))}
-          {looseFeeders.map((f) => (
-            <li key={f.id} className="rounded-2xl bg-white p-3 ring-1 ring-tan-200">
-              <button type="button" onClick={() => (me.is_admin ? setEditing(f) : setKills(f))} className="tap block w-full py-1 text-left font-bold text-clay-950">{f.name} <span className="text-xs font-semibold text-ink-muted">· feeder only{f.notes ? ` · ${f.notes}` : ''}</span></button>
-              <FeederLine p={f} />
-              <KillsLine p={f} />
-              <Directions p={f} />
+          {pins.map((p) => (
+            <li key={p.id} className="rounded-2xl bg-white p-3 ring-1 ring-tan-200">
+              <button type="button" onClick={() => setEditing(p)} className="tap block w-full py-0.5 text-left">
+                <span className="block truncate font-bold text-clay-950">{p.name}</span>
+                <span className="block text-xs text-ink-muted">{p.type === 'feeder' ? 'Feeder only' : p.stand_type ? STAND_TYPES[p.stand_type] : 'Blind'}{p.notes ? ` · ${p.notes}` : ''}</span>
+              </button>
+              {hasFeeder(p) && <FeederLine p={p} />}
+              <StatusLine p={p} />
+              <KillsLine p={p} />
+              <Links p={p} />
             </li>
           ))}
         </ul>
       )}
-      <p className="mt-3 text-xs text-ink-muted">Tap a sit to claim it or let it go. Burnt orange is you. Fills record bags so the app can guess when the corn runs out.{me.is_admin ? ' Tap a name to edit it.' : ''}</p>
+      <p className="mt-3 text-xs text-ink-muted">Tap a name to edit the spot, the status line to say how it's doing, Filled it when you put corn in. Anyone can add a blind.</p>
 
-      <ClaimSheet
-        cell={cell}
-        claim={cell ? claimAt(cell.stand.id, cell.date, cell.sit) : undefined}
-        onClose={() => setCell(null)}
-        onChanged={async () => { setCell(null); await reload() }}
-      />
       <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await reload() }} />
       <HistorySheet feeder={history} onClose={() => setHistory(null)} />
-      <Sheet open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? 'Add a blind or feeder' : editing ? `Edit ${editing.name}` : ''}>
-        {editing && <BlindForm key={editing === 'new' ? 'new' : editing.id} pin={editing === 'new' ? null : editing} onDone={async () => { setEditing(null); await reload() }} />}
+
+      <Sheet open={status !== null} onClose={() => setStatus(null)} title={status ? `How is ${status.name}` : ''}>
+        {status && <StatusForm key={status.id + (status.status_at ?? '')} pin={status} onDone={async () => { setStatus(null); await reload() }} />}
       </Sheet>
+
+      <Sheet open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? 'Add a blind or feeder' : editing ? `Edit ${editing.name}` : ''}>
+        {editing && <BlindForm key={editing === 'new' ? 'new' : editing.id} pin={editing === 'new' ? null : editing} canRemove={me.is_admin} onDone={async () => { setEditing(null); await reload() }} />}
+      </Sheet>
+
       <Sheet open={kills !== null} onClose={() => setKills(null)} title={kills ? `Killed at ${kills.name}` : ''}>
         {kills && killsAt(kills.id).length === 0 && <p className="text-sm text-ink-muted">Nothing taken here yet.</p>}
         {kills && (
@@ -235,86 +197,87 @@ export function Blinds() {
   )
 }
 
-export function ClaimSheet({ cell, claim, onClose, onChanged }: { cell: Cell | null; claim: StandClaimRow | undefined; onClose: () => void; onChanged: () => Promise<void> }) {
+const chip = (on: boolean) => `tap rounded-md px-3 py-2 text-sm font-bold ring-1 ${on ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`
+
+/** Anyone: how the spot is doing right now. */
+function StatusForm({ pin, onDone }: { pin: PinRow; onDone: () => Promise<void> }) {
   const me = useMe()
-  const { nameOf } = useMembers()
-  const [note, setNote] = useState('')
+  const [motor, setMotor] = useState<MotorStatus>(pin.motor_status)
+  const [lock, setLock] = useState<LockStatus>(pin.lock_status)
+  const [chairs, setChairs] = useState(pin.chairs)
+  const [cam, setCam] = useState(pin.has_camera)
+  const [camStatus, setCamStatus] = useState<CameraStatus>(pin.camera_status)
+  const [condition, setCondition] = useState(pin.condition ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { setNote(''); setError(null) }, [cell])
-
-  if (!cell) return null
-  const past = cell.date < todayISO()
-  const mine = claim?.member_id === me.member_id
-
-  async function claim_(e: FormEvent) {
+  async function save(e: FormEvent) {
     e.preventDefault()
-    if (!cell || !me.member_id) return
     setBusy(true); setError(null)
-    try {
-      await claimStand(cell.stand.id, me.member_id, cell.date, cell.sit, note.trim() || null)
-      await onChanged()
-    } catch (err) {
-      setError(friendlyError(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function release() {
-    if (!claim || !me.member_id) return
-    setBusy(true); setError(null)
-    try {
-      await releaseClaim(claim.id, me.member_id)
-      await onChanged()
-    } catch (err) {
-      setError(friendlyError(err))
-    } finally {
-      setBusy(false)
-    }
+    const { error } = await supabase.from('pins').update({
+      motor_status: motor, lock_status: lock, chairs, has_camera: cam, camera_status: cam ? camStatus : 'working',
+      condition: condition.trim() || null, status_by: me.member_id, status_at: new Date().toISOString(),
+    }).eq('id', pin.id)
+    setBusy(false)
+    if (error) return setError(friendlyError(error))
+    await onDone()
   }
 
   return (
-    <Sheet open={true} onClose={onClose} title={cell.stand.name}>
-      <p className="mb-3 text-lg font-bold text-clay-950">{fmtDate(cell.date)} · {SIT_LABEL[cell.sit]} sit</p>
-      {error && <Note kind="error" className="mb-3">{error}</Note>}
-      {claim ? (
-        <div className="space-y-3">
-          <p className="text-ink">
-            <strong>{mine ? 'You have' : `${nameOf(claim.member_id)} has`}</strong> this sit.
-            {claim.note && <span className="block text-ink-muted">“{claim.note}”</span>}
-            <span className="block text-xs text-ink-muted">Claimed {fmtDateTime(claim.created_at)}</span>
-          </p>
-          {(mine || me.is_admin) && !past && (
-            <Button variant="danger" busy={busy} onClick={release}>{mine ? 'Release my claim' : `Release ${nameOf(claim.member_id)}'s claim`}</Button>
-          )}
+    <form onSubmit={save} className="space-y-4">
+      {error && <Note kind="error">{error}</Note>}
+      {hasFeeder(pin) && (
+        <div>
+          <span className="mb-1 block text-sm font-semibold text-clay-900">Feeder motor</span>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setMotor('working')} aria-pressed={motor === 'working'} className={chip(motor === 'working')}>Working</button>
+            <button type="button" onClick={() => setMotor('down')} aria-pressed={motor === 'down'} className={chip(motor === 'down')}>Down</button>
+          </div>
         </div>
-      ) : past ? (
-        <p className="text-ink-muted">That sit is already past.</p>
-      ) : (
-        <form onSubmit={claim_} className="space-y-3">
-          <TextInput label="Note (optional)" name="claimNote" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Bringing my nephew…" maxLength={200} />
-          <Button type="submit" full busy={busy}>Claim it</Button>
-        </form>
       )}
-    </Sheet>
+      <div>
+        <span className="mb-1 block text-sm font-semibold text-clay-900">Lock</span>
+        <div className="flex gap-2">
+          {(['locked', 'unlocked', 'none'] as LockStatus[]).map((l) => (
+            <button key={l} type="button" onClick={() => setLock(l)} aria-pressed={lock === l} className={chip(lock === l)}>{LOCK[l]}</button>
+          ))}
+        </div>
+      </div>
+      {pin.type === 'stand' && (
+        <div>
+          <span className="mb-1 block text-sm font-semibold text-clay-900">Chairs in the blind</span>
+          <div className="flex items-center gap-3">
+            <Button type="button" variant="secondary" className="!px-4" aria-label="Fewer chairs" onClick={() => setChairs((c) => Math.max(0, c - 1))}>−</Button>
+            <span className="w-8 text-center text-xl font-extrabold text-clay-950" aria-live="polite">{chairs}</span>
+            <Button type="button" variant="secondary" className="!px-4" aria-label="More chairs" onClick={() => setChairs((c) => Math.min(20, c + 1))}>+</Button>
+          </div>
+        </div>
+      )}
+      <div>
+        <label className="tap flex items-center gap-3">
+          <input type="checkbox" checked={cam} onChange={(e) => setCam(e.target.checked)} className="h-5 w-5 accent-clay-900" />
+          <span className="text-sm font-semibold text-clay-900">Trail cam here</span>
+        </label>
+        {cam && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(['working', 'batteries', 'down'] as CameraStatus[]).map((c) => (
+              <button key={c} type="button" onClick={() => setCamStatus(c)} aria-pressed={camStatus === c} className={chip(camStatus === c)}>{c === 'working' ? 'Working' : c === 'batteries' ? 'Needs batteries or card' : 'Down'}</button>
+            ))}
+          </div>
+        )}
+      </div>
+      <TextArea label="Anything wrong with it" name="condition" value={condition} onChange={(e) => setCondition(e.target.value)} placeholder="Window latch broken, wasps, leg rotted…" rows={2} maxLength={300} />
+      <Button type="submit" full busy={busy}>Save</Button>
+    </form>
   )
 }
 
-function Directions({ p }: { p: PinRow }) {
-  if (p.lat == null || p.lng == null) return null
-  return (
-    <a href={mapsLink(String(p.lat), String(p.lng), p.name)} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs font-semibold text-clay-800 underline">Directions</a>
-  )
-}
-
-/** Admin: name, kind, feeder settings, notes, and an optional GPS spot for Directions. */
-function BlindForm({ pin, onDone }: { pin: PinRow | null; onDone: () => Promise<void> }) {
+/** Anyone: name, kind, feeder settings, notes, and an optional GPS spot for Directions. Admin can remove. */
+function BlindForm({ pin, canRemove, onDone }: { pin: PinRow | null; canRemove: boolean; onDone: () => Promise<void> }) {
   const [name, setName] = useState(pin?.name ?? '')
   const [kind, setKind] = useState<'stand' | 'feeder'>(pin?.type === 'feeder' ? 'feeder' : 'stand')
   const [standType, setStandType] = useState<StandType>(pin?.stand_type ?? 'box_blind')
-  const [feeder, setFeeder] = useState(pin ? hasFeeder(pin) : false)
+  const [feeder, setFeeder] = useState(pin ? hasFeeder(pin) : true)
   const [daysPerBag, setDaysPerBag] = useState(pin?.days_per_bag ? String(pin.days_per_bag) : '')
   const [interval, setInterval_] = useState(pin?.fill_interval_days ? String(pin.fill_interval_days) : '')
   const [notes, setNotes] = useState(pin?.notes ?? '')
@@ -364,11 +327,10 @@ function BlindForm({ pin, onDone }: { pin: PinRow | null; onDone: () => Promise<
     await onDone()
   }
 
-  const chip = (on: boolean) => `tap rounded-md px-3 py-2 text-sm font-bold ring-1 ${on ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`
   return (
     <form onSubmit={save} className="space-y-3">
       {error && <Note kind="error">{error}</Note>}
-      <TextInput label="Name" name="blindName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Box Blind, North Ladder, Plot Feeder…" maxLength={80} autoFocus={!pin} />
+      <TextInput label="Name" name="blindName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tank Blind, Brants Blind, Plot Feeder…" maxLength={80} autoFocus={!pin} />
       <div>
         <span className="mb-1 block text-sm font-semibold text-clay-900">What is it</span>
         <div className="flex gap-2">
@@ -398,7 +360,7 @@ function BlindForm({ pin, onDone }: { pin: PinRow | null; onDone: () => Promise<
           <TextInput label="Or fill every (days)" name="fillDays" inputMode="numeric" value={interval} onChange={(e) => setInterval_(e.target.value.replace(/\D/g, ''))} hint="Fallback when bags aren't recorded." />
         </div>
       )}
-      <TextArea label="Notes" name="blindNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Faces the creek bottom, 300 lb hopper…" rows={2} />
+      <TextArea label="Notes" name="blindNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="By the stock tank, 300 lb hopper…" rows={2} />
       <div>
         <span className="mb-1 block text-sm font-semibold text-clay-900">Spot (optional)</span>
         <div className="flex flex-wrap items-center gap-2">
@@ -410,7 +372,7 @@ function BlindForm({ pin, onDone }: { pin: PinRow | null; onDone: () => Promise<
       </div>
       <div className="flex flex-wrap gap-2">
         <Button type="submit" busy={busy} disabled={!name.trim()}>{pin ? 'Save' : 'Add it'}</Button>
-        {pin && <Button type="button" variant="ghost" busy={busy} onClick={remove}>Remove</Button>}
+        {pin && canRemove && <Button type="button" variant="ghost" busy={busy} onClick={remove}>Remove</Button>}
       </div>
     </form>
   )

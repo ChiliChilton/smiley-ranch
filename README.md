@@ -10,7 +10,7 @@ A shared app for one family hunting property. Who's hunting where, what's happen
 | --- | --- | --- |
 | 1 | Scaffold, PWA install, Supabase, identity/onboarding, members admin | **Done** |
 | 2 | Calendar (just us / come join), check-out list, emergency info, Home | **Done** |
-| 3 | Satellite map, pins, boundary and areas, stand sign-up | **Done** |
+| 3 | Blinds and feeders as upkeep cards | **Done** (map and sign-up removed later by decision) |
 | 4 | Feeders with bag-based run-out reminders, harvests with TPWD tags | **Done** |
 | 5 | Property notes + comments, projects, needs with House/Trailer/Barn tags | **Done** |
 | 6 | Push notifications, offline outbox, JSON/CSV export, update prompt | **Done** |
@@ -33,9 +33,8 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 
 ## Map and stands
 
-- **Blinds and feeders** are a list the admin keeps under Blinds (Add, or tap a name): name, blind kind, whether it has its own feeder, how long a bag lasts, notes, and an optional GPS spot captured with "Use my location" that gives everyone a Directions link.
+- **Blinds and feeders** are a list anyone keeps under Blinds (Add, or tap a name): name, blind kind, whether it has its own feeder, how long a bag lasts, notes, and an optional GPS spot captured with "Use my location" that gives everyone a Directions link.
 - **Adding pins**: "Drop a pin at my location" uses the phone's GPS. "Put a pin somewhere on the map" shows a crosshair you line up by panning.
-- **Stand sign-up**: the Stands tab is a week grid, stands down the side, days and AM/PM across the top. Tap a cell to claim it with an optional note, or to release your own claim. The admin can release anyone's. Postgres enforces one live claim per stand per sit. Home shows this weekend's claims.
 
 ## Feeders and harvests
 
@@ -43,7 +42,7 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 - **Sightings** were dropped by decision.
 - **Ranch info**: gate code, Wi-Fi, shutoffs, trash day, septic and well notes, who to call (tap to call). Admin edits in place; everyone reads it behind the family code. Emergency info is its first section.
 - **Equipment**: house, trailer, barn, truck, tractor, ATVs, haul trailer with Good / Needs attention / Down, a note, and the projects and needs tagged to each. Needs and projects pick a place or machine from this list.
-- **Blinds** (replaces Stands and Feeders): AM/PM sign-up per day, the blind's feeder with bag-based run-out, and what's been killed there. Harvests also group by blind. The admin adds and edits blinds here (name, kind, feeder, notes, optional GPS spot).
+- **Blinds** are upkeep cards, not a sign-up: feeder with bag-based run-out and Filled it, motor working or down, lock, chairs, trail cam and its state, a condition line, who last checked, and what's been killed there. Anyone adds or edits a blind; admin removes. Home lists the ones that need a look.
 - **Trips**: "At the ranch now" or "Next trip" on Home. Headcount when you say you're in, shown against the number of beds.
 - **Hunting seasons** (South Zone, Gonzales County) sit on the calendar: a strip under each day, "open now" and "next" at the top, and one line on Home. Admin edits them under More > Hunting seasons; 2026-27 is seeded from the TPWD Outdoor Annual. Check the county page there before you hunt.
 - **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes. Season totals (Sept–Aug) by person and species.
@@ -57,7 +56,7 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 
 ## Offline, export, updates
 
-- **No signal**: new harvests, property notes, feeder fills, projects, needs, and check-outs go into a local outbox (IndexedDB) and send themselves when signal returns, on app open, or when you tap the yellow "waiting for signal" pill. Claims and calendar entries stay online-only because they can conflict.
+- **No signal**: new harvests, property notes, feeder fills, projects, needs, and check-outs go into a local outbox (IndexedDB) and send themselves when signal returns, on app open, or when you tap the yellow "waiting for signal" pill. Calendar entries stay online-only because they can conflict.
 - **Export** (admin, More → Export data): everything as one JSON file, or any table as CSV. Files go to the share sheet on iPhone or download elsewhere. Nothing is locked in.
 - **Updates**: the app checks for a new build on launch and shows a "Reload" bar when one is ready.
 
@@ -169,7 +168,7 @@ Either way it's free and redeploys itself on push.
 
 ### 7. Notifications (optional, about ten minutes)
 
-The app works without this. With it, phones get pushes for stand claims, harvests, to-dos assigned to them, calendar entries, people past their "back by" time, and a morning feeder digest. Each person picks what they want under More → Notifications.
+The app works without this. With it, phones get pushes for harvests, projects put on them, calendar entries, and a morning feeder digest. Each person picks what they want under More → Notifications.
 
 1. Generate keys once (keep the private one secret):
    ```bash
@@ -215,7 +214,7 @@ public/icons/          PWA icons (generated from public/icon.svg)
 
 ## Testing the migrations without Supabase
 
-The migrations run on plain Postgres 16 if you stub the `auth` and `storage` schemas (a `auth.users` table, an `auth.uid()` function reading `request.jwt.claim.sub`, a `storage.objects` table, and a `supabase_realtime` publication). This is how Phase 1 was verified: wrong code rejected, members hidden before join, non-admin can't add members or stands, members can add hazard pins, one claim per stand per sit, switch person drops admin.
+The migrations run on plain Postgres 16 if you stub the `auth` and `storage` schemas (a `auth.users` table, an `auth.uid()` function reading `request.jwt.claim.sub`, a `storage.objects` table, and a `supabase_realtime` publication). This is how Phase 1 was verified: wrong code rejected, members hidden before join, non-admin can't add members, anyone can add a blind, switch person drops admin.
 
 ## UI smoke test
 

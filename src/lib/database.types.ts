@@ -230,6 +230,11 @@ export type PinType = 'stand' | 'feeder' | 'camera' | 'water' | 'gate' | 'food_p
 export type StandType = 'ladder' | 'box_blind' | 'ground_blind'
 export type Sit = 'am' | 'pm'
 
+export type MotorStatus = 'working' | 'down'
+export type LockStatus = 'none' | 'locked' | 'unlocked'
+export type CameraStatus = 'working' | 'batteries' | 'down'
+export type PinStatusPatch = { motor_status?: MotorStatus; lock_status?: LockStatus; chairs?: number; has_camera?: boolean; camera_status?: CameraStatus; condition?: string | null; status_by?: string | null; status_at?: string | null }
+
 export type PinRow = {
   id: string
   type: PinType
@@ -241,6 +246,14 @@ export type PinRow = {
   has_feeder: boolean
   fill_interval_days: number | null
   days_per_bag: number | null
+  motor_status: MotorStatus
+  lock_status: LockStatus
+  chairs: number
+  has_camera: boolean
+  camera_status: CameraStatus
+  condition: string | null
+  status_by: string | null
+  status_at: string | null
   created_by: string | null
   created_at: string
   updated_at: string
@@ -352,7 +365,7 @@ export type Database = {
           fill_interval_days?: number | null
           days_per_bag?: number | null
           created_by?: string | null
-        }
+        } & PinStatusPatch
         Update: {
           type?: PinType
           name?: string
@@ -364,7 +377,7 @@ export type Database = {
           fill_interval_days?: number | null
           days_per_bag?: number | null
           deleted_at?: string | null
-        }
+        } & PinStatusPatch
         Relationships: []
       }
       areas: {

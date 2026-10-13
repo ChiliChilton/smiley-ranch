@@ -3,11 +3,10 @@ import { supabase } from './supabase'
 import { pushSupported } from './standalone'
 
 export const PREF_LABELS: { key: keyof PushPrefs; label: string; hint: string }[] = [
-  { key: 'stand_claims', label: 'Stands this weekend', hint: 'Someone claimed or released a stand for the coming weekend' },
   { key: 'harvests', label: 'Harvests', hint: 'A new harvest was posted' },
-  { key: 'todos_assigned', label: 'To-dos for me', hint: 'Someone assigned you a to-do' },
+  { key: 'todos_assigned', label: 'Projects for me', hint: 'Someone put a project on you' },
   { key: 'events', label: 'Calendar', hint: 'A new trip, work day, or date was added' },
-  { key: 'feeders_overdue', label: 'Feeders due (daily)', hint: 'A morning digest of feeders that are due. Admin usually takes this one.' },
+  { key: 'feeders_overdue', label: 'Feeders due (daily)', hint: 'A morning digest of feeders that are empty or about to be. Admin usually takes this one.' },
 ]
 
 export function defaultPrefs(isAdmin: boolean): PushPrefs {

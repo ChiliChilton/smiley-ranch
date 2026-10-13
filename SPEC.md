@@ -32,9 +32,12 @@ A shared app for one family hunting property. It answers four questions for ever
 - Quick links across the top to Stands, Map, Property notes, Feeders, Harvests. Tabs: Check out, Home, Calendar, Projects, Needs, More.
 
 ### 2. Blinds (highest priority)
-- One Blinds screen replaces separate Stands and Feeders screens. Pick a day, see each blind with AM and PM sits, tap to claim or let go. One person per sit. You can release your own; the admin can release anyone.
-- A blind can have its own feeder (a flag on the pin). Its card shows the last fill, bags, and the run-out guess with a Filled it button. Feeders with no blind get a feeder-only card.
-- Each blind card shows what's been killed there: this season, all time, and the last one. Harvests have a "By blind" view and the map pin sheet shows "Killed here".
+- Blinds are hunting spots that need upkeep, not seats to reserve. There is no sign-up; the family settles who sits where on the trip.
+- One card per spot (Tank Blind, Brants Blind, Fence Blind to start; anyone can add more). Each shows: the feeder (last fill, bags, run-out guess, Filled it), feeder motor working or down, lock status, how many chairs, whether there's a trail cam and whether it's working, needs batteries or a card, or is down, a one-line "anything wrong with it", and who last checked it. Tap the status line to update any of that.
+- Killed here: this season, all time, and the last one. Harvests also group by blind.
+- "+ Project" on a card pre-fills a project with the blind's name and its current problem.
+- Home shows "Blinds that need a look": feeders running low plus any spot with a motor down, a cam problem, or a condition note.
+- Anyone adds or edits a spot (name, blind kind, feeder, bag settings, notes, optional GPS spot for a Directions link). Only the admin removes one.
 
 ### 2a. Ranch info
 - One page everyone can read behind the family code: gate code, Wi-Fi, where the breaker and water shutoff are, trash day, septic and well notes, propane and feed store numbers, the co-op outage line, the neighbor. Phone numbers get a Call button. Emergency info (address, GPS, Share) is the first section.

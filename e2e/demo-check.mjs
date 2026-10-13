@@ -59,11 +59,16 @@ try {
   await page.getByRole('button', { name: 'Add it anyway', exact: true }).click()
   await page.getByText("Who's going (1)").waitFor()
 
-  // Blinds: empty until the admin places pins; back goes Home
+  // Blinds: the three real spots with their status; back goes Home
   await tab('Home')
+  await page.getByText('Blinds that need a look').waitFor()
   await quick('Blinds')
-  await page.getByText('No blinds yet').waitFor()
-  await shot('demo-blinds-empty')
+  await page.getByText('Tank Blind').first().waitFor()
+  await page.getByText('Motor down').waitFor()
+  await page.getByText('Cam needs batteries or card').waitFor()
+  await page.getByText('Window latch is loose').first().waitFor()
+  await page.getByText(/Killed here: /).first().waitFor()
+  await shot('demo-blinds')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
   await page.getByText(/At the ranch now|Next trip/).waitFor()
 
@@ -100,14 +105,14 @@ try {
   await page.getByRole('button', { name: 'Feeder only', exact: true }).click()
   await page.getByLabel('A bag lasts about (days)').fill('4')
   await page.getByRole('button', { name: 'Add it', exact: true }).click()
-  await page.getByText('Plot Feeder').waitFor()
+  await page.getByText('Plot Feeder', { exact: true }).waitFor()
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await page.getByLabel('Name').fill('Box Blind')
   await page.getByRole('button', { name: 'Box blind', exact: true }).click()
   await page.getByLabel('This blind has its own feeder').check()
   await page.getByLabel('A bag lasts about (days)').fill('5')
   await page.getByRole('button', { name: 'Add it', exact: true }).click()
-  await page.getByText('Box Blind').waitFor()
+  await page.getByText('Box Blind', { exact: true }).waitFor()
   await shot('demo-blinds-admin')
 
   // Blinds: fill the blind's feeder with bags -> run-out estimate; claim and release a sit
@@ -119,14 +124,13 @@ try {
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await page.getByText(/runs out about/).waitFor()
   await page.getByText(/3 bags/).first().waitFor()
-  await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).click()
-  await page.getByLabel('Note (optional)').fill('Bringing my nephew')
-  await page.getByRole('button', { name: 'Claim it', exact: true }).click()
-  await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).waitFor()
-  await shot('demo-blinds')
-  await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).click()
-  await page.getByRole('button', { name: 'Release my claim', exact: true }).click()
-  await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).waitFor()
+  // Status: Tank Blind's motor is fixed
+  await page.getByRole('button', { name: 'Tank Blind status' }).click()
+  await page.getByRole('button', { name: 'Working', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await page.waitForTimeout(300)
+  if ((await page.getByText('Motor down').count()) !== 0) throw new Error('motor should be fixed')
+  await shot('demo-blinds-status')
   await page.getByRole('button', { name: 'Back', exact: true }).click()
 
   // Needs tab: place / machine filter

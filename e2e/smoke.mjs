@@ -50,10 +50,10 @@ let infoItems = [
   { id: 'i1', section: 'access', label: 'Gate code', value: '1234#', sort_order: 1, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 const seedPins = () => [
-  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: true, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let pins = seedPins()
 let areas = []
@@ -298,26 +298,26 @@ async function run(width, standalone) {
   await page.getByRole('button', { name: 'Back home' }).click()
   await page.getByText('Last checked out:').waitFor()
 
-  // Blinds: pick a day, claim, release, feeder line, back to Home
+  // Blinds: upkeep cards; mark a motor down, back to Home
   await page.getByRole('button', { name: 'Blinds', exact: true }).click()
   await page.getByRole('heading', { name: 'Blinds' }).waitFor()
   await page.getByText('Feeder', { exact: true }).first().waitFor()
   await page.getByText('Nothing taken here yet.').first().waitFor()
-  await shot(page, `${tag}-19-stands`)
-  const openCell = page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first()
-  await openCell.click()
-  await page.getByLabel('Note (optional)').fill('Bringing my nephew')
-  await page.getByRole('button', { name: 'Claim it' }).click()
-  await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).first().waitFor()
-  assert(claims.length === 1 && claims[0].note === 'Bringing my nephew', 'claim saved')
-  await shot(page, `${tag}-20-stands-claimed`)
-  await page.getByRole('button', { name: /^Box Blind, .* AM, Dad$/ }).first().click()
-  await page.getByText('You have this sit.').waitFor()
-  await page.getByRole('button', { name: 'Release my claim' }).click()
-  await page.getByRole('button', { name: /^Box Blind, .* AM, open$/ }).first().waitFor()
-  assert(claims[0].released_at, 'claim released')
+  await shot(page, `${tag}-19-blinds`)
+  await page.getByRole('button', { name: 'Box Blind status' }).click()
+  await page.getByRole('button', { name: 'Down', exact: true }).first().click()
+  await page.getByRole('button', { name: 'More chairs' }).click()
+  await page.getByLabel('Anything wrong with it').fill('Window latch broken')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await page.getByText('Motor down').waitFor()
+  await page.getByText('Window latch broken').waitFor()
+  const bb = pins.find((p) => p.id === 'p1')
+  assert(bb.motor_status === 'down' && bb.chairs === 3 && bb.status_by === 'm1', 'status saved with who')
+  await shot(page, `${tag}-20-blinds-status`)
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByText(/At the ranch now|Next trip/).waitFor()
+  await page.getByText('Blinds that need a look').waitFor()
+  await page.getByText('feeder motor down · Window latch broken').waitFor()
 
   // Ranch info and Equipment
   await page.getByRole('button', { name: 'Ranch info', exact: true }).click()

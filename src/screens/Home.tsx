@@ -14,6 +14,7 @@ import { assetName, loadAssets } from '../lib/assets'
 import { fmtDate, fmtDateTime, fmtRange, parseISODate, relativeDay, todayISO } from '../lib/dates'
 import { loadEvents } from '../lib/events'
 import { feederStatus, loadFeeders, recordFill } from '../lib/feeders'
+import { pinIssues } from '../lib/pins'
 import { useMembers } from '../lib/members'
 import { createRow } from '../lib/outbox'
 import { useRealtime } from '../lib/realtime'
@@ -47,7 +48,7 @@ export function Home() {
   const [stayGoing, setStayGoing] = useState<EventAttendeeRow[]>([])
   const [last, setLast] = useState<CheckoutRow | null>(null)
   const [seasons, setSeasons] = useState<SeasonRow[]>([])
-  const [feeders, setFeeders] = useState<{ feeders: PinRow[]; lastFill: Map<string, FeederFillRow> } | null>(null)
+  const [feeders, setFeeders] = useState<{ feeders: PinRow[]; spots: PinRow[]; lastFill: Map<string, FeederFillRow> } | null>(null)
   const [justFilled, setJustFilled] = useState<{ feeder: PinRow; fill: FeederFillRow } | null>(null)
   const [log, setLog] = useState<LogEntryRow[]>([])
   const [todos, setTodos] = useState<TodoRow[]>([])
@@ -97,6 +98,7 @@ export function Home() {
   const headcount = stayGoing.reduce((n, a) => n + (a.headcount ?? 1), 0)
 
   const feedersDue = (feeders?.feeders ?? []).filter((f) => ['due', 'overdue'].includes(feederStatus(f, feeders!.lastFill.get(f.id)).status))
+  const spotsWithIssues = (feeders?.spots ?? []).filter((p) => pinIssues(p).length > 0)
   const mine = todos.filter((t) => t.assignee_id === me.member_id)
   const others = todos.filter((t) => t.assignee_id !== me.member_id)
   const shownJobs = [...mine, ...others].slice(0, 6)
@@ -221,12 +223,21 @@ export function Home() {
           {todos.length > 6 && <SectionLink onClick={() => navigate('/todos')}>{todos.length - 6} more open</SectionLink>}
         </Section>
 
-        {feedersDue.length > 0 && (
-          <Section title="Feeders running low" count={feedersDue.length} action={<SectionLink onClick={() => navigate('/blinds')}>All blinds</SectionLink>}>
+        {(feedersDue.length > 0 || spotsWithIssues.length > 0) && (
+          <Section title="Blinds that need a look" count={feedersDue.length + spotsWithIssues.length} action={<SectionLink onClick={() => navigate('/blinds')}>All blinds</SectionLink>}>
             <ul className="space-y-2">
               {feedersDue.map((f) => (
                 <li key={f.id}>
                   <FeederCard feeder={f} fill={feeders!.lastFill.get(f.id)} compact onFilled={async () => { const fill = await recordFill(f.id); setJustFilled({ feeder: f, fill }); await reload() }} />
+                </li>
+              ))}
+              {spotsWithIssues.map((p) => (
+                <li key={p.id}>
+                  <button type="button" onClick={() => navigate('/blinds')} className="tap w-full py-1 text-left">
+                    <span className="block text-[15px] font-semibold text-clay-950">{p.name}</span>
+                    <span className="block text-xs font-semibold text-alert">{pinIssues(p).join(' · ')}</span>
+                    {p.status_at && <span className="block text-xs text-ink-muted">{nameOf(p.status_by)} · {fmtDateTime(p.status_at)}</span>}
+                  </button>
                 </li>
               ))}
             </ul>

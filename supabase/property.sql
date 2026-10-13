@@ -100,3 +100,9 @@ from (values
   ('contacts', 'Electric co-op outage line', 3), ('contacts', 'Neighbor', 4), ('contacts', 'Cleaning (Elvira)', 5)
 ) as i(section, label, sort_order)
 where not exists (select 1 from public.info_items);
+
+-- The blinds. Each has its own feeder; set days-per-bag in the app once you know it.
+insert into public.pins (name, type, stand_type, has_feeder, created_by)
+select name, 'stand'::public.pin_type, 'box_blind'::public.stand_type, true, (select id from public.members order by created_at limit 1)
+from unnest(array['Tank Blind', 'Brants Blind', 'Fence Blind']) as b(name)
+where not exists (select 1 from public.pins where type = 'stand');

@@ -52,7 +52,7 @@ const whoami = () => {
 const overlaps = (a: Row, b: Row) => (a.starts_on as string) <= (b.ends_on as string) && (b.starts_on as string) <= (a.ends_on as string)
 
 /** Same gates as the RLS policies in supabase/migrations. */
-function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row, patch?: Row): { code: string; message: string } | null {
+function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row): { code: string; message: string } | null {
   const me = state.device.member_id
   const rls = (t: string) => ({ code: '42501', message: `new row violates row-level security policy for table "${t}"` })
   if (!isActive()) return rls(table)
@@ -62,13 +62,9 @@ function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row, p
     case 'assets':
       if (op === 'update') return null
       return isAdmin() ? null : rls(table)
-    case 'pins': {
-      const adminOnly = ['stand', 'feeder', 'camera']
-      if (isAdmin()) return null
-      const type = String((patch?.type ?? row.type) as string)
-      if (adminOnly.includes(type) || row.created_by !== me) return rls(table)
+    case 'pins':
+      if (op === 'delete') return isAdmin() ? null : rls(table)
       return null
-    }
     case 'stand_claims':
       if (op === 'insert' && row.member_id !== me && !isAdmin()) return rls(table)
       if (op !== 'insert' && row.member_id !== me && !isAdmin()) return rls(table)
@@ -177,7 +173,7 @@ class Query implements PromiseLike<Result<unknown>> {
         if (this.op === 'upsert') {
           const existing = rows.find((x) => x[this.onConflict!] === r[this.onConflict!])
           if (existing) {
-            const denied = canWrite(this.table, 'update', existing, r)
+            const denied = canWrite(this.table, 'update', existing)
             if (denied) return err(denied.code, denied.message)
             Object.assign(existing, r, { updated_at: now }); inserted.push(existing); continue
           }
@@ -190,7 +186,7 @@ class Query implements PromiseLike<Result<unknown>> {
           seasons: { species: 'other', note: null },
           assets: { kind: 'other', status: 'good', note: null, sort_order: 0 },
           info_items: { value: '', sort_order: 0 },
-          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null },
+          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null, headcount: 1 },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
@@ -225,7 +221,7 @@ class Query implements PromiseLike<Result<unknown>> {
       const now = new Date().toISOString()
       const updated: Row[] = []
       for (const r of list) {
-        const denied = canWrite(this.table, 'update', r, this.payload as Row)
+        const denied = canWrite(this.table, 'update', r)
         if (denied) continue // RLS: silently no-op, like Postgres
         if (this.table === 'events' && ((this.payload as Row).kind === 'exclusive' || r.kind === 'exclusive')) {
           const next = { ...r, ...(this.payload as Row) }

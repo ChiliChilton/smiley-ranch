@@ -45,7 +45,13 @@ export function seedDb(): Record<string, Row[]> {
     ['utilities', 'Septic', 'Tank is under the green lid east of the house. Pumped 2024. No wipes.', 1], ['utilities', 'Well', 'Pump breaker is in the well house. If the pressure drops, check the breaker first.', 2], ['utilities', 'Propane', 'Two 250 gal tanks behind the house. Gauge should stay above 30%.', 3],
     ['contacts', 'Propane company', 'Gonzales Propane (830) 555-0142', 1], ['contacts', 'Feed store', 'Smiley Feed & Supply (830) 555-0170', 2], ['contacts', 'Electric co-op outage line', 'GVEC (800) 223-4832', 3], ['contacts', 'Neighbor', 'Hank at the next gate, (830) 555-0199. Has a key.', 4], ['contacts', 'Cleaning (Elvira)', '(830) 555-0123. $110 on the counter or Cash App.', 5],
   ].map(([section, label, value, sort_order], i) => ({ id: `in${i + 1}`, section, label, value, sort_order, ...base(60) }))
-  const pins: Row[] = [] // the admin sets up blinds and feeders in the app
+  const P = (n: number) => `00000000-0000-4000-8000-0000000000b${n}`
+  const blind = (n: number, name: string, extra: Row) => ({ id: P(n), type: 'stand', name, notes: null, lat: null, lng: null, stand_type: 'box_blind', has_feeder: true, fill_interval_days: null, days_per_bag: 5, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, ...base(60), ...extra })
+  const pins: Row[] = [
+    blind(1, 'Tank Blind', { notes: 'By the stock tank', motor_status: 'down', status_by: M(3), status_at: ts(2), has_camera: true }),
+    blind(2, 'Brants Blind', { has_camera: true, camera_status: 'batteries', status_by: M(4), status_at: ts(5), chairs: 1 }),
+    blind(3, 'Fence Blind', { lock_status: 'none', condition: 'Window latch is loose', status_by: M(1), status_at: ts(9), lat: 29.2290, lng: -97.6560 }),
+  ]
   const areas: Row[] = []
   const dow = new Date().getDay()
   const sat = dow === 6 ? today : dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow)
@@ -64,11 +70,14 @@ export function seedDb(): Record<string, Row[]> {
   const checkouts = [
     { id: 'o1', member_id: M(3), event_id: null, left_at: ts(9, 14), items: checklist.map((c, i) => ({ id: c.id, title: c.title, done: i !== 20 })), all_done: false, notes: 'Propane is getting low.', created_by: M(3), created_at: ts(9, 14), deleted_at: null },
   ]
-  const feeder_fills: Row[] = []
+  const feeder_fills: Row[] = [
+    { id: 'ff1', feeder_id: P(1), filled_at: ts(3), bags: 4, amount: null, feed_type: 'corn', created_by: M(4), created_at: ts(3), deleted_at: null },
+    { id: 'ff2', feeder_id: P(2), filled_at: ts(16), bags: 3, amount: null, feed_type: 'corn', created_by: M(3), created_at: ts(16), deleted_at: null },
+  ]
   const y = Number(today.slice(0, 4)); const seasonYear = Number(today.slice(5, 7)) >= 9 ? y : y - 1
   const harvests = [
-    { id: 'h1', member_id: M(3), harvested_on: `${seasonYear}-11-08`, species: 'Deer', sex: 'buck', description: '10 point, 138"', pin_id: null, lat: null, lng: null, notes: null, tag_number: 'A-4471', logged_on_license: true, ...base(30) , created_by: M(3) },
-    { id: 'h2', member_id: M(1), harvested_on: `${seasonYear}-11-15`, species: 'Deer', sex: 'doe', description: null, pin_id: null, lat: null, lng: null, notes: 'Management doe', tag_number: null, logged_on_license: false, ...base(20) },
+    { id: 'h1', member_id: M(3), harvested_on: `${seasonYear}-11-08`, species: 'Deer', sex: 'buck', description: '10 point, 138"', pin_id: P(1), lat: null, lng: null, notes: null, tag_number: 'A-4471', logged_on_license: true, ...base(30) , created_by: M(3) },
+    { id: 'h2', member_id: M(1), harvested_on: `${seasonYear}-11-15`, species: 'Deer', sex: 'doe', description: null, pin_id: P(3), lat: null, lng: null, notes: 'Management doe', tag_number: null, logged_on_license: false, ...base(20) },
     { id: 'h3', member_id: M(4), harvested_on: `${seasonYear}-10-02`, species: 'Hog', sex: 'male', description: '180 lb boar', pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, ...base(40), created_by: M(4) },
   ]
   const log_entries = [

@@ -31,7 +31,7 @@ Read `SPEC.md` first. It's the source of truth for features. This file covers ho
 
 ## Data
 - Write SQL migrations in `supabase/migrations/`.
-- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (unique on stand_id + date + sit), `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checklist_items`, `checkouts`, `seasons`, `assets`, `info_items`, and `push_subscriptions`. `pins.has_feeder` marks a blind with its own feeder; `supply_items.asset_id` and `todos.asset_id` tag a place or machine; `event_attendees.headcount` is how many are coming. (Photos, sightings, and the who's-here check-in board were dropped by decision to keep it bare-bones.)
+- Core tables: `members`, `settings`, `pins`, `areas`, `stand_claims` (kept for data; no sign-up UI any more), `harvests`, `feeder_fills`, `log_entries`, `comments`, `events`, `event_attendees`, `todos`, `supply_items`, `checklist_items`, `checkouts`, `seasons`, `assets`, `info_items`, and `push_subscriptions`. `pins.has_feeder` marks a blind with its own feeder; `supply_items.asset_id` and `todos.asset_id` tag a place or machine; `event_attendees.headcount` is how many are coming. (Photos, sightings, and the who's-here check-in board were dropped by decision to keep it bare-bones.)
 - Use soft delete (`deleted_at`) for user content.
 
 ## Build order
@@ -47,7 +47,7 @@ Actual order used: 1 identity â†’ 2 calendar + check-out list + emergency info â
 ## Style
 - Earthy and simple: burnt orange / red dirt, tan, warm off-white. Muted, easy on the eyes, readable in sunlight. Dark mode is optional.
 - It's a family work board, not a consumer app: flat sections with hairline rules, small radii, no floating buttons, no greetings. Needs, projects, and the calendar come first; hunting features are one tap away.
-- Use plain language in the UI. Say "Claim stand," not "Create reservation."
+- Use plain language in the UI. Say "Filled it," not "Record feeder fill event."
 - Keep components small. No extra libraries without a reason.
 
 ## Deliverables beyond code
