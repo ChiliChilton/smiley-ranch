@@ -8,7 +8,7 @@ type Row = Record<string, unknown>
 type Result<T> = { data: T; error: null } | { data: null; error: { code: string; message: string } }
 type Filter = { col: string; op: 'eq' | 'neq' | 'is' | 'not_is' | 'gte' | 'lte' | 'gt' | 'lt' | 'in'; val: unknown }
 
-const KEY = 'back40.demo.v1'
+const KEY = 'back40.demo.v2' // bump when the seed shape changes so old phones start fresh
 
 type State = { db: Record<string, Row[]>; device: { member_id: string | null; is_admin: boolean }; secrets: { code: string; pin: string } }
 

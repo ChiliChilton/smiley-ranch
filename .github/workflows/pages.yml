@@ -1,7 +1,8 @@
 # Deploys the app to GitHub Pages on every push to main.
-# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
-# Secrets needed: SUPABASE_URL, SUPABASE_ANON_KEY (repo Settings → Secrets → Actions).
-# The app will live at https://<your-github-name>.github.io/<repo-name>/
+# With no secrets set it deploys the SANDBOX (fake backend, sample data) so the family can
+# try it. Add SUPABASE_URL and SUPABASE_ANON_KEY (repo Settings → Secrets → Actions) and the
+# next push deploys the real app instead.
+# The app lives at https://<your-github-name>.github.io/<repo-name>/
 name: Deploy to GitHub Pages
 on:
   push:
@@ -30,9 +31,18 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VITE_BASE: /${{ github.event.repository.name }}/
-        run: npm run build
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "No SUPABASE_URL secret: building the sandbox."
+            VITE_DEMO=1 npm run build
+          else
+            npm run build
+          fi
       - name: SPA fallback for deep links
         run: cp dist/index.html dist/404.html
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
