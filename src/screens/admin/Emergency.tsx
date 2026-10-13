@@ -11,15 +11,16 @@ import { EMERGENCY_KEYS, emergencyFrom, useSettings, type EmergencyInfo } from '
 export function Emergency() {
   const { values, loading, save } = useSettings()
   return (
-    <Screen title="Emergency info" back="/more">
-      <p className="mb-4 text-sm text-ink-muted">Shows on everyone's Home screen with a Share button, so they can text it to 911, a tow truck, or a late guest.</p>
-      {!loading && <EmergencyForm initial={emergencyFrom(values)} save={save} />}
+    <Screen title="Emergency info" back="/info">
+      <p className="mb-4 text-sm text-ink-muted">Shows on Home and on Ranch info with a Share button, so anyone can text it to 911, a tow truck, or a late guest.</p>
+      {!loading && <EmergencyForm initial={emergencyFrom(values)} initialBeds={values?.beds ?? '4'} save={save} />}
     </Screen>
   )
 }
 
-function EmergencyForm({ initial, save }: { initial: EmergencyInfo; save: (entries: Record<string, string>) => Promise<void> }) {
+function EmergencyForm({ initial, initialBeds, save }: { initial: EmergencyInfo; initialBeds: string; save: (entries: Record<string, string>) => Promise<void> }) {
   const [form, setForm] = useState<EmergencyInfo>(initial)
+  const [beds, setBeds] = useState(initialBeds)
   const [busy, setBusy] = useState(false)
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +35,7 @@ function EmergencyForm({ initial, save }: { initial: EmergencyInfo; save: (entri
     setError(null)
     setDone(false)
     try {
-      await save(Object.fromEntries((Object.keys(EMERGENCY_KEYS) as (keyof EmergencyInfo)[]).map((k) => [EMERGENCY_KEYS[k], form[k].trim()])))
+      await save({ ...Object.fromEntries((Object.keys(EMERGENCY_KEYS) as (keyof EmergencyInfo)[]).map((k) => [EMERGENCY_KEYS[k], form[k].trim()])), beds: beds || '4' })
       setDone(true)
     } catch (err) {
       setError(friendlyError(err))
@@ -79,6 +80,9 @@ function EmergencyForm({ initial, save }: { initial: EmergencyInfo; save: (entri
           </Card>
           <Card>
             <TextArea label="Anything else" name="extra" value={form.extra} onChange={set('extra')} placeholder="Nearest ER, sheriff's number, neighbor who has a key…" />
+          </Card>
+          <Card title="The place">
+            <TextInput label="How many beds" name="beds" inputMode="numeric" value={beds} onChange={(e) => setBeds(e.target.value.replace(/\D/g, ''))} hint="Shown on trips next to the headcount." />
           </Card>
           {error && <Note kind="error">{error}</Note>}
           {done && <Note kind="ok">Saved.</Note>}

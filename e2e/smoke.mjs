@@ -398,7 +398,8 @@ async function run(width, standalone) {
   // Blinds as admin: add a blind with its own feeder from the list
   await page.getByRole('link', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Blinds', exact: true }).click()
-  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await page.getByRole('heading', { name: 'Blinds' }).waitFor()
+  await page.getByRole('button', { name: '+ Add', exact: true }).click()
   await page.getByLabel('Name').fill('Tank Blind')
   await page.getByRole('button', { name: 'Ground blind', exact: true }).click()
   await page.getByLabel('This blind has its own feeder').check()

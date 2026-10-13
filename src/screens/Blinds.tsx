@@ -145,7 +145,7 @@ export function Blinds() {
   }
 
   return (
-    <Screen title="Blinds" back="/" right={<button type="button" onClick={() => setEditing('new')} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Add</button>}>
+    <Screen title="Blinds" back="/" right={<button type="button" onClick={() => setEditing('new')} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">+ Add</button>}>
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!pins ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>

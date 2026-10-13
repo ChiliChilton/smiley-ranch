@@ -38,7 +38,7 @@ export function RanchInfo() {
   const beds = settings?.beds
 
   return (
-    <Screen title="Ranch info" back="/">
+    <Screen title="Ranch info" back="/" right={me.is_admin ? <button type="button" onClick={() => setEditing({ section: 'access' })} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">+ Add</button> : undefined}>
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!items ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
@@ -66,6 +66,7 @@ export function RanchInfo() {
                             <span className={`block whitespace-pre-wrap text-[15px] ${it.value ? 'text-ink' : 'italic text-ink-muted'}`}>{it.value || 'not filled in yet'}</span>
                             {copied === it.id && <span className="text-xs text-ok">Copied</span>}
                           </button>
+                          {me.is_admin && <span className="mt-1 rounded-md bg-tan-200 px-2 py-1 text-xs font-bold text-clay-900">Edit</span>}
                           {tel && <a href={`tel:${tel}`} className="tap inline-flex items-center rounded-md bg-tan-200 px-3 py-1.5 text-sm font-semibold text-clay-950 active:bg-tan-300">Call</a>}
                         </li>
                       )
@@ -82,7 +83,7 @@ export function RanchInfo() {
               <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/equipment')}>Equipment and buildings</button>
             </p>
           </Section>
-          {!me.is_admin && <p className="text-xs text-ink-muted">Tap a line to copy it. The admin keeps this page current.</p>}
+          <p className="text-xs text-ink-muted">{me.is_admin ? 'Tap a line to change it, + Add to add one. Beds and the emergency address are under Edit on their sections.' : 'Tap a line to copy it. The admin keeps this page current.'}</p>
         </div>
       )}
 
@@ -93,7 +94,8 @@ export function RanchInfo() {
   )
 }
 
-function InfoForm({ item, section, onDone }: { item: InfoItemRow | null; section: InfoSection; onDone: () => Promise<void> }) {
+function InfoForm({ item, section: initialSection, onDone }: { item: InfoItemRow | null; section: InfoSection; onDone: () => Promise<void> }) {
+  const [section, setSection] = useState<InfoSection>(item?.section ?? initialSection)
   const [label, setLabel] = useState(item?.label ?? '')
   const [value, setValue] = useState(item?.value ?? '')
   const [busy, setBusy] = useState(false)
@@ -104,7 +106,7 @@ function InfoForm({ item, section, onDone }: { item: InfoItemRow | null; section
     if (!label.trim()) return
     setBusy(true); setError(null)
     const { error } = item
-      ? await supabase.from('info_items').update({ label: label.trim(), value: value.trim() }).eq('id', item.id)
+      ? await supabase.from('info_items').update({ label: label.trim(), value: value.trim(), section }).eq('id', item.id)
       : await supabase.from('info_items').insert({ section, label: label.trim(), value: value.trim() })
     setBusy(false)
     if (error) return setError(friendlyError(error))
@@ -122,7 +124,14 @@ function InfoForm({ item, section, onDone }: { item: InfoItemRow | null; section
   return (
     <form onSubmit={save} className="space-y-3">
       {error && <Note kind="error">{error}</Note>}
-      <p className="text-xs text-ink-muted">{INFO_SECTIONS[section].title} · {INFO_SECTIONS[section].blurb}</p>
+      <div>
+        <span className="mb-1 block text-sm font-semibold text-clay-900">Where it goes</span>
+        <div className="flex flex-wrap gap-1.5">
+          {INFO_SECTION_ORDER.map((s) => (
+            <button key={s} type="button" onClick={() => setSection(s)} aria-pressed={section === s} className={`tap rounded-md px-3 py-1.5 text-xs font-bold ring-1 ${section === s ? 'bg-clay-900 text-cream ring-clay-900' : 'bg-white text-clay-950 ring-tan-500'}`}>{INFO_SECTIONS[s].title}</button>
+          ))}
+        </div>
+      </div>
       <TextInput label="Label" name="infoLabel" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Gate code, Wi-Fi password, Propane company…" maxLength={80} autoFocus={!item} />
       <TextArea label="What to know" name="infoValue" value={value} onChange={(e) => setValue(e.target.value)} placeholder="The code, the number, where it is, what to do…" rows={3} maxLength={1000} autoFocus={Boolean(item)} />
       <div className="flex flex-wrap gap-2">

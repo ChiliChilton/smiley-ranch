@@ -57,7 +57,7 @@ export function Equipment() {
   }
 
   return (
-    <Screen title="Equipment" back="/" right={<button type="button" onClick={() => setAdding(true)} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Add</button>}>
+    <Screen title="Equipment" back="/" right={<button type="button" onClick={() => setAdding(true)} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">+ Add</button>}>
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!assets ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
