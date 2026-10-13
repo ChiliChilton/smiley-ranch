@@ -143,7 +143,7 @@ try {
 
   // Property notes -> comment -> make it a job
   await tab('Home')
-  await quick('Property notes')
+  await quick('All notes')
   await page.getByPlaceholder(/Anything the family should know/).fill('Cut fence on the east line near the gate')
   await page.getByRole('button', { name: 'Post', exact: true }).click()
   const entry = page.getByRole('button', { name: /Cut fence on the east line/ })
@@ -188,7 +188,7 @@ try {
   await tab('More')
   await page.getByText("Pretend there's no signal").click()
   await tab('Home')
-  await quick('Property notes')
+  await quick('All notes')
   await page.getByPlaceholder(/Anything the family should know/).fill('Posted with no signal')
   await page.getByRole('button', { name: 'Post', exact: true }).click()
   await page.getByText('1 entry waiting for signal').waitFor()

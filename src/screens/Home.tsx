@@ -119,60 +119,16 @@ export function Home() {
     <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={34} />} hero={`${import.meta.env.BASE_URL}banner.jpg`}>
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
-      <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
-        {([['Blinds', '/blinds'], ['Ranch info', '/info'], ['Property notes', '/log'], ['Equipment', '/equipment'], ['Harvests', '/harvests']] as const).map(([label, to]) => (
-          <button key={to} type="button" onClick={() => navigate(to)} className="tap shrink-0 rounded-md border border-tan-500 bg-white px-3 py-2 text-sm font-semibold text-clay-950 active:bg-tan-100">
-            {label}
-          </button>
+      <p className="mb-4 flex flex-wrap gap-x-3 gap-y-1 text-sm font-semibold text-clay-800">
+        {([['Blinds', '/blinds'], ['Ranch info', '/info'], ['Harvests', '/harvests'], ['Equipment', '/equipment']] as const).map(([label, to], i) => (
+          <span key={to} className="flex items-center gap-3">
+            {i > 0 && <span className="text-tan-500" aria-hidden>·</span>}
+            <button type="button" onClick={() => navigate(to)} className="tap !min-h-0 py-1 underline-offset-2 hover:underline">{label}</button>
+          </span>
         ))}
-      </div>
+      </p>
 
       <div className="space-y-6">
-        <Section title={stayIsNow ? 'At the ranch now' : 'Next trip'} action={<SectionLink onClick={() => navigate('/calendar')}>Calendar</SectionLink>}>
-          {!stay ? (
-            <p className="py-1 text-sm text-ink-muted">
-              Nothing on the calendar. <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/calendar/new')}>Add a trip</button>
-            </p>
-          ) : (
-            <button type="button" onClick={() => navigate(`/calendar/${stay.id}`)} className="tap flex w-full items-start gap-3 py-1 text-left">
-              <span className="w-12 shrink-0 text-center leading-none">
-                <span className="block text-[10px] font-extrabold uppercase text-clay-800">{MONTHS[parseISODate(stay.starts_on).getMonth()]}</span>
-                <span className="block text-2xl font-extrabold text-clay-950">{parseISODate(stay.starts_on).getDate()}</span>
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  <span className="truncate text-lg font-bold text-clay-950">{stay.title}</span>
-                  <KindBadge kind={stay.kind} mine={stay.created_by === me.member_id} />
-                </span>
-                <span className="block text-sm text-ink">{fmtRange(stay.starts_on, stay.ends_on)} · {stayIsNow ? 'happening now' : relativeDay(stay.starts_on)}</span>
-                <span className="block text-sm text-ink-muted">
-                  {stayGoing.length === 0 ? `${nameOf(stay.created_by)} · nobody has said they're in yet` : `Going: ${stayGoing.map((a) => `${nameOf(a.member_id)}${(a.headcount ?? 1) > 1 ? ` +${a.headcount - 1}` : ''}`).join(', ')}`}
-                  {stayGoing.length > 0 && stay.kind === 'inclusive' && <span className={headcount > beds ? ' font-semibold text-alert' : ''}> · {headcount} {headcount === 1 ? 'person' : 'people'}, {beds} beds</span>}
-                </span>
-                {stay.notes && <span className="mt-1 block text-sm text-ink">{stay.notes.length > 100 ? stay.notes.slice(0, 100) + '…' : stay.notes}</span>}
-              </span>
-            </button>
-          )}
-          {upcoming.length > 0 && (
-            <ul className="mt-1 border-t border-tan-200 pt-1">
-              {upcoming.map((e) => (
-                <li key={e.id}>
-                  <button type="button" onClick={() => navigate(`/calendar/${e.id}`)} className="tap flex w-full items-center gap-3 py-1 text-left text-sm">
-                    <span className="w-12 shrink-0 text-center text-xs font-bold text-clay-800">{MONTHS[parseISODate(e.starts_on).getMonth()]} {parseISODate(e.starts_on).getDate()}</span>
-                    <span className="min-w-0 flex-1 truncate text-ink">{e.title}</span>
-                    <KindBadge kind={e.kind} mine={e.created_by === me.member_id} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {seasons.length > 0 && (
-            <button type="button" onClick={() => navigate('/calendar')} className="tap mt-1 w-full border-t border-tan-200 pt-2 text-left">
-              <SeasonSummary seasons={seasons} compact />
-            </button>
-          )}
-        </Section>
-
         <Section title="Needs" count={needs.length} action={<SectionLink onClick={() => setAdding('need')}>+ Add</SectionLink>}>
           {needs.length === 0 ? (
             <p className="py-1 text-sm text-ink-muted">Nothing on the list.</p>
@@ -221,6 +177,51 @@ export function Home() {
             </ul>
           )}
           {todos.length > 6 && <SectionLink onClick={() => navigate('/todos')}>{todos.length - 6} more open</SectionLink>}
+        </Section>
+
+        <Section title={stayIsNow ? 'At the ranch now' : 'Next trip'} action={<SectionLink onClick={() => navigate('/calendar')}>Calendar</SectionLink>}>
+          {!stay ? (
+            <p className="py-1 text-sm text-ink-muted">
+              Nothing on the calendar. <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/calendar/new')}>Add a trip</button>
+            </p>
+          ) : (
+            <button type="button" onClick={() => navigate(`/calendar/${stay.id}`)} className="tap flex w-full items-start gap-3 py-1 text-left">
+              <span className="w-12 shrink-0 text-center leading-none">
+                <span className="block text-[10px] font-extrabold uppercase text-clay-800">{MONTHS[parseISODate(stay.starts_on).getMonth()]}</span>
+                <span className="block text-2xl font-extrabold text-clay-950">{parseISODate(stay.starts_on).getDate()}</span>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-lg font-bold text-clay-950">{stay.title}</span>
+                  <KindBadge kind={stay.kind} mine={stay.created_by === me.member_id} />
+                </span>
+                <span className="block text-sm text-ink">{fmtRange(stay.starts_on, stay.ends_on)} · {stayIsNow ? 'happening now' : relativeDay(stay.starts_on)}</span>
+                <span className="block text-sm text-ink-muted">
+                  {stayGoing.length === 0 ? `${nameOf(stay.created_by)} · nobody has said they're in yet` : `Going: ${stayGoing.map((a) => `${nameOf(a.member_id)}${(a.headcount ?? 1) > 1 ? ` +${a.headcount - 1}` : ''}`).join(', ')}`}
+                  {stayGoing.length > 0 && stay.kind === 'inclusive' && <span className={headcount > beds ? ' font-semibold text-alert' : ''}> · {headcount} {headcount === 1 ? 'person' : 'people'}, {beds} beds</span>}
+                </span>
+                {stay.notes && <span className="mt-1 block text-sm text-ink">{stay.notes.length > 100 ? stay.notes.slice(0, 100) + '…' : stay.notes}</span>}
+              </span>
+            </button>
+          )}
+          {upcoming.length > 0 && (
+            <ul className="mt-1 border-t border-tan-200 pt-1">
+              {upcoming.map((e) => (
+                <li key={e.id}>
+                  <button type="button" onClick={() => navigate(`/calendar/${e.id}`)} className="tap flex w-full items-center gap-3 py-1 text-left text-sm">
+                    <span className="w-12 shrink-0 text-center text-xs font-bold text-clay-800">{MONTHS[parseISODate(e.starts_on).getMonth()]} {parseISODate(e.starts_on).getDate()}</span>
+                    <span className="min-w-0 flex-1 truncate text-ink">{e.title}</span>
+                    <KindBadge kind={e.kind} mine={e.created_by === me.member_id} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {seasons.length > 0 && (
+            <button type="button" onClick={() => navigate('/calendar')} className="tap mt-1 w-full border-t border-tan-200 pt-2 text-left">
+              <SeasonSummary seasons={seasons} compact />
+            </button>
+          )}
         </Section>
 
         {(feedersDue.length > 0 || spotsWithIssues.length > 0) && (

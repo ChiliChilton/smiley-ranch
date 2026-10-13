@@ -14,7 +14,7 @@ export function InstallScreen({ onContinue }: { onContinue: () => void }) {
         <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={56} height={56} className="rounded-xl" />
         <div>
           <h1 className="text-2xl font-bold text-clay-950">Smiley Ranch</h1>
-          <p className="text-ink-muted">Put it on your home screen</p>
+          <p className="text-ink-muted">Our board for keeping the ranch running. Put it on your home screen.</p>
         </div>
       </div>
 
