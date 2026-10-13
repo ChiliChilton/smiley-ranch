@@ -60,8 +60,8 @@ function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row): 
     case 'members': case 'areas': case 'checklist_items': case 'settings': case 'seasons': case 'info_items':
       return isAdmin() ? null : rls(table)
     case 'assets':
-      if (op === 'update') return null
-      return isAdmin() ? null : rls(table)
+      if (op === 'delete') return isAdmin() ? null : rls(table)
+      return null
     case 'pins':
       if (op === 'delete') return isAdmin() ? null : rls(table)
       return null

@@ -90,6 +90,11 @@ try {
   await shot('demo-equipment')
   await page.keyboard.press('Escape')
   await page.waitForTimeout(300)
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await page.getByLabel('Name').fill('Zero-turn mower')
+  await page.getByRole('button', { name: 'Other', exact: true }).click()
+  await page.getByRole('button', { name: 'Add it', exact: true }).click()
+  await page.getByText('Zero-turn mower').waitFor()
   await page.getByRole('button', { name: 'Back', exact: true }).click()
 
   // Admin: set up a standalone feeder and a blind with its own feeder from the Blinds list

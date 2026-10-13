@@ -57,12 +57,12 @@ export function Equipment() {
   }
 
   return (
-    <Screen title="Equipment" back="/" right={me.is_admin ? <button type="button" onClick={() => setAdding(true)} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Add</button> : undefined}>
+    <Screen title="Equipment" back="/" right={<button type="button" onClick={() => setAdding(true)} className="tap rounded-lg px-3 font-semibold active:bg-clay-800">Add</button>}>
       {error && <Note kind="error" className="mb-3">{error}</Note>}
       {!assets ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : assets.length === 0 ? (
-        <Note>Nothing listed yet.{me.is_admin ? ' Tap Add to put the truck, tractor and ATVs here.' : ''}</Note>
+        <Note>Nothing listed yet. Tap Add to put the truck, tractor and ATVs here.</Note>
       ) : (
         <ul className="space-y-2">
           {assets.map((a) => {
@@ -93,7 +93,7 @@ export function Equipment() {
           })}
         </ul>
       )}
-      <p className="mt-3 text-xs text-ink-muted">Anyone can mark something down and leave a note. Projects and needs tagged to a machine show up on it.</p>
+      <p className="mt-3 text-xs text-ink-muted">Anyone can add a machine, mark something down, and leave a note. Projects and needs tagged to a machine show up on it.</p>
 
       <Sheet open={open !== null} onClose={() => setOpen(null)} title={open?.name}>
         {open && (
@@ -124,13 +124,13 @@ export function Equipment() {
                 <Button variant="secondary" onClick={() => navigate(`/supplies?asset=${open.id}`)}>+ Need</Button>
               </div>
             </div>
-            {me.is_admin && <AdminAssetForm asset={open} onDone={async () => { setOpen(null); await reload() }} />}
+            <AdminAssetForm asset={open} canRemove={me.is_admin} onDone={async () => { setOpen(null); await reload() }} />
           </div>
         )}
       </Sheet>
 
       <Sheet open={adding} onClose={() => setAdding(false)} title="Add equipment or a building">
-        {adding && <AdminAssetForm asset={null} onDone={async () => { setAdding(false); await reload() }} />}
+        {adding && <AdminAssetForm asset={null} canRemove={false} onDone={async () => { setAdding(false); await reload() }} />}
       </Sheet>
 
       <Sheet open={newJob !== null} onClose={() => setNewJob(null)} title={newJob ? `Project on ${newJob.name}` : ''}>
@@ -159,7 +159,7 @@ function NoteForm({ asset, onSaved }: { asset: AssetRow; onSaved: () => Promise<
   )
 }
 
-function AdminAssetForm({ asset, onDone }: { asset: AssetRow | null; onDone: () => Promise<void> }) {
+function AdminAssetForm({ asset, canRemove, onDone }: { asset: AssetRow | null; canRemove: boolean; onDone: () => Promise<void> }) {
   const [name, setName] = useState(asset?.name ?? '')
   const [kind, setKind] = useState<AssetKind>(asset?.kind ?? 'vehicle')
   const [busy, setBusy] = useState(false)
@@ -185,7 +185,7 @@ function AdminAssetForm({ asset, onDone }: { asset: AssetRow | null; onDone: () 
   }
   return (
     <form onSubmit={save} className="space-y-3 border-t border-tan-200 pt-3">
-      {asset && <div className="text-xs font-bold uppercase tracking-wide text-clay-800">Admin</div>}
+      {asset && <div className="text-xs font-bold uppercase tracking-wide text-clay-800">Name and kind</div>}
       {error && <Note kind="error">{error}</Note>}
       <TextInput label="Name" name="assetName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Truck, Tractor, ATV 2, Haul trailer…" maxLength={60} autoFocus={!asset} />
       <div>
@@ -198,7 +198,7 @@ function AdminAssetForm({ asset, onDone }: { asset: AssetRow | null; onDone: () 
       </div>
       <div className="flex flex-wrap gap-2">
         <Button type="submit" busy={busy} disabled={!name.trim()}>{asset ? 'Rename' : 'Add it'}</Button>
-        {asset && <Button type="button" variant="ghost" busy={busy} onClick={remove}>Remove from list</Button>}
+        {asset && canRemove && <Button type="button" variant="ghost" busy={busy} onClick={remove}>Remove from list</Button>}
       </div>
     </form>
   )

@@ -44,7 +44,7 @@ A shared app for one family hunting property. It answers four questions for ever
 - Admin edits lines in place under Ranch info. Values live only in the database, never in code.
 
 ### 2c. Equipment
-- The house, house trailer, barn, truck, tractor, ATVs and haul trailer each have a status (Good / Needs attention / Down) and a note. Anyone can set them. Admin adds and removes entries.
+- The house, house trailer, barn, truck, tractor, ATVs and haul trailer each have a status (Good / Needs attention / Down) and a note. Anyone can add, rename, and set them. Admin removes entries.
 - Needs and projects tag a place or machine from this list (replaces the House / Trailer / Barn tags), so the equipment card shows what's open on it.
 
 ### 2d. Trips
