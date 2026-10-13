@@ -52,7 +52,7 @@ A shared app for one family hunting property. It answers four questions for ever
 - When you say you're in, you give a headcount. The trip shows "6 people, 4 beds" (beds is a setting) and turns red when there are more people than beds.
 
 ### 2b. Hunting seasons
-- Texas seasons for the place (South Zone, Gonzales County) show on the calendar: a strip under each day, an "Open now" and "Next" card at the top, and a one-line summary on Home.
+- Texas seasons for the place (South Zone, Gonzales County) show as a one-line ribbon above the calendar and on Home: what's in season now and what's next. The calendar days themselves only show trips.
 - The admin keeps the list under More > Hunting seasons: species, name, from, to, note. Each year's dates come from the TPWD Outdoor Annual; `supabase/property.sql` ships 2026-27.
 
 ### 3. Map

@@ -44,7 +44,7 @@ Gonzales County, Texas, just south of Smiley. Gonzales CAD parcel **8554**, Abst
 - **Equipment**: house, trailer, barn, truck, tractor, ATVs, haul trailer with Good / Needs attention / Down, a note, and the projects and needs tagged to each. Anyone can add a machine; admin removes. Needs and projects pick a place or machine from this list.
 - **Blinds** are upkeep cards, not a sign-up: feeder with bag-based run-out and Filled it, motor working or down, lock, chairs, trail cam and its state, a condition line, who last checked, and what's been killed there. Anyone adds or edits a blind; admin removes. Home lists the ones that need a look.
 - **Trips**: "At the ranch now" or "Next trip" on Home. Headcount when you say you're in, shown against the number of beds.
-- **Hunting seasons** (South Zone, Gonzales County) sit on the calendar: a strip under each day, "open now" and "next" at the top, and one line on Home. Admin edits them under More > Hunting seasons; 2026-27 is seeded from the TPWD Outdoor Annual. Check the county page there before you hunt.
+- **Hunting seasons** (South Zone, Gonzales County) show as a one-line ribbon above the calendar and on Home: in season now, and next. Calendar days only show trips. Admin edits them under More > Hunting seasons; 2026-27 is seeded from the TPWD Outdoor Annual. Check the county page there before you hunt.
 - **Harvests**: who, date, species, sex, description or score, pin or GPS spot, Texas **tag number** and **logged on license**, notes. Season totals (Sept–Aug) by person and species.
 - **Photos** were cut by decision: photo storage is the one part of the stack that needs looking after over time.
 

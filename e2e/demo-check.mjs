@@ -165,10 +165,9 @@ try {
 
   // Hunting seasons: on the calendar, and the admin can add one
   await tab('Calendar')
-  await page.getByText('Hunting seasons').waitFor()
-  await page.getByText('Open now').waitFor()
+  await page.getByText('In season:').waitFor()
   await page.getByText(/Deer · Archery/).first().waitFor()
-  await page.getByText(/Next ·/).waitFor()
+  await page.getByText('Next:').waitFor()
   await shot('demo-calendar-seasons')
   await page.getByRole('button', { name: 'Edit', exact: true }).click()
   await page.getByRole('button', { name: 'Add a season' }).click()
