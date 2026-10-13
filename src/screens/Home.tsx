@@ -119,9 +119,9 @@ export function Home() {
     <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={34} />} hero={`${import.meta.env.BASE_URL}banner.jpg`}>
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
-      <p className="mb-4 flex flex-wrap gap-x-3 gap-y-1 text-sm font-semibold text-clay-800">
+      <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-semibold text-clay-800">
         {([['Blinds', '/blinds'], ['Ranch info', '/info'], ['Harvests', '/harvests'], ['Equipment', '/equipment']] as const).map(([label, to], i) => (
-          <span key={to} className="flex items-center gap-3">
+          <span key={to} className="flex items-center gap-2">
             {i > 0 && <span className="text-tan-500" aria-hidden>·</span>}
             <button type="button" onClick={() => navigate(to)} className="tap !min-h-0 py-1 underline-offset-2 hover:underline">{label}</button>
           </span>
