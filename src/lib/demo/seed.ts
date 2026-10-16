@@ -51,8 +51,8 @@ export function seedDb(): Record<string, Row[]> {
     blind(1, 'Tank Blind', { notes: 'By the stock tank', motor_status: 'down', status_by: M(3), status_at: ts(2), has_camera: true }),
     blind(2, 'Brants Blind', { has_camera: true, camera_status: 'batteries', status_by: M(4), status_at: ts(5), chairs: 1 }),
     blind(3, 'Fence Blind', { lock_status: 'none', condition: 'Window latch is loose', status_by: M(1), status_at: ts(9), lat: 29.2290, lng: -97.6560 }),
-    { ...blind(4, 'Front Tank', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 1, notes: 'About an acre', water_level: 'down', condition: 'Aerator is off', status_by: M(4), status_at: ts(6) },
-    { ...blind(5, 'Big Lake', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 5, notes: 'About five acres, dock on the north side' },
+    { ...blind(4, 'Front Tank', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 1, notes: null, water_level: 'down', condition: 'Aerator is off', status_by: M(4), status_at: ts(6) },
+    { ...blind(5, 'Big Lake', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 5, notes: 'Dock on the north side' },
   ]
   const catches = [
     { id: 'ca1', member_id: M(1), pin_id: P(5), caught_on: addDays(today, -4), species: 'Bass', weight_lb: 4, length_in: null, bait: 'green worm', notes: 'Off the dock at sunset', released: true, photo_path: null, ...base(4) },

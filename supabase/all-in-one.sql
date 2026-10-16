@@ -1541,5 +1541,5 @@ where not exists (select 1 from public.pins where type = 'stand');
 -- The waters.
 insert into public.pins (name, type, acres, notes, created_by)
 select name, 'water'::public.pin_type, acres, notes, (select id from public.members order by created_at limit 1)
-from (values ('Front Tank', 1.0, 'About an acre'), ('Big Lake', 5.0, 'About five acres')) as w(name, acres, notes)
+from (values ('Front Tank', 1.0, null::text), ('Big Lake', 5.0, null::text)) as w(name, acres, notes)
 where not exists (select 1 from public.pins where type = 'water');
