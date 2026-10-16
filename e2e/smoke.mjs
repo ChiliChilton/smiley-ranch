@@ -50,15 +50,15 @@ let infoItems = [
   { id: 'i1', section: 'access', label: 'Gate code', value: '1234#', sort_order: 1, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 const seedPins = () => [
-  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: true, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: true, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let pins = seedPins()
 let areas = []
 let claims = []
-let fills = [], sightings = [], harvests = [], logs = [], comments = [], todos = [], supplies = [], checkins = []
+let fills = [], sightings = [], harvests = [], catches = [], logs = [], comments = [], todos = [], supplies = [], checkins = []
 const TILE = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
 let settings = { beds: '4', emergency_address: '1932 CR 211, Smiley, TX 78159', emergency_lat: '29.2273', emergency_lng: '-97.6519', emergency_directions: 'Green pipe gate on the left.', emergency_extra: '' }
 const overlap = (a, b) => a.starts_on <= b.ends_on && b.starts_on <= a.ends_on
@@ -83,7 +83,7 @@ function applyFilters(rows, sp) {
   return rows
 }
 function restTable(name) {
-  return { events, event_attendees: attendees, checklist_items: checklist, seasons, assets, info_items: infoItems, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
+  return { events, event_attendees: attendees, checklist_items: checklist, seasons, assets, info_items: infoItems, checkouts, members, pins, areas, stand_claims: claims, feeder_fills: fills, sightings, harvests, catches, log_entries: logs, comments, todos, supply_items: supplies, checkins }[name]
 }
 let secrets = { code: 'deer-camp', pin: '4321' }
 let device = { member_id: null, is_admin: false }
@@ -135,7 +135,7 @@ async function mock(route) {
     if (method === 'GET') return route.fulfill(json(Object.entries(settings).map(([key, value]) => ({ key, value, updated_at: 'x' }))))
     if (method === 'POST') { if (!device.is_admin) return route.fulfill(pgErr('42501', 'new row violates row-level security policy')); for (const r of (Array.isArray(body) ? body : [body])) settings[r.key] = r.value; return route.fulfill(json([], 201)) }
   }
-  const generic = ['events', 'event_attendees', 'checklist_items', 'seasons', 'assets', 'info_items', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
+  const generic = ['events', 'event_attendees', 'checklist_items', 'seasons', 'assets', 'info_items', 'checkouts', 'pins', 'areas', 'stand_claims', 'feeder_fills', 'sightings', 'harvests', 'catches', 'log_entries', 'comments', 'todos', 'supply_items', 'checkins']
   const tname = path.replace('/rest/v1/', '')
   if (generic.includes(tname)) {
     const rows = restTable(tname)

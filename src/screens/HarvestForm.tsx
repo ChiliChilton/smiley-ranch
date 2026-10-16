@@ -4,6 +4,8 @@ import { Button } from '../components/Button'
 import { TextArea, TextInput } from '../components/Input'
 import { Note } from '../components/Note'
 import { PinSelect, type Where } from '../components/PinSelect'
+import { PhotoField } from '../components/PhotoField'
+import { removePhoto, uploadPhoto } from '../lib/photos'
 import { Screen } from '../components/Screen'
 import { todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
@@ -28,6 +30,8 @@ export function HarvestForm() {
   const [tag, setTag] = useState('')
   const [logged, setLogged] = useState(false)
   const [notes, setNotes] = useState('')
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [existingPhoto, setExistingPhoto] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(!id)
@@ -47,6 +51,7 @@ export function HarvestForm() {
       setTag(data.tag_number ?? '')
       setLogged(data.logged_on_license)
       setNotes(data.notes ?? '')
+      setExistingPhoto(data.photo_path)
       setLoaded(true)
     })
   }, [id])
@@ -77,7 +82,9 @@ export function HarvestForm() {
         tag_number: tag.trim() || null,
         logged_on_license: logged,
         notes: notes.trim() || null,
+        photo_path: photo ? await uploadPhoto(photo) : existingPhoto,
       }
+      if (photo && existingPhoto) void removePhoto(existingPhoto)
       if (id) {
         const { error } = await supabase.from('harvests').update(row).eq('id', id)
         if (error) throw error
@@ -128,6 +135,7 @@ export function HarvestForm() {
           </div>
           <TextInput label="Description or score" name="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Big 8, 140 class, 180 lb boar…" maxLength={120} />
           <PinSelect value={where} onChange={setWhere} />
+          <PhotoField file={photo} onFile={setPhoto} existing={existingPhoto} onClear={() => setExistingPhoto(null)} />
           {deerOrTurkey && (
             <div className="rounded-xl bg-white p-3 ring-1 ring-tan-200">
               <div className="grid grid-cols-2 gap-3">

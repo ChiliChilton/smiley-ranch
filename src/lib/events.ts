@@ -1,22 +1,25 @@
 import type { EventKind, EventRow } from './database.types'
 import { supabase } from './supabase'
 
-export const KIND: Record<EventKind, { label: string; bar: string; badge: string; help: string }> = {
+export const KIND: Record<EventKind, { label: string; bar: string; glyph: string; badge: string; help: string }> = {
   inclusive: {
     label: 'Come join',
     bar: 'bg-sage-600',
+    glyph: '+',
     badge: 'bg-sage-100 text-sage-900',
     help: 'Anyone can come. Tap "I\'m in" to say you\'re going.',
   },
   exclusive: {
     label: 'Just them',
-    bar: 'bg-clay-900',
+    bar: 'bg-[repeating-linear-gradient(135deg,#8c3d1f_0_3px,#f8f2e8_3px_5px)] ring-1 ring-clay-900',
+    glyph: '🔒',
     badge: 'bg-clay-100 text-clay-900',
     help: 'They have the place to themselves these dates.',
   },
   info: {
     label: 'Note',
     bar: 'border border-tan-600 bg-transparent',
+    glyph: '',
     badge: 'bg-cream-dark text-ink-muted',
     help: 'Just a date to know about.',
   },

@@ -17,6 +17,8 @@ import { EventDetail } from './screens/EventDetail'
 import { EventForm } from './screens/EventForm'
 import { Checklist } from './screens/admin/Checklist'
 import { Blinds } from './screens/Blinds'
+import { Fishing } from './screens/Fishing'
+import { cleanupPhotos } from './lib/photos'
 import { Equipment } from './screens/Equipment'
 import { RanchInfo } from './screens/RanchInfo'
 import { Seasons } from './screens/admin/Seasons'
@@ -103,7 +105,7 @@ function Gate() {
 }
 
 function Shell() {
-  useEffect(() => { startOutbox() }, [])
+  useEffect(() => { startOutbox(); void cleanupPhotos().catch(() => {}) }, [])
   return (
     <MembersProvider>
       <UpdateBanner />
@@ -118,6 +120,7 @@ function Shell() {
         <Route path="/stands" element={<Navigate to="/blinds" replace />} />
         <Route path="/feeders" element={<Navigate to="/blinds" replace />} />
         <Route path="/info" element={<RanchInfo />} />
+        <Route path="/fishing" element={<Fishing />} />
         <Route path="/equipment" element={<Equipment />} />
         <Route path="/harvests" element={<Harvests />} />
         <Route path="/harvests/new" element={<HarvestForm />} />

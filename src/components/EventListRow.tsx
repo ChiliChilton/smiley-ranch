@@ -5,7 +5,16 @@ import { useMembers } from '../lib/members'
 
 export function KindBadge({ kind, mine }: { kind: EventRow['kind']; mine?: boolean }) {
   const label = kind === 'exclusive' && mine ? 'Just us' : KIND[kind].label
-  return <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${KIND[kind].badge}`}>{label}</span>
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold ${KIND[kind].badge}`}>
+      {kind === 'exclusive' ? (
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+      ) : kind === 'inclusive' ? (
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>
+      ) : null}
+      {label}
+    </span>
+  )
 }
 
 export function EventListRow({ event, onClick, compact }: { event: EventRow; onClick: () => void; compact?: boolean }) {

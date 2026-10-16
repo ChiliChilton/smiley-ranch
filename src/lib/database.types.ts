@@ -58,6 +58,24 @@ export type SeasonRow = {
   deleted_at: string | null
 }
 
+export type CatchRow = {
+  id: string
+  member_id: string
+  pin_id: string | null
+  caught_on: string
+  species: string
+  weight_lb: number | null
+  length_in: number | null
+  bait: string | null
+  notes: string | null
+  released: boolean
+  photo_path: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
 export type ChecklistItemRow = {
   id: string
   title: string
@@ -91,19 +109,21 @@ export type LogEntryRow = {
   pin_id: string | null
   lat: number | null
   lng: number | null
+  photo_path: string | null
   created_by: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
 }
 
-export type CommentParent = 'log_entry' | 'harvest' | 'todo' | 'event' | 'pin'
+export type CommentParent = 'log_entry' | 'harvest' | 'todo' | 'event' | 'pin' | 'catch'
 
 export type CommentRow = {
   id: string
   parent_type: CommentParent
   parent_id: string
   body: string
+  photo_path: string | null
   created_by: string | null
   created_at: string
   updated_at: string
@@ -220,6 +240,7 @@ export type HarvestRow = {
   notes: string | null
   tag_number: string | null
   logged_on_license: boolean
+  photo_path: string | null
   created_by: string | null
   created_at: string
   updated_at: string
@@ -233,7 +254,8 @@ export type Sit = 'am' | 'pm'
 export type MotorStatus = 'working' | 'down'
 export type LockStatus = 'none' | 'locked' | 'unlocked'
 export type CameraStatus = 'working' | 'batteries' | 'down'
-export type PinStatusPatch = { motor_status?: MotorStatus; lock_status?: LockStatus; chairs?: number; has_camera?: boolean; camera_status?: CameraStatus; condition?: string | null; status_by?: string | null; status_at?: string | null }
+export type WaterLevel = 'full' | 'down' | 'low'
+export type PinStatusPatch = { water_level?: WaterLevel; acres?: number | null; photo_path?: string | null; motor_status?: MotorStatus; lock_status?: LockStatus; chairs?: number; has_camera?: boolean; camera_status?: CameraStatus; condition?: string | null; status_by?: string | null; status_at?: string | null }
 
 export type PinRow = {
   id: string
@@ -254,6 +276,9 @@ export type PinRow = {
   condition: string | null
   status_by: string | null
   status_at: string | null
+  water_level: WaterLevel
+  acres: number | null
+  photo_path: string | null
   created_by: string | null
   created_at: string
   updated_at: string
@@ -345,6 +370,12 @@ export type Database = {
         Update: { section?: InfoSection; label?: string; value?: string; sort_order?: number; deleted_at?: string | null }
         Relationships: []
       }
+      catches: {
+        Row: CatchRow
+        Insert: { id?: string; member_id: string; pin_id?: string | null; caught_on?: string; species: string; weight_lb?: number | null; length_in?: number | null; bait?: string | null; notes?: string | null; released?: boolean; photo_path?: string | null; created_by?: string | null }
+        Update: Partial<Omit<CatchRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
       seasons: {
         Row: SeasonRow
         Insert: { id?: string; name: string; species?: SeasonSpecies; starts_on: string; ends_on: string; note?: string | null; created_by?: string | null }
@@ -413,6 +444,7 @@ export type Database = {
           notes?: string | null
           tag_number?: string | null
           logged_on_license?: boolean
+          photo_path?: string | null
           created_by?: string | null
         }
         Update: Partial<Omit<HarvestRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
@@ -420,14 +452,14 @@ export type Database = {
       }
       log_entries: {
         Row: LogEntryRow
-        Insert: { id?: string; body: string; pin_id?: string | null; lat?: number | null; lng?: number | null; created_by?: string | null }
-        Update: { body?: string; pin_id?: string | null; lat?: number | null; lng?: number | null; deleted_at?: string | null }
+        Insert: { id?: string; body: string; pin_id?: string | null; lat?: number | null; lng?: number | null; photo_path?: string | null; created_by?: string | null }
+        Update: { body?: string; pin_id?: string | null; lat?: number | null; lng?: number | null; photo_path?: string | null; deleted_at?: string | null }
         Relationships: []
       }
       comments: {
         Row: CommentRow
-        Insert: { id?: string; parent_type: CommentParent; parent_id: string; body: string; created_by?: string | null }
-        Update: { body?: string; deleted_at?: string | null }
+        Insert: { id?: string; parent_type: CommentParent; parent_id: string; body: string; photo_path?: string | null; created_by?: string | null }
+        Update: { body?: string; photo_path?: string | null; deleted_at?: string | null }
         Relationships: []
       }
       todos: {

@@ -83,6 +83,7 @@ try {
 
   // Equipment: tractor is down, mark ATV 2 good again
   await quick('Equipment')
+  await page.getByRole('heading', { name: 'Equipment' }).waitFor()
   await page.getByText('Down', { exact: true }).first().waitFor()
   await page.getByRole('button', { name: /^ATV 2/ }).click()
   await page.getByRole('button', { name: 'Good', exact: true }).click()
@@ -97,6 +98,37 @@ try {
   await page.getByText('Zero-turn mower').waitFor()
   await page.getByRole('button', { name: 'Back', exact: true }).click()
 
+  // Fishing: the two waters, log a catch with a photo
+  await quick('Fishing')
+  await page.getByText('Big Lake').first().waitFor()
+  await page.getByText(/Best:/).first().waitFor()
+  await page.getByText('Aerator is off').waitFor()
+  await page.getByRole('button', { name: '+ Catch', exact: true }).click()
+  await page.getByRole('button', { name: 'Catfish', exact: true }).click()
+  await page.getByLabel('Weight (lb)').fill('6.5')
+  await page.getByLabel('Bait or lure').fill('chicken liver')
+  await page.getByTestId('photo-input').setInputFiles('e2e/fixtures/photo.jpg')
+  await page.getByRole('button', { name: 'Change', exact: true }).waitFor()
+  await page.getByRole('button', { name: 'Log it', exact: true }).click()
+  await page.getByText(/6.5 lb catfish on chicken liver/).first().waitFor()
+  await shot('demo-fishing')
+  await page.getByRole('button', { name: 'Back', exact: true }).click()
+
+  // Projects: an update with a photo
+  await tab('Projects')
+  await page.getByText('Fix the north fence').first().click()
+  await page.getByText('Updates', { exact: true }).waitFor()
+  await page.getByPlaceholder('Add an update').fill('Posts are set, wire goes on Saturday')
+  await page.getByTestId('photo-input').setInputFiles('e2e/fixtures/photo.jpg')
+  await page.getByRole('button', { name: 'Change', exact: true }).waitFor()
+  await page.getByRole('button', { name: 'Send', exact: true }).click()
+  await page.getByText('Posts are set, wire goes on Saturday').waitFor()
+  await page.locator('a img').first().waitFor()
+  await shot('demo-project-update')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+  await page.getByText('1 update').waitFor()
+
   // Admin: set up a standalone feeder and a blind with its own feeder from the Blinds list
   await tab('More')
   await page.getByRole('button', { name: 'Unlock admin' }).click()
@@ -105,6 +137,8 @@ try {
   await page.getByText('Admin mode is on').waitFor()
   await tab('Home')
   await quick('Blinds')
+  await page.getByRole('heading', { name: 'Blinds' }).waitFor()
+  await page.getByText('Tank Blind').first().waitFor()
   await page.getByRole('button', { name: '+ Add', exact: true }).click()
   await page.getByLabel('Name').fill('Plot Feeder')
   await page.getByRole('button', { name: 'Feeder only', exact: true }).click()

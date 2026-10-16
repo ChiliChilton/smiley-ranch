@@ -5,6 +5,7 @@ import { Card } from '../components/Card'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
+import { Photo } from '../components/PhotoField'
 import type { HarvestRow, PinRow } from '../lib/database.types'
 import { fmtDate, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
@@ -159,7 +160,9 @@ export function Harvests() {
             <ul className="space-y-2">
               {inSeason.map((r) => (
                 <li key={r.id}>
-                  <button type="button" onClick={() => setOpen(r)} className="tap w-full rounded-2xl bg-white p-4 text-left ring-1 ring-tan-200 active:bg-tan-100">
+                  <button type="button" onClick={() => setOpen(r)} className="tap flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left ring-1 ring-tan-200 active:bg-tan-100">
+                    {r.photo_path && <Photo path={r.photo_path} className="h-14 w-14 shrink-0" />}
+                    <span className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-clay-950">{nameOf(r.member_id)}</span>
                       <span className="text-ink">· {[sexLabel(r.sex), r.species].filter(Boolean).join(' ')}</span>
@@ -169,6 +172,7 @@ export function Harvests() {
                       {fmtDate(r.harvested_on)} · {pinName(r.pin_id) ?? (r.lat != null ? 'GPS spot' : 'somewhere')}
                       {!r.logged_on_license && r.species === 'Deer' && <span className="text-warn"> · not logged on license</span>}
                     </div>
+                    </span>
                   </button>
                 </li>
               ))}
@@ -181,6 +185,7 @@ export function Harvests() {
         {open && (
           <div className="space-y-3">
             {open.description && <p className="text-lg font-bold text-clay-950">{open.description}</p>}
+            {open.photo_path && <Photo path={open.photo_path} className="max-h-72 w-full" />}
             <p className="text-sm text-ink">
               {fmtDate(open.harvested_on)}<br />
               {pinName(open.pin_id) ?? (open.lat != null ? 'GPS spot' : 'Location not given')}<br />

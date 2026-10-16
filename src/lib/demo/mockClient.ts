@@ -181,16 +181,17 @@ class Query implements PromiseLike<Result<unknown>> {
         // Column defaults from the migrations that the app relies on.
         const defaults: Record<string, Row> = {
           feeder_fills: { filled_at: now, bags: null, amount: null, feed_type: null },
-          harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false },
+          harvests: { harvested_on: now.slice(0, 10), sex: null, description: null, pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, photo_path: null },
           checklist_items: { sort_order: 0 },
           seasons: { species: 'other', note: null },
+          catches: { pin_id: null, caught_on: now.slice(0, 10), weight_lb: null, length_in: null, bait: null, notes: null, released: false, photo_path: null },
           assets: { kind: 'other', status: 'good', note: null, sort_order: 0 },
           info_items: { value: '', sort_order: 0 },
-          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null },
+          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null, headcount: 1 },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
-          log_entries: { pin_id: null, lat: null, lng: null },
+          log_entries: { pin_id: null, lat: null, lng: null, photo_path: null },
           todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, asset_id: null, status: 'open', completed_by: null, completed_at: null },
           supply_items: { notes: null, is_inventory: false, asset_id: null, level: null, needed: true, got_by: null, got_at: null },
           areas: { is_boundary: false, color: null },
@@ -300,6 +301,21 @@ function rpc(name: string, args: Row = {}): Promise<Result<unknown>> {
   return new Promise((resolve) => setTimeout(() => resolve(demoOffline() && name !== 'whoami' ? netErr() : run()), 80))
 }
 
+/** Demo photos live in memory for the session (object URLs), never in localStorage. */
+const blobs = new Map<string, { url: string; created_at: string }>()
+const storage = {
+  from: (_bucket: string) => ({
+    upload: async (path: string, body: Blob) => {
+      if (demoOffline()) return { data: null, error: { message: 'Failed to fetch' } }
+      blobs.set(path, { url: URL.createObjectURL(body), created_at: new Date().toISOString() })
+      return { data: { path }, error: null }
+    },
+    getPublicUrl: (path: string) => ({ data: { publicUrl: blobs.get(path)?.url ?? '' } }),
+    remove: async (paths: string[]) => { for (const p of paths) blobs.delete(p); return { data: paths.map((name) => ({ name })), error: null } },
+    list: async () => ({ data: [...blobs.entries()].map(([name, b]) => ({ name, created_at: b.created_at })), error: null }),
+  }),
+}
+
 const channel = () => {
   const ch = { on: () => ch, subscribe: () => ch, unsubscribe: () => Promise.resolve('ok') }
   return ch
@@ -316,5 +332,6 @@ export function createMockClient() {
     },
     channel,
     removeChannel: async () => 'ok',
+    storage,
   }
 }

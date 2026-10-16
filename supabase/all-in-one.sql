@@ -1,5 +1,5 @@
 -- Smiley Ranch: every migration plus the property seed, in order, for pasting into the Supabase SQL editor.
--- Generated 2026-10-13. Run once on a fresh project. Then run: select public.bootstrap_secrets('<family code>', '<admin PIN>');
+-- Generated 2026-10-16. Run once on a fresh project. Then run: select public.bootstrap_secrets('<family code>', '<admin PIN>');
 
 -- ===== supabase/migrations/20261010000001_identity.sql =====
 -- Back 40: identity, members, settings
@@ -350,6 +350,7 @@ create policy settings_select on public.settings
 create policy member_devices_select_own on public.member_devices
   for select to authenticated
   using (auth_user_id = auth.uid());
+
 
 -- ===== supabase/migrations/20261010000002_content.sql =====
 -- Back 40: content tables
@@ -770,6 +771,7 @@ alter publication supabase_realtime add table
   public.stand_claims, public.log_entries, public.todos, public.feeder_fills,
   public.harvests, public.supply_items, public.members;
 
+
 -- ===== supabase/migrations/20261010000003_calendar_checklist.sql =====
 -- Back 40: calendar marks, check-out list, emergency info
 --
@@ -909,6 +911,7 @@ create policy settings_admin_update on public.settings for update to authenticat
 alter publication supabase_realtime add table
   public.events, public.event_attendees, public.checkouts, public.checklist_items, public.settings;
 
+
 -- ===== supabase/migrations/20261010000004_harvest_tags.sql =====
 -- Back 40: Phase 4 additions
 --   * harvests: Texas tag number and "logged on my license" flag
@@ -916,6 +919,7 @@ alter publication supabase_realtime add table
 alter table public.harvests
   add column tag_number text,
   add column logged_on_license boolean not null default false;
+
 
 -- ===== supabase/migrations/20261010000005_push.sql =====
 -- Back 40: push notifications
@@ -1125,6 +1129,7 @@ begin
 end;
 $$;
 
+
 -- ===== supabase/migrations/20261010000006_seasons.sql =====
 -- Hunting seasons shown on the calendar. The admin keeps these current each
 -- year from the TPWD Outdoor Annual; everyone can read them.
@@ -1159,6 +1164,7 @@ create policy seasons_update on public.seasons for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 alter publication supabase_realtime add table public.seasons;
+
 
 -- ===== supabase/migrations/20261010000007_ranch.sql =====
 -- Ranch info, equipment, blinds with feeders, and trip headcounts.
@@ -1308,12 +1314,14 @@ revoke execute on function public.push_feeders_overdue() from public, anon, auth
 
 alter publication supabase_realtime add table public.info_items, public.assets;
 
+
 -- ===== supabase/migrations/20261010000008_no_map.sql =====
 -- The map is gone. Blinds and feeders are set up from a list; a GPS spot is optional
 -- (it only powers a Directions link). Boundary and area rows stay for the export.
 alter table public.pins alter column lat drop not null;
 alter table public.pins alter column lng drop not null;
 alter table public.pins add constraint pins_lat_lng_together check ((lat is null) = (lng is null));
+
 
 -- ===== supabase/migrations/20261010000009_spots.sql =====
 -- Blinds are hunting spots that need upkeep, not seats to reserve.
@@ -1338,11 +1346,87 @@ create policy pins_insert on public.pins for insert to authenticated
 create policy pins_update on public.pins for update to authenticated
   using (public.is_active_member()) with check (public.is_active_member());
 
+
 -- ===== supabase/migrations/20261010000010_anyone_adds_equipment.sql =====
 -- Anyone in the family can add or rename equipment, like blinds. Admin still removes.
 drop policy assets_insert on public.assets;
 create policy assets_insert on public.assets for insert to authenticated
   with check (public.is_active_member() and created_by = public.current_member_id());
+
+
+-- ===== supabase/migrations/20261010000011_fishing_photos.sql =====
+-- Fishing and photos.
+--   * Two waters (Front Tank, Big Lake) are pins of type 'water' with a level and condition.
+--   * catches: who caught what, where, on what. One optional photo each.
+--   * Photos: one Storage bucket "photos", public read, written by active members.
+--     Kept small by the app (shrunk before upload) and by the app's own cleanup:
+--     anything older than 12 months, or beyond the newest 250, gets deleted.
+--     One optional photo on harvests, catches, property notes, comments (project
+--     updates), and a blind's condition.
+
+alter table public.pins
+  add column water_level text not null default 'full' check (water_level in ('full', 'down', 'low')),
+  add column acres numeric(6,1) check (acres is null or acres > 0),
+  add column photo_path text;
+
+create table public.catches (
+  id          uuid primary key default gen_random_uuid(),
+  member_id   uuid not null references public.members(id),
+  pin_id      uuid references public.pins(id),
+  caught_on   date not null default current_date,
+  species     text not null check (length(btrim(species)) between 1 and 40),
+  weight_lb   numeric(5,2) check (weight_lb is null or weight_lb > 0),
+  length_in   numeric(5,1) check (length_in is null or length_in > 0),
+  bait        text check (bait is null or length(bait) <= 80),
+  notes       text check (notes is null or length(notes) <= 1000),
+  released    boolean not null default false,
+  photo_path  text,
+  created_by  uuid references public.members(id),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  deleted_at  timestamptz
+);
+create index catches_water_idx on public.catches(pin_id, caught_on desc) where deleted_at is null;
+
+create trigger catches_set_created_by before insert on public.catches
+  for each row execute function public.set_created_by();
+create trigger catches_set_updated_at before update on public.catches
+  for each row execute function public.set_updated_at();
+
+alter table public.catches enable row level security;
+create policy catches_select on public.catches for select to authenticated
+  using (public.is_active_member() and (deleted_at is null or public.is_admin()));
+create policy catches_insert on public.catches for insert to authenticated
+  with check (public.is_active_member() and created_by = public.current_member_id());
+create policy catches_update on public.catches for update to authenticated
+  using (public.is_active_member() and (created_by = public.current_member_id() or member_id = public.current_member_id() or public.is_admin()))
+  with check (public.is_active_member());
+
+alter table public.harvests add column photo_path text;
+alter table public.log_entries add column photo_path text;
+alter table public.comments add column photo_path text;
+alter table public.comments drop constraint if exists comments_parent_type_check;
+alter table public.comments add constraint comments_parent_type_check
+  check (parent_type in ('log_entry', 'harvest', 'todo', 'event', 'pin', 'catch'));
+
+alter publication supabase_realtime add table public.catches;
+
+-- ---------------------------------------------------------------------------
+-- Photos bucket
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', true, 1048576, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = 1048576, allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+
+create policy photos_read on storage.objects for select to authenticated, anon
+  using (bucket_id = 'photos');
+create policy photos_write on storage.objects for insert to authenticated
+  with check (bucket_id = 'photos' and public.is_active_member());
+-- Anyone in the family may clear out old photos; the admin may remove any; you may remove your own.
+create policy photos_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'photos' and public.is_active_member()
+         and (public.is_admin() or owner = auth.uid() or created_at < now() - interval '365 days'));
+
 
 -- ===== supabase/property.sql =====
 -- Back 40: the REAL property data for Smiley (Gonzales CAD parcel 8554).
@@ -1453,3 +1537,9 @@ insert into public.pins (name, type, stand_type, has_feeder, created_by)
 select name, 'stand'::public.pin_type, 'box_blind'::public.stand_type, true, (select id from public.members order by created_at limit 1)
 from unnest(array['Tank Blind', 'Brants Blind', 'Fence Blind']) as b(name)
 where not exists (select 1 from public.pins where type = 'stand');
+
+-- The waters.
+insert into public.pins (name, type, acres, notes, created_by)
+select name, 'water'::public.pin_type, acres, notes, (select id from public.members order by created_at limit 1)
+from (values ('Front Tank', 1.0, 'About an acre'), ('Big Lake', 5.0, 'About five acres')) as w(name, acres, notes)
+where not exists (select 1 from public.pins where type = 'water');

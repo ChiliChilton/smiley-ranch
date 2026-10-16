@@ -46,11 +46,18 @@ export function seedDb(): Record<string, Row[]> {
     ['contacts', 'Propane company', 'Gonzales Propane (830) 555-0142', 1], ['contacts', 'Feed store', 'Smiley Feed & Supply (830) 555-0170', 2], ['contacts', 'Electric co-op outage line', 'GVEC (800) 223-4832', 3], ['contacts', 'Neighbor', 'Hank at the next gate, (830) 555-0199. Has a key.', 4], ['contacts', 'Cleaning (Elvira)', '(830) 555-0123. $110 on the counter or Cash App.', 5],
   ].map(([section, label, value, sort_order], i) => ({ id: `in${i + 1}`, section, label, value, sort_order, ...base(60) }))
   const P = (n: number) => `00000000-0000-4000-8000-0000000000b${n}`
-  const blind = (n: number, name: string, extra: Row) => ({ id: P(n), type: 'stand', name, notes: null, lat: null, lng: null, stand_type: 'box_blind', has_feeder: true, fill_interval_days: null, days_per_bag: 5, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, ...base(60), ...extra })
+  const blind = (n: number, name: string, extra: Row) => ({ id: P(n), type: 'stand', name, notes: null, lat: null, lng: null, stand_type: 'box_blind', has_feeder: true, fill_interval_days: null, days_per_bag: 5, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, ...base(60), ...extra })
   const pins: Row[] = [
     blind(1, 'Tank Blind', { notes: 'By the stock tank', motor_status: 'down', status_by: M(3), status_at: ts(2), has_camera: true }),
     blind(2, 'Brants Blind', { has_camera: true, camera_status: 'batteries', status_by: M(4), status_at: ts(5), chairs: 1 }),
     blind(3, 'Fence Blind', { lock_status: 'none', condition: 'Window latch is loose', status_by: M(1), status_at: ts(9), lat: 29.2290, lng: -97.6560 }),
+    { ...blind(4, 'Front Tank', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 1, notes: 'About an acre', water_level: 'down', condition: 'Aerator is off', status_by: M(4), status_at: ts(6) },
+    { ...blind(5, 'Big Lake', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 5, notes: 'About five acres, dock on the north side' },
+  ]
+  const catches = [
+    { id: 'ca1', member_id: M(1), pin_id: P(5), caught_on: addDays(today, -4), species: 'Bass', weight_lb: 4, length_in: null, bait: 'green worm', notes: 'Off the dock at sunset', released: true, photo_path: null, ...base(4) },
+    { id: 'ca2', member_id: M(5), pin_id: P(5), caught_on: addDays(today, -4), species: 'Catfish', weight_lb: 2.5, length_in: null, bait: 'chicken liver', notes: null, released: false, photo_path: null, ...base(4), created_by: M(5) },
+    { id: 'ca3', member_id: M(4), pin_id: P(4), caught_on: addDays(today, -40), species: 'Perch', weight_lb: null, length_in: 7, bait: 'worm', notes: null, released: true, photo_path: null, ...base(40), created_by: M(4) },
   ]
   const areas: Row[] = []
   const dow = new Date().getDay()
@@ -76,17 +83,17 @@ export function seedDb(): Record<string, Row[]> {
   ]
   const y = Number(today.slice(0, 4)); const seasonYear = Number(today.slice(5, 7)) >= 9 ? y : y - 1
   const harvests = [
-    { id: 'h1', member_id: M(3), harvested_on: `${seasonYear}-11-08`, species: 'Deer', sex: 'buck', description: '10 point, 138"', pin_id: P(1), lat: null, lng: null, notes: null, tag_number: 'A-4471', logged_on_license: true, ...base(30) , created_by: M(3) },
-    { id: 'h2', member_id: M(1), harvested_on: `${seasonYear}-11-15`, species: 'Deer', sex: 'doe', description: null, pin_id: P(3), lat: null, lng: null, notes: 'Management doe', tag_number: null, logged_on_license: false, ...base(20) },
-    { id: 'h3', member_id: M(4), harvested_on: `${seasonYear}-10-02`, species: 'Hog', sex: 'male', description: '180 lb boar', pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, ...base(40), created_by: M(4) },
+    { id: 'h1', member_id: M(3), harvested_on: `${seasonYear}-11-08`, species: 'Deer', sex: 'buck', description: '10 point, 138"', pin_id: P(1), lat: null, lng: null, notes: null, tag_number: 'A-4471', logged_on_license: true, photo_path: null, ...base(30) , created_by: M(3) },
+    { id: 'h2', member_id: M(1), harvested_on: `${seasonYear}-11-15`, species: 'Deer', sex: 'doe', description: null, pin_id: P(3), lat: null, lng: null, notes: 'Management doe', tag_number: null, logged_on_license: false, photo_path: null, ...base(20) },
+    { id: 'h3', member_id: M(4), harvested_on: `${seasonYear}-10-02`, species: 'Hog', sex: 'male', description: '180 lb boar', pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, photo_path: null, ...base(40), created_by: M(4) },
   ]
   const log_entries = [
-    { id: 'l1', body: 'Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', pin_id: null, lat: null, lng: null, ...base(1), created_by: M(3) },
-    { id: 'l2', body: 'Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', pin_id: null, lat: null, lng: null, ...base(4), created_by: M(4) },
-    { id: 'l3', body: 'Filled the propane at the house. Gauge reads 70%.', pin_id: null, lat: null, lng: null, ...base(9), created_by: M(3) },
+    { id: 'l1', body: 'Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', pin_id: null, lat: null, lng: null, photo_path: null, ...base(1), created_by: M(3) },
+    { id: 'l2', body: 'Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', pin_id: null, lat: null, lng: null, photo_path: null, ...base(4), created_by: M(4) },
+    { id: 'l3', body: 'Filled the propane at the house. Gauge reads 70%.', pin_id: null, lat: null, lng: null, photo_path: null, ...base(9), created_by: M(3) },
   ]
   const comments = [
-    { id: 'cm1', parent_type: 'log_entry', parent_id: 'l1', body: "I've got posts in the barn. Can fix it Saturday.", ...base(1), created_by: M(1) },
+    { id: 'cm1', parent_type: 'log_entry', parent_id: 'l1', body: "I've got posts in the barn. Can fix it Saturday.", photo_path: null, ...base(1), created_by: M(1) },
   ]
   const todos = [
     { id: 't1', title: 'Fix the north fence', notes: 'Two T-posts and wire. Posts are in the barn.', assignee_id: M(3), due_on: addDays(today, 6), pin_id: null, asset_id: null, status: 'open', completed_by: null, completed_at: null, ...base(1) },
@@ -118,5 +125,5 @@ export function seedDb(): Record<string, Row[]> {
     ['Quail', 'quail', '2026-11-01', '2027-02-28', 'Upland game bird endorsement.'],
   ].map(([name, species, starts_on, ends_on, note], i) => ({ id: `sn${i + 1}`, name, species, starts_on, ends_on, note, ...base(90) }))
 
-  return { members, checklist_items: checklist, seasons, assets, info_items, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, harvests, log_entries, comments, todos, supply_items }
+  return { members, checklist_items: checklist, seasons, assets, info_items, settings, pins, areas, events, event_attendees, stand_claims, checkouts, feeder_fills, harvests, catches, log_entries, comments, todos, supply_items }
 }

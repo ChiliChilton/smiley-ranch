@@ -34,6 +34,7 @@ export function Todos() {
   const [rows, setRows] = useState<TodoRow[] | null>(null)
   const [pins, setPins] = useState<PinRow[]>([])
   const [assets, setAssets] = useState<AssetRow[]>([])
+  const [updates, setUpdates] = useState<Map<string, number>>(new Map())
   const [filter, setFilter] = useState<Filter>('open')
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<TodoRow | 'new' | null>(params.get('new') ? 'new' : null)
@@ -41,12 +42,16 @@ export function Todos() {
 
   const reload = useCallback(async () => {
     try {
-      const [{ data, error }, allPins, as] = await Promise.all([
+      const [{ data, error }, allPins, as, { data: cm }] = await Promise.all([
         supabase.from('todos').select('*').is('deleted_at', null).order('status').order('due_on', { ascending: true }).order('created_at', { ascending: false }).limit(300),
         loadPins(),
         loadAssets().catch(() => [] as AssetRow[]),
+        supabase.from('comments').select('parent_id').eq('parent_type', 'todo').is('deleted_at', null),
       ])
       if (error) throw error
+      const m = new Map<string, number>()
+      for (const c of cm ?? []) m.set(c.parent_id, (m.get(c.parent_id) ?? 0) + 1)
+      setUpdates(m)
       setRows(data ?? [])
       setPins(allPins)
       setAssets(as)
@@ -121,6 +126,7 @@ export function Todos() {
                     {t.assignee_id ? nameOf(t.assignee_id) : 'Anyone'}
                     {t.due_on && <span className={overdue ? ' font-semibold text-alert' : ''}> · {overdue ? 'was due' : 'due'} {fmtDate(t.due_on)}</span>}
                     {pinName(t.pin_id) && ` · ${pinName(t.pin_id)}`}
+                    {(updates.get(t.id) ?? 0) > 0 && ` · ${updates.get(t.id)} update${updates.get(t.id) === 1 ? '' : 's'}`}
                     {t.status === 'done' && t.completed_at && ` · done by ${nameOf(t.completed_by)} ${fmtDate(t.completed_at.slice(0, 10))}`}
                   </div>
                 </button>
@@ -130,7 +136,7 @@ export function Todos() {
         </ul>
       )}
 
-      <Sheet open={open !== null} onClose={() => setOpen(null)} title={open?.title}>
+      <Sheet open={open !== null} onClose={() => { setOpen(null); void reload() }} title={open?.title}>
         {open && (
           <div className="space-y-3">
             <p className="text-sm text-ink">
@@ -147,7 +153,7 @@ export function Todos() {
               <Button variant="secondary" onClick={() => { setEditing(open); setOpen(null) }}>Edit</Button>
               {(open.created_by === me.member_id || me.is_admin) && <Button variant="ghost" onClick={() => remove(open)}>Remove</Button>}
             </div>
-            <Comments parentType="todo" parentId={open.id} />
+            <Comments parentType="todo" parentId={open.id} label="Updates" />
           </div>
         )}
       </Sheet>

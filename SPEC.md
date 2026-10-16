@@ -51,6 +51,14 @@ A shared app for one family hunting property. It answers four questions for ever
 - Home shows "At the ranch now" when a trip is happening, otherwise "Next trip".
 - When you say you're in, you give a headcount. The trip shows "6 people, 4 beds" (beds is a setting) and turns red when there are more people than beds.
 
+### 2e. Fishing
+- Front Tank (about 1 acre) and Big Lake (about 5 acres) are waters; anyone can add one. Each card shows water level (Full / Down some / Low), a condition line and photo, who last checked, this year's and all-time catch counts, the best fish, and the last one.
+- Catch log: who, date, which water, species, weight, length, bait, let it go, notes, photo.
+
+### 2f. Photos
+- One optional photo on a harvest, a catch, a property note, a project update (comment), and a blind's or water's condition. Not on needs, projects themselves, or the calendar.
+- Photos are shrunk on the phone to about 1280px before upload. They live in one Supabase Storage bucket (free tier) and the app cleans it itself: anything older than a year or past the newest 250 is deleted the next time someone opens the app. It's a work board, not an album; keepers go on your own phone.
+
 ### 2b. Hunting seasons
 - Texas seasons for the place (South Zone, Gonzales County) show as a one-line ribbon above the calendar and on Home: what's in season now and what's next. The calendar days themselves only show trips.
 - The admin keeps the list under More > Hunting seasons: species, name, from, to, note. Each year's dates come from the TPWD Outdoor Annual; `supabase/property.sql` ships 2026-27.

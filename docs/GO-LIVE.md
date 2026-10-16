@@ -7,7 +7,7 @@ same home-screen icon.
 ## A. Supabase project (10 min)
 1. supabase.com → New project. Name: smiley-ranch. Region: US East. Set a database password and keep it.
 2. Authentication → Sign In / Providers → **Anonymous sign-ins: ON**.
-3. SQL Editor → New query → paste the whole of `supabase/all-in-one.sql` → Run. (It creates every table and the real blinds, checklist, seasons, and info labels.)
+3. SQL Editor → New query → paste the whole of `supabase/all-in-one.sql` → Run. (It creates every table, the photos bucket, and the real blinds, waters, checklist, seasons, and info labels.)
 4. SQL Editor → new query:
    ```sql
    select public.bootstrap_secrets('<your family code>', '<4-digit admin PIN>');

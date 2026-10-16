@@ -5,6 +5,8 @@ import { TextArea, TextInput } from '../components/Input'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
+import { Photo, PhotoField } from '../components/PhotoField'
+import { removePhoto, uploadPhoto } from '../lib/photos'
 import type { CameraStatus, FeederFillRow, HarvestRow, LockStatus, MotorStatus, PinRow, StandType } from '../lib/database.types'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
@@ -115,6 +117,7 @@ export function Blinds() {
           ))}
         </span>
         {p.condition && <span className="block text-sm font-semibold text-alert">{p.condition}</span>}
+        {p.photo_path && <Photo path={p.photo_path} className="mt-1 h-20 w-20" />}
         <span className="block text-xs text-ink-muted">
           {p.status_at ? `${nameOf(p.status_by)}, ${fmtDateTime(p.status_at)}` : 'Nobody has checked it yet'} · tap to update
         </span>
@@ -208,19 +211,28 @@ function StatusForm({ pin, onDone }: { pin: PinRow; onDone: () => Promise<void> 
   const [cam, setCam] = useState(pin.has_camera)
   const [camStatus, setCamStatus] = useState<CameraStatus>(pin.camera_status)
   const [condition, setCondition] = useState(pin.condition ?? '')
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [existingPhoto, setExistingPhoto] = useState<string | null>(pin.photo_path)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function save(e: FormEvent) {
     e.preventDefault()
     setBusy(true); setError(null)
-    const { error } = await supabase.from('pins').update({
-      motor_status: motor, lock_status: lock, chairs, has_camera: cam, camera_status: cam ? camStatus : 'working',
-      condition: condition.trim() || null, status_by: me.member_id, status_at: new Date().toISOString(),
-    }).eq('id', pin.id)
-    setBusy(false)
-    if (error) return setError(friendlyError(error))
-    await onDone()
+    try {
+      const photo_path = photo ? await uploadPhoto(photo) : existingPhoto
+      if (pin.photo_path && pin.photo_path !== photo_path) void removePhoto(pin.photo_path)
+      const { error } = await supabase.from('pins').update({
+        motor_status: motor, lock_status: lock, chairs, has_camera: cam, camera_status: cam ? camStatus : 'working',
+        condition: condition.trim() || null, photo_path, status_by: me.member_id, status_at: new Date().toISOString(),
+      }).eq('id', pin.id)
+      if (error) throw error
+      await onDone()
+    } catch (err) {
+      setError(friendlyError(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -267,6 +279,7 @@ function StatusForm({ pin, onDone }: { pin: PinRow; onDone: () => Promise<void> 
         )}
       </div>
       <TextArea label="Anything wrong with it" name="condition" value={condition} onChange={(e) => setCondition(e.target.value)} placeholder="Window latch broken, wasps, leg rotted…" rows={2} maxLength={300} />
+      <PhotoField file={photo} onFile={setPhoto} existing={existingPhoto} onClear={() => setExistingPhoto(null)} label="Photo of it (optional)" />
       <Button type="submit" full busy={busy}>Save</Button>
     </form>
   )

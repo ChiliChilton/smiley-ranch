@@ -4,7 +4,7 @@ import { supabase } from './supabase'
 export const EXPORT_TABLES = [
   'members', 'pins', 'areas', 'stand_claims', 'harvests', 'feeder_fills',
   'log_entries', 'comments', 'events', 'event_attendees', 'todos', 'supply_items',
-  'checklist_items', 'checkouts', 'settings', 'seasons', 'assets', 'info_items',
+  'checklist_items', 'checkouts', 'settings', 'seasons', 'assets', 'info_items', 'catches',
 ] as const
 export type ExportTable = (typeof EXPORT_TABLES)[number]
 
