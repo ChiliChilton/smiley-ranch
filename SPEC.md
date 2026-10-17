@@ -54,6 +54,7 @@ A shared app for one family hunting property. It answers four questions for ever
 ### 2e. Fishing
 - Front Tank (about 1 acre) and Big Lake (about 5 acres) are waters; anyone can add one. Each card shows water level (Full / Down some / Low), a condition line and photo, who last checked, this year's and all-time catch counts, the best fish, and the last one.
 - Catch log: who, date, which water, species, weight, length, bait, let it go, notes, photo.
+- A water can have a well with named valves (Big Lake: a well, two valves). Status shows well running or off and each valve open or closed, with who last checked.
 
 ### 2f. Photos
 - One optional photo on a harvest, a catch, a property note, a project update (comment), and a blind's or water's condition. Not on needs, projects themselves, or the calendar.

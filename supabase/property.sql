@@ -112,3 +112,8 @@ insert into public.pins (name, type, acres, notes, created_by)
 select name, 'water'::public.pin_type, acres, notes, (select id from public.members order by created_at limit 1)
 from (values ('Front Tank', 1.0, null::text), ('Big Lake', 5.0, null::text)) as w(name, acres, notes)
 where not exists (select 1 from public.pins where type = 'water');
+
+-- Big Lake's well and its two valves.
+update public.pins set has_well = true, well_on = false,
+  valves = '[{"name": "Valve 1", "open": false}, {"name": "Valve 2", "open": false}]'::jsonb
+where type = 'water' and name = 'Big Lake' and not has_well;

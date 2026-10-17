@@ -5,7 +5,7 @@ import { Note } from '../components/Note'
 import { Photo, PhotoField } from '../components/PhotoField'
 import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
-import type { CatchRow, PinRow, WaterLevel } from '../lib/database.types'
+import type { CatchRow, PinRow, Valve, WaterLevel } from '../lib/database.types'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { bestCatch, catchLabel, FISH, loadCatches, loadWaters, WATER_LEVEL } from '../lib/fishing'
@@ -72,6 +72,12 @@ export function Fishing() {
                 </button>
                 <button type="button" onClick={() => setStatus(w)} aria-label={`${w.name} status`} className="tap mt-2 block w-full border-t border-tan-200 pt-2 text-left">
                   <span className={`text-sm ${bad ? 'font-semibold text-alert' : 'text-ink'}`}>Water {WATER_LEVEL[w.water_level].toLowerCase()}{w.condition ? ` · ${w.condition}` : ''}</span>
+                  {w.has_well && (
+                    <span className="block text-sm text-ink">
+                      <span className="font-semibold text-clay-950">Well {w.well_on ? 'running' : 'off'}</span>
+                      {(w.valves ?? []).map((v) => <span key={v.name}> · {v.name} {v.open ? 'open' : 'closed'}</span>)}
+                    </span>
+                  )}
                   {w.photo_path && <Photo path={w.photo_path} className="mt-1 h-20 w-20" />}
                   <span className="block text-xs text-ink-muted">{w.status_at ? `${nameOf(w.status_by)}, ${fmtDateTime(w.status_at)}` : 'Nobody has checked it yet'} · tap to update</span>
                 </button>
@@ -229,6 +235,9 @@ function CatchForm({ waters, water, onDone }: { waters: PinRow[]; water: PinRow 
 function WaterStatusForm({ water, onDone }: { water: PinRow; onDone: () => Promise<void> }) {
   const me = useMe()
   const [level, setLevel] = useState<WaterLevel>(water.water_level)
+  const [hasWell, setHasWell] = useState(water.has_well)
+  const [wellOn, setWellOn] = useState(water.well_on)
+  const [valves, setValves] = useState<Valve[]>(water.valves ?? [])
   const [condition, setCondition] = useState(water.condition ?? '')
   const [photo, setPhoto] = useState<File | null>(null)
   const [existingPhoto, setExistingPhoto] = useState<string | null>(water.photo_path)
@@ -240,7 +249,11 @@ function WaterStatusForm({ water, onDone }: { water: PinRow; onDone: () => Promi
     try {
       const photo_path = photo ? await uploadPhoto(photo) : existingPhoto
       if (water.photo_path && water.photo_path !== photo_path) void removePhoto(water.photo_path)
-      const { error } = await supabase.from('pins').update({ water_level: level, condition: condition.trim() || null, photo_path, status_by: me.member_id, status_at: new Date().toISOString() }).eq('id', water.id)
+      const { error } = await supabase.from('pins').update({
+        water_level: level, condition: condition.trim() || null, photo_path,
+        has_well: hasWell, well_on: hasWell && wellOn, valves: hasWell ? valves.filter((v) => v.name.trim()) : [],
+        status_by: me.member_id, status_at: new Date().toISOString(),
+      }).eq('id', water.id)
       if (error) throw error
       await onDone()
     } catch (err) {
@@ -257,6 +270,29 @@ function WaterStatusForm({ water, onDone }: { water: PinRow; onDone: () => Promi
         <div className="flex gap-2">
           {(['full', 'down', 'low'] as WaterLevel[]).map((l) => <button key={l} type="button" onClick={() => setLevel(l)} aria-pressed={level === l} className={chip(level === l)}>{WATER_LEVEL[l]}</button>)}
         </div>
+      </div>
+      <div>
+        <label className="tap flex items-center gap-3">
+          <input type="checkbox" checked={hasWell} onChange={(e) => setHasWell(e.target.checked)} className="h-5 w-5 accent-clay-900" />
+          <span className="text-sm font-semibold text-clay-900">Has a well</span>
+        </label>
+        {hasWell && (
+          <div className="mt-2 space-y-2">
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setWellOn(true)} aria-pressed={wellOn} className={chip(wellOn)}>Well running</button>
+              <button type="button" onClick={() => setWellOn(false)} aria-pressed={!wellOn} className={chip(!wellOn)}>Well off</button>
+            </div>
+            {valves.map((v, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="min-w-0 flex-1"><TextInput name={`valve${i}`} aria-label={`Valve ${i + 1} name`} value={v.name} onChange={(e) => setValves((vs) => vs.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} placeholder="Valve name" maxLength={40} /></div>
+                <button type="button" onClick={() => setValves((vs) => vs.map((x, j) => (j === i ? { ...x, open: true } : x)))} aria-pressed={v.open} className={chip(v.open)}>Open</button>
+                <button type="button" onClick={() => setValves((vs) => vs.map((x, j) => (j === i ? { ...x, open: false } : x)))} aria-pressed={!v.open} className={chip(!v.open)}>Closed</button>
+                <button type="button" aria-label={`Remove ${v.name || 'valve'}`} onClick={() => setValves((vs) => vs.filter((_, j) => j !== i))} className="tap px-1 text-ink-muted">✕</button>
+              </div>
+            ))}
+            <Button type="button" variant="ghost" onClick={() => setValves((vs) => [...vs, { name: `Valve ${vs.length + 1}`, open: false }])}>+ Add a valve</Button>
+          </div>
+        )}
       </div>
       <TextArea label="Anything to know" name="waterCondition" value={condition} onChange={(e) => setCondition(e.target.value)} placeholder="Aerator off, moss on the east end, dock board loose…" rows={2} maxLength={300} />
       <PhotoField file={photo} onFile={setPhoto} existing={existingPhoto} onClear={() => setExistingPhoto(null)} label="Photo of it (optional)" />

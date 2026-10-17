@@ -187,7 +187,7 @@ class Query implements PromiseLike<Result<unknown>> {
           catches: { pin_id: null, caught_on: now.slice(0, 10), weight_lb: null, length_in: null, bait: null, notes: null, released: false, photo_path: null },
           assets: { kind: 'other', status: 'good', note: null, sort_order: 0 },
           info_items: { value: '', sort_order: 0 },
-          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null },
+          pins: { notes: null, lat: null, lng: null, stand_type: null, has_feeder: false, fill_interval_days: null, days_per_bag: null, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, has_well: false, well_on: false, valves: [] },
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null, headcount: 1 },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },

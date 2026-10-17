@@ -50,10 +50,10 @@ let infoItems = [
   { id: 'i1', section: 'access', label: 'Gate code', value: '1234#', sort_order: 1, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 const seedPins = () => [
-  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: true, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
-  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p1', type: 'stand', name: 'Box Blind', notes: 'Overlooks the plot', lat: 29.2368, lng: -97.6321, stand_type: 'box_blind', has_feeder: true, days_per_bag: 5, fill_interval_days: null, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: true, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, has_well: false, well_on: false, valves: [], created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p2', type: 'stand', name: 'North Ladder', notes: null, lat: 29.2392, lng: -97.6360, stand_type: 'ladder', has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, has_well: false, well_on: false, valves: [], created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p3', type: 'feeder', name: 'Plot Feeder', notes: null, lat: 29.2373, lng: -97.6329, stand_type: null, has_feeder: true, days_per_bag: null, fill_interval_days: 14, motor_status: 'working', lock_status: 'none', chairs: 0, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, has_well: false, well_on: false, valves: [], created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
+  { id: 'p4', type: 'gate', name: 'Front Gate', notes: null, lat: 29.2272, lng: -97.6490, stand_type: null, has_feeder: false, days_per_bag: null, fill_interval_days: null, motor_status: 'working', lock_status: 'none', chairs: 1, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, has_well: false, well_on: false, valves: [], created_by: 'm1', created_at: 'x', updated_at: 'x', deleted_at: null },
 ]
 let pins = seedPins()
 let areas = []
@@ -300,7 +300,7 @@ async function run(width, standalone) {
 
   // Blinds: upkeep cards; mark a motor down, back to Home
   await page.getByRole('button', { name: 'Blinds', exact: true }).click()
-  await page.getByRole('heading', { name: 'Blinds' }).waitFor()
+  await page.getByRole('heading', { name: 'Blinds', exact: true }).waitFor()
   await page.getByText('Feeder', { exact: true }).first().waitFor()
   await page.getByText('Nothing taken here yet.').first().waitFor()
   await shot(page, `${tag}-19-blinds`)
@@ -398,7 +398,7 @@ async function run(width, standalone) {
   // Blinds as admin: add a blind with its own feeder from the list
   await page.getByRole('link', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Blinds', exact: true }).click()
-  await page.getByRole('heading', { name: 'Blinds' }).waitFor()
+  await page.getByRole('heading', { name: 'Blinds', exact: true }).waitFor()
   await page.getByRole('button', { name: '+ Add', exact: true }).click()
   await page.getByLabel('Name').fill('Tank Blind')
   await page.getByRole('button', { name: 'Ground blind', exact: true }).click()

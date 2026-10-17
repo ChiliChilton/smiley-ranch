@@ -255,7 +255,8 @@ export type MotorStatus = 'working' | 'down'
 export type LockStatus = 'none' | 'locked' | 'unlocked'
 export type CameraStatus = 'working' | 'batteries' | 'down'
 export type WaterLevel = 'full' | 'down' | 'low'
-export type PinStatusPatch = { water_level?: WaterLevel; acres?: number | null; photo_path?: string | null; motor_status?: MotorStatus; lock_status?: LockStatus; chairs?: number; has_camera?: boolean; camera_status?: CameraStatus; condition?: string | null; status_by?: string | null; status_at?: string | null }
+export type Valve = { name: string; open: boolean }
+export type PinStatusPatch = { water_level?: WaterLevel; acres?: number | null; photo_path?: string | null; has_well?: boolean; well_on?: boolean; valves?: Valve[]; motor_status?: MotorStatus; lock_status?: LockStatus; chairs?: number; has_camera?: boolean; camera_status?: CameraStatus; condition?: string | null; status_by?: string | null; status_at?: string | null }
 
 export type PinRow = {
   id: string
@@ -279,6 +280,9 @@ export type PinRow = {
   water_level: WaterLevel
   acres: number | null
   photo_path: string | null
+  has_well: boolean
+  well_on: boolean
+  valves: Valve[]
   created_by: string | null
   created_at: string
   updated_at: string

@@ -1,5 +1,5 @@
 -- Smiley Ranch: every migration plus the property seed, in order, for pasting into the Supabase SQL editor.
--- Generated 2026-10-16. Run once on a fresh project. Then run: select public.bootstrap_secrets('<family code>', '<admin PIN>');
+-- Generated 2026-10-17. Run once on a fresh project. Then run: select public.bootstrap_secrets('<family code>', '<admin PIN>');
 
 -- ===== supabase/migrations/20261010000001_identity.sql =====
 -- Back 40: identity, members, settings
@@ -1428,6 +1428,15 @@ create policy photos_delete on storage.objects for delete to authenticated
          and (public.is_admin() or owner = auth.uid() or created_at < now() - interval '365 days'));
 
 
+-- ===== supabase/migrations/20261010000012_wells.sql =====
+-- A water can have a well with named valves (Big Lake has one with two).
+-- Status lives with the water: well running or off, each valve open or closed, who last checked.
+alter table public.pins
+  add column has_well boolean not null default false,
+  add column well_on  boolean not null default false,
+  add column valves   jsonb not null default '[]'::jsonb;   -- [{"name": "Valve 1", "open": true}, ...]
+
+
 -- ===== supabase/property.sql =====
 -- Back 40: the REAL property data for Smiley (Gonzales CAD parcel 8554).
 -- Run this on the live Supabase project after the migrations and after adding the first member:
@@ -1543,3 +1552,8 @@ insert into public.pins (name, type, acres, notes, created_by)
 select name, 'water'::public.pin_type, acres, notes, (select id from public.members order by created_at limit 1)
 from (values ('Front Tank', 1.0, null::text), ('Big Lake', 5.0, null::text)) as w(name, acres, notes)
 where not exists (select 1 from public.pins where type = 'water');
+
+-- Big Lake's well and its two valves.
+update public.pins set has_well = true, well_on = false,
+  valves = '[{"name": "Valve 1", "open": false}, {"name": "Valve 2", "open": false}]'::jsonb
+where type = 'water' and name = 'Big Lake' and not has_well;

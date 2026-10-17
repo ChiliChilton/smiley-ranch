@@ -46,13 +46,13 @@ export function seedDb(): Record<string, Row[]> {
     ['contacts', 'Propane company', 'Gonzales Propane (830) 555-0142', 1], ['contacts', 'Feed store', 'Smiley Feed & Supply (830) 555-0170', 2], ['contacts', 'Electric co-op outage line', 'GVEC (800) 223-4832', 3], ['contacts', 'Neighbor', 'Hank at the next gate, (830) 555-0199. Has a key.', 4], ['contacts', 'Cleaning (Elvira)', '(830) 555-0123. $110 on the counter or Cash App.', 5],
   ].map(([section, label, value, sort_order], i) => ({ id: `in${i + 1}`, section, label, value, sort_order, ...base(60) }))
   const P = (n: number) => `00000000-0000-4000-8000-0000000000b${n}`
-  const blind = (n: number, name: string, extra: Row) => ({ id: P(n), type: 'stand', name, notes: null, lat: null, lng: null, stand_type: 'box_blind', has_feeder: true, fill_interval_days: null, days_per_bag: 5, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, ...base(60), ...extra })
+  const blind = (n: number, name: string, extra: Row) => ({ id: P(n), type: 'stand', name, notes: null, lat: null, lng: null, stand_type: 'box_blind', has_feeder: true, fill_interval_days: null, days_per_bag: 5, motor_status: 'working', lock_status: 'locked', chairs: 2, has_camera: false, camera_status: 'working', condition: null, status_by: null, status_at: null, water_level: 'full', acres: null, photo_path: null, has_well: false, well_on: false, valves: [], ...base(60), ...extra })
   const pins: Row[] = [
     blind(1, 'Tank Blind', { notes: 'By the stock tank', motor_status: 'down', status_by: M(3), status_at: ts(2), has_camera: true }),
     blind(2, 'Brants Blind', { has_camera: true, camera_status: 'batteries', status_by: M(4), status_at: ts(5), chairs: 1 }),
     blind(3, 'Fence Blind', { lock_status: 'none', condition: 'Window latch is loose', status_by: M(1), status_at: ts(9), lat: 29.2290, lng: -97.6560 }),
     { ...blind(4, 'Front Tank', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 1, notes: null, water_level: 'down', condition: 'Aerator is off', status_by: M(4), status_at: ts(6) },
-    { ...blind(5, 'Big Lake', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 5, notes: 'Dock on the north side' },
+    { ...blind(5, 'Big Lake', {}), type: 'water', stand_type: null, has_feeder: false, days_per_bag: null, lock_status: 'none', chairs: 0, acres: 5, notes: 'Dock on the north side', has_well: true, well_on: true, valves: [{ name: 'Valve 1', open: true }, { name: 'Valve 2', open: false }], status_by: M(3), status_at: ts(2) },
   ]
   const catches = [
     { id: 'ca1', member_id: M(1), pin_id: P(5), caught_on: addDays(today, -4), species: 'Bass', weight_lb: 4, length_in: null, bait: 'green worm', notes: 'Off the dock at sunset', released: true, photo_path: null, ...base(4) },
