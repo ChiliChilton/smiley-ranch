@@ -10,6 +10,7 @@ import { Sheet } from '../components/Sheet'
 import type { InfoItemRow, InfoSection } from '../lib/database.types'
 import { friendlyError } from '../lib/errors'
 import { INFO_SECTION_ORDER, INFO_SECTIONS, loadInfo, phoneIn } from '../lib/info'
+import { forecastUrl } from '../lib/weather'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
 import { useSettings } from '../lib/settings'
@@ -81,6 +82,8 @@ export function RanchInfo() {
             <p className="py-1 text-sm text-ink">
               Sleeps {beds ?? '4'}.{' '}
               <button type="button" className="font-semibold text-clay-900 underline" onClick={() => navigate('/equipment')}>Equipment and buildings</button>
+              {' · '}
+              <a href={forecastUrl()} target="_blank" rel="noopener" className="font-semibold text-clay-900 underline">7-day forecast</a>
             </p>
           </Section>
           <p className="text-xs text-ink-muted">{me.is_admin ? 'Tap a line to change it, + Add to add one. Beds and the emergency address are under Edit on their sections.' : 'Tap a line to copy it. The admin keeps this page current.'}</p>

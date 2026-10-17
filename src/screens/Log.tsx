@@ -20,7 +20,7 @@ import { supabase } from '../lib/supabase'
 import { createRow, isNetworkError } from '../lib/outbox'
 
 export async function loadLog(limit = 100): Promise<LogEntryRow[]> {
-  const { data, error } = await supabase.from('log_entries').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(limit)
+  const { data, error } = await supabase.from('log_entries').select('*').is('deleted_at', null).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(limit)
   if (error) throw error
   return data ?? []
 }
@@ -69,7 +69,7 @@ export function Log() {
       const photo_path = photo ? await uploadPhoto(photo) : null
       const { row, queued } = await createRow('log_entries', { body: body.trim(), pin_id: where.pin_id, lat: where.lat, lng: where.lng, photo_path })
       setBody(''); setWhere({ pin_id: null, lat: null, lng: null }); setShowWhere(false); setPhoto(null)
-      if (queued) setRows((cur) => [{ ...row, photo_path, created_by: me.member_id, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), deleted_at: null }, ...(cur ?? [])])
+      if (queued) setRows((cur) => [{ ...row, photo_path, pinned: false, created_by: me.member_id, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), deleted_at: null }, ...(cur ?? [])])
       else await reload()
     } catch (err) {
       setError(friendlyError(err))
@@ -82,6 +82,13 @@ export function Log() {
     const { error } = await supabase.from('log_entries').update({ deleted_at: new Date().toISOString() }).eq('id', row.id)
     if (error) return setError(friendlyError(error))
     setOpen(null); await reload()
+  }
+
+  /** Admins keep one or two notes at the top: gate chain, water off, that kind of thing. */
+  async function togglePin(row: LogEntryRow) {
+    const { error } = await supabase.from('log_entries').update({ pinned: !row.pinned }).eq('id', row.id)
+    if (error) return setError(friendlyError(error))
+    await reload()
   }
 
   const pinName = (id: string | null) => pins.find((p) => p.id === id)?.name
@@ -110,6 +117,7 @@ export function Log() {
           {rows.map((r) => (
             <li key={r.id}>
               <button type="button" onClick={() => setOpen(r)} className="tap w-full rounded-2xl bg-white p-4 text-left ring-1 ring-tan-200 active:bg-tan-100">
+                {r.pinned && <span className="mb-1 inline-block rounded bg-tan-200 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-tan-700">Pinned</span>}
                 <span className="flex gap-3">
                   <p className="min-w-0 flex-1 whitespace-pre-wrap text-ink">{r.body}</p>
                   {r.photo_path && <Photo path={r.photo_path} className="h-16 w-16 shrink-0" />}
@@ -136,6 +144,7 @@ export function Log() {
             </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={() => navigate(`/todos/new?title=${encodeURIComponent(open.body.slice(0, 80))}${open.pin_id ? `&pin=${open.pin_id}` : ''}`)}>Make it a job</Button>
+              {me.is_admin && <Button variant="ghost" onClick={() => togglePin(open)}>{open.pinned ? 'Unpin' : 'Pin to top'}</Button>}
               {(open.created_by === me.member_id || me.is_admin) && <Button variant="ghost" onClick={() => remove(open)}>Remove</Button>}
             </div>
             <Comments parentType="log_entry" parentId={open.id} />

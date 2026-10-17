@@ -7,8 +7,11 @@ import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
 import { useSearchParams } from 'react-router'
 import { AssetPicker, AssetTag } from '../components/AssetPicker'
+import { TextArea } from '../components/Input'
+import { loadEvents } from '../lib/events'
+import { todayISO } from '../lib/dates'
 import { assetName, loadAssets } from '../lib/assets'
-import type { AssetRow, SupplyItemRow, SupplyLevel } from '../lib/database.types'
+import type { AssetRow, EventRow, SupplyItemRow, SupplyLevel } from '../lib/database.types'
 import { fmtDate } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
 import { useMembers } from '../lib/members'
@@ -23,6 +26,33 @@ const LEVELS: { value: SupplyLevel; label: string; cls: string }[] = [
   { value: 'low', label: 'Low', cls: 'bg-warn/20 text-tan-700 ring-warn' },
   { value: 'out', label: 'Out', cls: 'bg-alert/10 text-alert ring-alert' },
 ]
+
+export function TripTag({ title }: { title: string | null | undefined }) {
+  if (!title) return null
+  return <span className="ml-2 rounded bg-sage-100 px-1.5 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-sage-900">{title}</span>
+}
+
+/** "We need" form. Used on Home and on a trip (initialEvent ties it to that trip). */
+export function NeedForm({ assets, initialEvent = null, onDone }: { assets: AssetRow[]; initialEvent?: string | null; onDone: () => Promise<void> }) {
+  const [name, setName] = useState('')
+  const [notes, setNotes] = useState('')
+  const [asset, setAsset] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setBusy(true)
+    try { await createRow('supply_items', { name: name.trim(), notes: notes.trim() || null, asset_id: asset, event_id: initialEvent, needed: true }); await onDone() } finally { setBusy(false) }
+  }
+  return (
+    <form onSubmit={save} className="space-y-3">
+      <TextInput label="What" name="needName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Corn, batteries, gate latch…" maxLength={120} autoFocus />
+      <AssetPicker label="For" assets={assets} value={asset} onChange={(p) => setAsset(p === 'any' ? null : p)} />
+      <TextArea label="Notes" name="needNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Brand, size, how many…" rows={2} />
+      <Button type="submit" full busy={busy} disabled={!name.trim()}>Add it</Button>
+    </form>
+  )
+}
 
 export async function loadSupplies(): Promise<SupplyItemRow[]> {
   const { data, error } = await supabase.from('supply_items').select('*').is('deleted_at', null).order('name')
@@ -39,6 +69,7 @@ export function Supplies() {
   const [newNeed, setNewNeed] = useState('')
   const [params] = useSearchParams()
   const [assets, setAssets] = useState<AssetRow[]>([])
+  const [events, setEvents] = useState<EventRow[]>([])
   const [newNeedAsset, setNewNeedAsset] = useState<string | null>(params.get('asset'))
   const [newInv, setNewInv] = useState('')
   const [newInvAsset, setNewInvAsset] = useState<string | null>(null)
@@ -49,8 +80,8 @@ export function Supplies() {
 
   const reload = useCallback(async () => {
     try {
-      const [it, as] = await Promise.all([loadSupplies(), loadAssets().catch(() => [] as AssetRow[])])
-      setItems(it); setAssets(as)
+      const [it, as, ev] = await Promise.all([loadSupplies(), loadAssets().catch(() => [] as AssetRow[]), loadEvents(todayISO()).catch(() => [] as EventRow[])])
+      setItems(it); setAssets(as); setEvents(ev)
     } catch (err) { setError(friendlyError(err)) }
   }, [])
   useEffect(() => { void reload() }, [reload])
@@ -98,6 +129,7 @@ export function Supplies() {
                   <button type="button" onClick={() => setEditing(i)} className="tap min-w-0 flex-1 text-left">
                     <span className="font-semibold text-clay-950">{i.name}</span>
                     <AssetTag name={assetName(assets, i.asset_id)} />
+                    <TripTag title={events.find((e) => e.id === i.event_id)?.title} />
                     {i.is_inventory && i.level && <span className="ml-2 text-xs font-bold uppercase text-alert">{i.level}</span>}
                     {i.notes && <span className="block text-sm text-ink-muted">{i.notes}</span>}
                     <span className="block text-xs text-ink-muted">added by {nameOf(i.created_by)}</span>

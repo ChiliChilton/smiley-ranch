@@ -60,6 +60,13 @@ A shared app for one family hunting property. It answers four questions for ever
 - One optional photo on a harvest, a catch, a property note, a project update (comment), and a blind's or water's condition. Not on needs, projects themselves, or the calendar.
 - Photos are shrunk on the phone to about 1280px before upload. They live in one Supabase Storage bucket (free tier) and the app cleans it itself: anything older than a year or past the newest 250 is deleted the next time someone opens the app. It's a work board, not an album; keepers go on your own phone.
 
+### 2g. Small things that matter
+- Weather: a small chip at the top of Home shows the current conditions at the ranch (icon, temperature, wind) from Open-Meteo, free and no account. Tap it for the 7-day forecast (National Weather Service). Ranch info links the forecast too. If the phone can't reach it, the chip just isn't there.
+- Know before you go: the Check out tab lists live status to look at before leaving. Wells running and which valves are open, low water, a water's or blind's condition note, feeders due or overdue. Each line has an Update link to the right screen.
+- Pinned notes: the admin can pin a property note (gate chain goes on the left post, water is off at the well) and it stays at the top of Property notes and Home until unpinned.
+- Needs and projects tied to a trip: a trip shows a "For this trip" card with what to bring and what to get done, with Got it and Done right there, and + Need / + Project that tie the new item to that trip. The item shows the trip's name on the Needs and Projects lists, and Home says "For this trip: 2 needs, 1 project" under the stay.
+- Needs and projects are shared lists: anyone in the family can mark a need Got it or a project Done, not just whoever added it. Removing one is still the owner's or the admin's call.
+
 ### 2b. Hunting seasons
 - Texas seasons for the place (South Zone, Gonzales County) show as a one-line ribbon above the calendar and on Home: what's in season now and what's next. The calendar days themselves only show trips.
 - The admin keeps the list under More > Hunting seasons: species, name, from, to, note. Each year's dates come from the TPWD Outdoor Annual; `supabase/property.sql` ships 2026-27.

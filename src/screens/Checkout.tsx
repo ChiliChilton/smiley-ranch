@@ -5,9 +5,11 @@ import { Card } from '../components/Card'
 import { TextArea } from '../components/Input'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
-import type { ChecklistItemRow, CheckoutRow } from '../lib/database.types'
+import type { ChecklistItemRow, CheckoutRow, FeederFillRow, PinRow } from '../lib/database.types'
 import { fmtDateTime } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
+import { feederStatus, hasFeeder, loadFeeders } from '../lib/feeders'
+import { loadPins, pinIssues } from '../lib/pins'
 import { useMembers } from '../lib/members'
 import { useRealtime } from '../lib/realtime'
 import { useMe } from '../lib/session'
@@ -32,6 +34,7 @@ export function Checkout() {
   const { nameOf } = useMembers()
   const [items, setItems] = useState<ChecklistItemRow[] | null>(null)
   const [last, setLast] = useState<CheckoutRow | null>(null)
+  const [know, setKnow] = useState<{ text: string; to: string }[]>([])
   const [done, setDone] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
@@ -39,19 +42,22 @@ export function Checkout() {
   const [saved, setSaved] = useState<CheckoutRow | null>(null)
 
   const reload = useCallback(async () => {
-    const [{ data, error }, lastRow] = await Promise.all([
+    const [{ data, error }, lastRow, pins, fd] = await Promise.all([
       supabase.from('checklist_items').select('*').is('deleted_at', null).order('sort_order').order('created_at'),
       loadLastCheckout(),
+      loadPins().catch(() => [] as PinRow[]),
+      loadFeeders().catch(() => null),
     ])
     if (error) setError(friendlyError(error))
     else setItems(data ?? [])
     setLast(lastRow)
+    setKnow(knowBeforeYouGo(pins, fd?.lastFill ?? new Map()))
   }, [])
 
   useEffect(() => {
     void reload()
   }, [reload])
-  useRealtime(['checklist_items', 'checkouts'], reload)
+  useRealtime(['checklist_items', 'checkouts', 'pins', 'feeder_fills'], reload)
 
   function toggle(id: string) {
     setDone((prev) => {
@@ -114,6 +120,19 @@ export function Checkout() {
         </p>
       )}
 
+      {know.length > 0 && (
+        <Card title="Know before you go" className="mb-4">
+          <ul className="space-y-1.5">
+            {know.map((k, i) => (
+              <li key={i} className="flex items-center gap-2 text-[15px] text-ink">
+                <span className="min-w-0 flex-1">{k.text}</span>
+                <button type="button" onClick={() => navigate(k.to)} className="tap shrink-0 rounded-md bg-tan-200 px-3 py-1.5 text-sm font-semibold text-clay-950 active:bg-tan-300">Update</button>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       {!items ? (
         <div className="flex justify-center py-8 text-clay-900"><Spinner /></div>
       ) : items.length === 0 ? (
@@ -162,4 +181,30 @@ export function Checkout() {
       )}
     </Screen>
   )
+}
+
+/** Live status the person leaving should look at: wells running, valves open, low water, blinds with a problem, feeders due. */
+export function knowBeforeYouGo(spots: PinRow[], lastFill: Map<string, FeederFillRow>): { text: string; to: string }[] {
+  const out: { text: string; to: string }[] = []
+  for (const p of spots) {
+    if (p.type === 'water') {
+      if (p.has_well && p.well_on) {
+        const open = (p.valves ?? []).filter((v) => v.open).map((v) => v.name)
+        out.push({ text: `${p.name}: well running${open.length ? `, ${open.join(' and ')} open` : ''}`, to: '/fishing' })
+      } else if (p.has_well && (p.valves ?? []).some((v) => v.open)) {
+        out.push({ text: `${p.name}: well off, ${(p.valves ?? []).filter((v) => v.open).map((v) => v.name).join(' and ')} still open`, to: '/fishing' })
+      }
+      if (p.water_level === 'low') out.push({ text: `${p.name}: water is low`, to: '/fishing' })
+      if (p.condition?.trim()) out.push({ text: `${p.name}: ${p.condition.trim()}`, to: '/fishing' })
+      continue
+    }
+    const issues = pinIssues(p)
+    if (issues.length) out.push({ text: `${p.name}: ${issues.join(', ')}`, to: '/blinds' })
+    if (hasFeeder(p)) {
+      const st = feederStatus(p, lastFill.get(p.id))
+      if (st.status === 'overdue') out.push({ text: `${p.name} feeder: overdue`, to: '/blinds' })
+      else if (st.status === 'due') out.push({ text: `${p.name} feeder: due a fill`, to: '/blinds' })
+    }
+  }
+  return out
 }

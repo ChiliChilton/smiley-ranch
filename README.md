@@ -78,6 +78,13 @@ The goal is near zero. What there is:
 
 Home is a work board: property name and date, quick links to the hunting side (Stands, Map, Property notes, Feeders, Harvests), then the **current or next stay** with who's going, **Needs** and **Projects** with a + that opens the full form and inline Got it / Done, feeders running low, the latest property notes, and the emergency address in one line. Tabs: Check out, Home, Calendar, Projects, Needs, More.
 
+## Small things that matter
+
+- **Weather chip** at the top of Home: current conditions at the ranch from Open-Meteo (free, no key). Tap for the NWS 7-day forecast. Hidden when it can't load.
+- **Know before you go** on the Check out tab: wells running and valves open, low water, condition notes, feeders due. Each line links to where you update it.
+- **Pinned notes**: the admin pins a property note and it stays at the top of Property notes and Home.
+- **Needs and projects on a trip**: open a trip, add what to bring and what to get done; the item carries the trip's name everywhere and Home counts them under the stay.
+
 ## Calendar rules
 
 - Every entry is **Come join** (anyone can tap "I'm in" and leave a note), **Just us** (that person has the place to themselves), or a **Note** (season dates, reminders).

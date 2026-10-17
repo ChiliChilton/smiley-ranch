@@ -88,9 +88,10 @@ export function seedDb(): Record<string, Row[]> {
     { id: 'h3', member_id: M(4), harvested_on: `${seasonYear}-10-02`, species: 'Hog', sex: 'male', description: '180 lb boar', pin_id: null, lat: null, lng: null, notes: null, tag_number: null, logged_on_license: false, photo_path: null, ...base(40), created_by: M(4) },
   ]
   const log_entries = [
-    { id: 'l1', body: 'Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', pin_id: null, lat: null, lng: null, photo_path: null, ...base(1), created_by: M(3) },
-    { id: 'l2', body: 'Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', pin_id: null, lat: null, lng: null, photo_path: null, ...base(4), created_by: M(4) },
-    { id: 'l3', body: 'Filled the propane at the house. Gauge reads 70%.', pin_id: null, lat: null, lng: null, photo_path: null, ...base(9), created_by: M(3) },
+    { id: 'l1', body: 'Fence down by the north gate, hogs pushed it over. Needs two T-posts and a stretch of wire.', pin_id: null, lat: null, lng: null, photo_path: null, pinned: false, ...base(1), created_by: M(3) },
+    { id: 'l2', body: 'Creek crossing is washed out below the tank. Mule can still make it, truck cannot.', pin_id: null, lat: null, lng: null, photo_path: null, pinned: false, ...base(4), created_by: M(4) },
+    { id: 'l3', body: 'Filled the propane at the house. Gauge reads 70%.', pin_id: null, lat: null, lng: null, photo_path: null, pinned: false, ...base(9), created_by: M(3) },
+    { id: 'l4', body: 'Gate chain goes on the LEFT post. The right latch is bent.', pin_id: null, lat: null, lng: null, photo_path: null, pinned: true, ...base(30), created_by: M(1) },
   ]
   const comments = [
     { id: 'cm1', parent_type: 'log_entry', parent_id: 'l1', body: "I've got posts in the barn. Can fix it Saturday.", photo_path: null, ...base(1), created_by: M(1) },
@@ -105,7 +106,7 @@ export function seedDb(): Record<string, Row[]> {
     { id: 'su1', name: 'Corn (50 lb bags)', notes: '6 bags', asset_id: A(3), is_inventory: true, level: 'low', needed: true, got_by: null, got_at: null, ...base(20) },
     { id: 'su2', name: 'Protein pellets', notes: null, asset_id: A(3), is_inventory: true, level: 'some', needed: false, got_by: null, got_at: null, ...base(20) },
     { id: 'su3', name: 'Propane', notes: null, asset_id: A(1), is_inventory: true, level: 'full', needed: false, got_by: null, got_at: null, ...base(20) },
-    { id: 'su4', name: 'AA batteries', notes: 'For the cameras', asset_id: null, is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(3), created_by: M(4) },
+    { id: 'su4', name: 'AA batteries', notes: 'For the cameras', asset_id: null, event_id: 'e1', is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(3), created_by: M(4) },
     { id: 'su5', name: 'Gate latch', notes: null, asset_id: A(3), is_inventory: false, level: null, needed: true, got_by: null, got_at: null, ...base(2), created_by: M(3) },
     { id: 'su6', name: 'Trash bags', notes: null, asset_id: A(2), is_inventory: false, level: null, needed: false, got_by: M(2), got_at: ts(8), ...base(12), created_by: M(2) },
   ]

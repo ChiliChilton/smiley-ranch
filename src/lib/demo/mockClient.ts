@@ -15,7 +15,14 @@ type State = { db: Record<string, Row[]>; device: { member_id: string | null; is
 function load(): State {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw) as State
+    if (raw) {
+      const st = JSON.parse(raw) as State
+      // Columns added after a phone first saved its sandbox: fill the defaults in instead of wiping it.
+      for (const r of st.db.log_entries ?? []) if (r.pinned == null) r.pinned = false
+      for (const r of st.db.supply_items ?? []) if (r.event_id === undefined) r.event_id = null
+      for (const r of st.db.todos ?? []) if (r.event_id === undefined) r.event_id = null
+      return st
+    }
   } catch { /* ignore */ }
   return { db: seedDb(), device: { member_id: null, is_admin: false }, secrets: { code: DEMO_CODE, pin: DEMO_PIN } }
 }
@@ -71,6 +78,8 @@ function canWrite(table: string, op: 'insert' | 'update' | 'delete', row: Row): 
       return null
     case 'event_attendees':
       return row.member_id === me || isAdmin() ? null : rls(table)
+    case 'todos': case 'supply_items':
+      return op === 'delete' && !isAdmin() ? rls(table) : null // shared lists: anyone marks got / done
     default:
       if (op === 'insert') return null
       return row.created_by === me || isAdmin() ? null : rls(table)
@@ -191,9 +200,9 @@ class Query implements PromiseLike<Result<unknown>> {
           events: { notes: null, kind: 'inclusive' },
           event_attendees: { note: null, headcount: 1 },
           checkouts: { event_id: null, left_at: now, items: [], all_done: false, notes: null },
-          log_entries: { pin_id: null, lat: null, lng: null, photo_path: null },
-          todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, asset_id: null, status: 'open', completed_by: null, completed_at: null },
-          supply_items: { notes: null, is_inventory: false, asset_id: null, level: null, needed: true, got_by: null, got_at: null },
+          log_entries: { pin_id: null, lat: null, lng: null, photo_path: null, pinned: false },
+          todos: { notes: null, assignee_id: null, due_on: null, pin_id: null, asset_id: null, event_id: null, status: 'open', completed_by: null, completed_at: null },
+          supply_items: { notes: null, is_inventory: false, asset_id: null, event_id: null, level: null, needed: true, got_by: null, got_at: null },
           areas: { is_boundary: false, color: null },
           members: { is_active: true },
         }

@@ -1,34 +1,33 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Button } from '../components/Button'
 import { EmergencyCard } from '../components/EmergencyCard'
 import { KindBadge } from '../components/EventListRow'
-import { TextArea, TextInput } from '../components/Input'
 import { Note } from '../components/Note'
 import { Screen } from '../components/Screen'
 import { Section, SectionLink } from '../components/Section'
 import { Sheet } from '../components/Sheet'
 import type { AssetRow, CheckoutRow, EventAttendeeRow, EventRow, FeederFillRow, LogEntryRow, PinRow, SupplyItemRow, TodoRow } from '../lib/database.types'
-import { AssetPicker, AssetTag } from '../components/AssetPicker'
+import { AssetTag } from '../components/AssetPicker'
 import { assetName, loadAssets } from '../lib/assets'
 import { fmtDate, fmtDateTime, fmtRange, parseISODate, relativeDay, todayISO } from '../lib/dates'
 import { loadEvents } from '../lib/events'
 import { feederStatus, loadFeeders, recordFill } from '../lib/feeders'
 import { pinIssues } from '../lib/pins'
 import { useMembers } from '../lib/members'
-import { createRow } from '../lib/outbox'
 import { useRealtime } from '../lib/realtime'
 import { useMe, useSession } from '../lib/session'
 import { emergencyFrom, useSettings } from '../lib/settings'
 import { supabase } from '../lib/supabase'
 import { loadLastCheckout } from './Checkout'
 import { Brand } from '../components/Brand'
+import { WeatherChip } from '../components/WeatherChip'
 import { SeasonSummary } from '../components/SeasonChips'
 import { loadSeasons } from '../lib/seasons'
 import type { SeasonRow } from '../lib/database.types'
 import { FeederCard, FillDetailsSheet } from './Feeders'
 import { loadLog } from './Log'
-import { loadSupplies } from './Supplies'
+import { loadSupplies, NeedForm } from './Supplies'
 import { TodoForm } from './Todos'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -95,6 +94,8 @@ export function Home() {
   useEffect(() => { void reload() }, [reload])
   useRealtime(['events', 'event_attendees', 'checkouts', 'feeder_fills', 'log_entries', 'todos', 'supply_items', 'assets'], reload)
   const beds = Number(settings?.beds ?? 4)
+  const tripNeeds = stay ? needs.filter((i) => i.event_id === stay.id).length : 0
+  const tripJobs = stay ? todos.filter((t) => t.event_id === stay.id).length : 0
   const headcount = stayGoing.reduce((n, a) => n + (a.headcount ?? 1), 0)
 
   const feedersDue = (feeders?.feeders ?? []).filter((f) => ['due', 'overdue'].includes(feederStatus(f, feeders!.lastFill.get(f.id)).status))
@@ -116,7 +117,7 @@ export function Home() {
   }
 
   return (
-    <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={34} />} hero={`${import.meta.env.BASE_URL}banner.jpg`}>
+    <Screen title={`${settings?.property_name ?? 'Smiley Ranch'} · ${dateLabel}`} leading={<Brand size={34} />} right={<WeatherChip />} hero={`${import.meta.env.BASE_URL}banner.jpg`}>
       {offline && <Note kind="warn" className="mb-3">No signal right now. Showing what we had last time.</Note>}
 
       <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-semibold text-clay-800">
@@ -139,6 +140,7 @@ export function Home() {
                   <span className="min-w-0 flex-1 text-[15px] text-ink">
                     {i.name}
                     <AssetTag name={assetName(assets, i.asset_id)} />
+                    {i.event_id === stay?.id && stay && <span className="ml-2 rounded bg-sage-100 px-1.5 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-sage-900">{stay.title}</span>}
                     {i.is_inventory && i.level && <span className="ml-2 text-[10px] font-extrabold uppercase text-alert">{i.level}</span>}
                     {i.notes && <span className="block text-xs text-ink-muted">{i.notes}</span>}
                   </span>
@@ -201,6 +203,7 @@ export function Home() {
                   {stayGoing.length > 0 && stay.kind === 'inclusive' && <span className={headcount > beds ? ' font-semibold text-alert' : ''}> · {headcount} {headcount === 1 ? 'person' : 'people'}, {beds} beds</span>}
                 </span>
                 {stay.notes && <span className="mt-1 block text-sm text-ink">{stay.notes.length > 100 ? stay.notes.slice(0, 100) + '…' : stay.notes}</span>}
+                {(tripNeeds > 0 || tripJobs > 0) && <span className="mt-1 block text-sm font-semibold text-clay-900">For this trip: {[tripNeeds > 0 ? `${tripNeeds} need${tripNeeds === 1 ? '' : 's'}` : '', tripJobs > 0 ? `${tripJobs} project${tripJobs === 1 ? '' : 's'}` : ''].filter(Boolean).join(', ')}</span>}
               </span>
             </button>
           )}
@@ -252,6 +255,7 @@ export function Home() {
             <ul className="divide-y divide-tan-200">
               {log.map((e) => (
                 <li key={e.id} className="py-1.5 text-sm">
+                  {e.pinned && <span className="mr-1.5 rounded bg-tan-200 px-1.5 py-0.5 align-middle text-[10px] font-extrabold uppercase tracking-wide text-tan-700">Pinned</span>}
                   <span className="text-ink">{e.body.length > 120 ? e.body.slice(0, 120) + '…' : e.body}</span>
                   <span className="block text-xs text-ink-muted">{nameOf(e.created_by)} · {fmtDateTime(e.created_at)}</span>
                 </li>
@@ -278,26 +282,5 @@ export function Home() {
       </Sheet>
       <FillDetailsSheet entry={justFilled} onClose={() => setJustFilled(null)} onSaved={async () => { setJustFilled(null); await reload() }} />
     </Screen>
-  )
-}
-
-function NeedForm({ assets, onDone }: { assets: AssetRow[]; onDone: () => Promise<void> }) {
-  const [name, setName] = useState('')
-  const [notes, setNotes] = useState('')
-  const [asset, setAsset] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  async function save(e: FormEvent) {
-    e.preventDefault()
-    if (!name.trim()) return
-    setBusy(true)
-    try { await createRow('supply_items', { name: name.trim(), notes: notes.trim() || null, asset_id: asset, needed: true }); await onDone() } finally { setBusy(false) }
-  }
-  return (
-    <form onSubmit={save} className="space-y-3">
-      <TextInput label="What" name="needName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Corn, batteries, gate latch…" maxLength={120} autoFocus />
-      <AssetPicker label="For" assets={assets} value={asset} onChange={(p) => setAsset(p === 'any' ? null : p)} />
-      <TextArea label="Notes" name="needNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Brand, size, how many…" rows={2} />
-      <Button type="submit" full busy={busy} disabled={!name.trim()}>Add it</Button>
-    </form>
   )
 }

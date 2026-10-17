@@ -8,9 +8,10 @@ import { Screen } from '../components/Screen'
 import { Sheet } from '../components/Sheet'
 import { AssetPicker, AssetTag } from '../components/AssetPicker'
 import { assetName, loadAssets } from '../lib/assets'
-import type { AssetRow, PinRow, TodoRow } from '../lib/database.types'
+import type { AssetRow, EventRow, PinRow, TodoRow } from '../lib/database.types'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/dates'
 import { friendlyError } from '../lib/errors'
+import { loadEvents } from '../lib/events'
 import { useMembers } from '../lib/members'
 import { loadPins } from '../lib/pins'
 import { useRealtime } from '../lib/realtime'
@@ -18,6 +19,7 @@ import { useMe } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { createRow } from '../lib/outbox'
 import { Comments } from './Log'
+import { TripTag } from './Supplies'
 
 type Filter = 'mine' | 'open' | 'done'
 
@@ -34,6 +36,7 @@ export function Todos() {
   const [rows, setRows] = useState<TodoRow[] | null>(null)
   const [pins, setPins] = useState<PinRow[]>([])
   const [assets, setAssets] = useState<AssetRow[]>([])
+  const [events, setEvents] = useState<EventRow[]>([])
   const [updates, setUpdates] = useState<Map<string, number>>(new Map())
   const [filter, setFilter] = useState<Filter>('open')
   const [error, setError] = useState<string | null>(null)
@@ -42,11 +45,12 @@ export function Todos() {
 
   const reload = useCallback(async () => {
     try {
-      const [{ data, error }, allPins, as, { data: cm }] = await Promise.all([
+      const [{ data, error }, allPins, as, { data: cm }, ev] = await Promise.all([
         supabase.from('todos').select('*').is('deleted_at', null).order('status').order('due_on', { ascending: true }).order('created_at', { ascending: false }).limit(300),
         loadPins(),
         loadAssets().catch(() => [] as AssetRow[]),
         supabase.from('comments').select('parent_id').eq('parent_type', 'todo').is('deleted_at', null),
+        loadEvents(todayISO()).catch(() => [] as EventRow[]),
       ])
       if (error) throw error
       const m = new Map<string, number>()
@@ -55,6 +59,7 @@ export function Todos() {
       setRows(data ?? [])
       setPins(allPins)
       setAssets(as)
+      setEvents(ev)
       setOpen((cur) => (cur ? ((data ?? []).find((t) => t.id === cur.id) ?? null) : null))
     } catch (err) {
       setError(friendlyError(err))
@@ -84,6 +89,7 @@ export function Todos() {
   }
 
   const pinName = (id: string | null) => pins.find((p) => p.id === id)?.name
+  const tripName = (id: string | null) => events.find((e) => e.id === id)?.title
   const today = todayISO()
 
   return (
@@ -121,7 +127,7 @@ export function Todos() {
                   </span>
                 </button>
                 <button type="button" onClick={() => setOpen(t)} className="tap min-w-0 flex-1 py-3 pr-3 text-left">
-                  <div className={`font-semibold ${t.status === 'done' ? 'text-ink-muted line-through' : 'text-clay-950'}`}>{t.title}<AssetTag name={assetName(assets, t.asset_id)} /></div>
+                  <div className={`font-semibold ${t.status === 'done' ? 'text-ink-muted line-through' : 'text-clay-950'}`}>{t.title}<AssetTag name={assetName(assets, t.asset_id)} /><TripTag title={tripName(t.event_id)} /></div>
                   <div className="text-sm text-ink-muted">
                     {t.assignee_id ? nameOf(t.assignee_id) : 'Anyone'}
                     {t.due_on && <span className={overdue ? ' font-semibold text-alert' : ''}> · {overdue ? 'was due' : 'due'} {fmtDate(t.due_on)}</span>}
@@ -144,6 +150,7 @@ export function Todos() {
               {assetName(assets, open.asset_id) && ` · ${assetName(assets, open.asset_id)}`}
               {open.due_on && ` · due ${fmtDate(open.due_on)}`}
               {pinName(open.pin_id) && ` · ${pinName(open.pin_id)}`}
+              {tripName(open.event_id) && ` · for ${tripName(open.event_id)}`}
               <br />Added by {nameOf(open.created_by)} {fmtDateTime(open.created_at)}
               {open.status === 'done' && open.completed_at && <><br />Done by {nameOf(open.completed_by)} {fmtDateTime(open.completed_at)}</>}
             </p>
@@ -173,7 +180,7 @@ export function Todos() {
   )
 }
 
-export function TodoForm({ todo, initialTitle = '', initialPin = null, initialAsset = null, onDone }: { todo: TodoRow | null; initialTitle?: string; initialPin?: string | null; initialAsset?: string | null; onDone: () => Promise<void> }) {
+export function TodoForm({ todo, initialTitle = '', initialPin = null, initialAsset = null, initialEvent = null, onDone }: { todo: TodoRow | null; initialTitle?: string; initialPin?: string | null; initialAsset?: string | null; initialEvent?: string | null; onDone: () => Promise<void> }) {
   const me = useMe()
   const { active } = useMembers()
   const [title, setTitle] = useState(todo?.title ?? initialTitle)
@@ -194,7 +201,7 @@ export function TodoForm({ todo, initialTitle = '', initialPin = null, initialAs
         const { error } = await supabase.from('todos').update(row).eq('id', todo.id)
         if (error) throw error
       } else {
-        await createRow('todos', row)
+        await createRow('todos', { ...row, event_id: initialEvent })
       }
       await onDone()
     } catch (err) {

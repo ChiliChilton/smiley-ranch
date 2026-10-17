@@ -110,6 +110,7 @@ export type LogEntryRow = {
   lat: number | null
   lng: number | null
   photo_path: string | null
+  pinned: boolean
   created_by: string | null
   created_at: string
   updated_at: string
@@ -138,6 +139,7 @@ export type TodoRow = {
   due_on: string | null
   pin_id: string | null
   asset_id: string | null
+  event_id: string | null
   status: 'open' | 'done'
   completed_by: string | null
   completed_at: string | null
@@ -183,6 +185,7 @@ export type SupplyItemRow = {
   notes: string | null
   is_inventory: boolean
   asset_id: string | null
+  event_id: string | null
   level: SupplyLevel | null
   needed: boolean
   got_by: string | null
@@ -456,8 +459,8 @@ export type Database = {
       }
       log_entries: {
         Row: LogEntryRow
-        Insert: { id?: string; body: string; pin_id?: string | null; lat?: number | null; lng?: number | null; photo_path?: string | null; created_by?: string | null }
-        Update: { body?: string; pin_id?: string | null; lat?: number | null; lng?: number | null; photo_path?: string | null; deleted_at?: string | null }
+        Insert: { id?: string; body: string; pin_id?: string | null; lat?: number | null; lng?: number | null; photo_path?: string | null; pinned?: boolean; created_by?: string | null }
+        Update: { body?: string; pin_id?: string | null; lat?: number | null; lng?: number | null; photo_path?: string | null; pinned?: boolean; deleted_at?: string | null }
         Relationships: []
       }
       comments: {
@@ -476,6 +479,7 @@ export type Database = {
           due_on?: string | null
           pin_id?: string | null
           asset_id?: string | null
+          event_id?: string | null
           status?: 'open' | 'done'
           created_by?: string | null
         }
@@ -484,7 +488,7 @@ export type Database = {
       }
       supply_items: {
         Row: SupplyItemRow
-        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; asset_id?: string | null; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
+        Insert: { id?: string; name: string; notes?: string | null; is_inventory?: boolean; asset_id?: string | null; event_id?: string | null; level?: SupplyLevel | null; needed?: boolean; created_by?: string | null }
         Update: Partial<Omit<SupplyItemRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
         Relationships: []
       }

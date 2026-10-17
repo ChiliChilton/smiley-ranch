@@ -1,6 +1,7 @@
 -- Smiley Ranch: every migration plus the property seed, in order, for pasting into the Supabase SQL editor.
 -- Generated 2026-10-17. Run once on a fresh project. Then run: select public.bootstrap_secrets('<family code>', '<admin PIN>');
 
+
 -- ===== supabase/migrations/20261010000001_identity.sql =====
 -- Back 40: identity, members, settings
 --
@@ -1435,6 +1436,30 @@ alter table public.pins
   add column has_well boolean not null default false,
   add column well_on  boolean not null default false,
   add column valves   jsonb not null default '[]'::jsonb;   -- [{"name": "Valve 1", "open": true}, ...]
+
+
+-- ===== supabase/migrations/20261010000013_pins_trips.sql =====
+-- Pinned property notes, and needs or projects tied to a trip.
+alter table public.log_entries add column pinned boolean not null default false;
+alter table public.supply_items add column event_id uuid references public.events(id);
+alter table public.todos add column event_id uuid references public.events(id);
+create index supply_items_event_idx on public.supply_items(event_id) where deleted_at is null and needed;
+create index todos_event_idx on public.todos(event_id) where deleted_at is null and status = 'open';
+
+
+-- ===== supabase/migrations/20261010000014_shared_lists.sql =====
+-- Needs and projects are shared lists: anyone in the family can mark a need "Got it"
+-- or a project "Done", not just whoever added it. (Notes, harvests, and the rest stay
+-- owner-or-admin.) Removing is still only shown to the owner or the admin in the app.
+drop policy if exists todos_update on public.todos;
+create policy todos_update on public.todos for update to authenticated
+  using (public.is_active_member())
+  with check (public.is_active_member());
+
+drop policy if exists supply_items_update on public.supply_items;
+create policy supply_items_update on public.supply_items for update to authenticated
+  using (public.is_active_member())
+  with check (public.is_active_member());
 
 
 -- ===== supabase/property.sql =====
